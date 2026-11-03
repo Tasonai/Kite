@@ -18,6 +18,10 @@ struct ContentView: View {
                 PromptTranslatorView()
             case .skills:
                 SkillsCatalogView()
+            case .canvas:
+                InfiniteCanvasView()
+            case .designLab:
+                DesignLabView()
             case .inspirations:
                 InspirationGalleryView()
             case .styles:
@@ -59,7 +63,7 @@ struct ContentView: View {
             }
 
             Section("Дизайн и референсы") {
-                ForEach([SidebarItem.inspirations, .styles]) { page in
+                ForEach([SidebarItem.canvas, .designLab, .inspirations, .styles]) { page in
                     Label(page.title, systemImage: page.symbol).tag(page)
                 }
             }

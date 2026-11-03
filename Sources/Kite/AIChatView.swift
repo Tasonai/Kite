@@ -173,6 +173,10 @@ struct AIChatView: View {
                         sendMessage()
                     }
 
+                VoiceRecordButton { spokenText in
+                    inputPrompt = spokenText
+                }
+
                 Button {
                     sendMessage()
                 } label: {

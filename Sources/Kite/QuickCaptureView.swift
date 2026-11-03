@@ -36,7 +36,15 @@ struct QuickCaptureView: View {
                     .font(.headline)
                 
                 Spacer()
-                
+
+                VoiceRecordButton { spokenText in
+                    if title.isEmpty {
+                        title = spokenText
+                    } else {
+                        concept = spokenText
+                    }
+                }
+
                 Text("⌘⇧K")
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.secondary)

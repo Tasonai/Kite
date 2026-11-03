@@ -26,7 +26,7 @@ final class Item {
 enum SidebarItem: String, CaseIterable, Identifiable {
     case all, inProgress, completed, starred
     case aiChat, translator, skills
-    case inspirations, styles
+    case canvas, designLab, inspirations, styles
 
     var id: String { rawValue }
 
@@ -39,6 +39,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .aiChat: "AI-Архитектор"
         case .translator: "Промпт-переводчик"
         case .skills: "База скиллов"
+        case .canvas: "Холст идей"
+        case .designLab: "Лаборатория дизайна"
         case .inspirations: "Вдохновение"
         case .styles: "Стили и токены"
         }
@@ -53,6 +55,8 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .aiChat: "sparkles"
         case .translator: "wand.and.stars"
         case .skills: "cpu"
+        case .canvas: "rectangle.split.3x3"
+        case .designLab: "slider.horizontal.3"
         case .inspirations: "photo.stack"
         case .styles: "paintpalette.fill"
         }
@@ -62,7 +66,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .all, .inProgress, .completed, .starred: "Идеи и проекты"
         case .aiChat, .translator, .skills: "Студия Antigravity"
-        case .inspirations, .styles: "Дизайн и референсы"
+        case .canvas, .designLab, .inspirations, .styles: "Дизайн и референсы"
         }
     }
 }
