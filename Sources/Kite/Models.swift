@@ -25,7 +25,7 @@ final class Item {
 /// The sidebar pages. Snapshot mode walks through every case.
 enum SidebarItem: String, CaseIterable, Identifiable {
     case all, inProgress, completed, starred
-    case translator, skills
+    case aiChat, translator, skills
     case inspirations, styles
 
     var id: String { rawValue }
@@ -36,6 +36,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .inProgress: "В разработке"
         case .completed: "Готово"
         case .starred: "Избранное"
+        case .aiChat: "AI-Архитектор"
         case .translator: "Промпт-переводчик"
         case .skills: "База скиллов"
         case .inspirations: "Вдохновение"
@@ -49,6 +50,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .inProgress: "bolt.fill"
         case .completed: "checkmark.circle.fill"
         case .starred: "star.fill"
+        case .aiChat: "sparkles"
         case .translator: "wand.and.stars"
         case .skills: "cpu"
         case .inspirations: "photo.stack"
@@ -59,7 +61,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var sectionTitle: String {
         switch self {
         case .all, .inProgress, .completed, .starred: "Идеи и проекты"
-        case .translator, .skills: "Студия Antigravity"
+        case .aiChat, .translator, .skills: "Студия Antigravity"
         case .inspirations, .styles: "Дизайн и референсы"
         }
     }

@@ -12,6 +12,8 @@ struct ContentView: View {
             sidebar
         } detail: {
             switch model.sidebar {
+            case .aiChat:
+                AIChatView()
             case .translator:
                 PromptTranslatorView()
             case .skills:
@@ -51,7 +53,7 @@ struct ContentView: View {
             }
 
             Section("Студия Antigravity") {
-                ForEach([SidebarItem.translator, .skills]) { page in
+                ForEach([SidebarItem.aiChat, .translator, .skills]) { page in
                     Label(page.title, systemImage: page.symbol).tag(page)
                 }
             }
@@ -190,6 +192,8 @@ struct ItemDetail: View {
     @State private var scaffoldSuccessPath: String?
     @State private var isGeneratingAI = false
     @State private var aiError: String?
+    @State private var exportSheetContent: String?
+    @State private var exportSheetTitle: String = ""
 
     @AppStorage("ai_provider") private var aiProvider = "Gemini API"
     @AppStorage("gemini_api_key") private var geminiApiKey = ""
@@ -319,6 +323,49 @@ struct ItemDetail: View {
                         }
                         .buttonStyle(.bordered)
                         .help("Создать папку проекта с README, SPEC, PLAN и git init")
+
+                        Menu {
+                            Button {
+                                let md = DesignExporter.generateStitchDesignMd(
+                                    title: item.title,
+                                    style: item.style,
+                                    platform: item.platform,
+                                    concept: item.concept
+                                )
+                                exportSheetTitle = "Google Stitch — DESIGN.md"
+                                exportSheetContent = md
+                            } label: {
+                                Label("Экспорт в Google Stitch (DESIGN.md)", systemImage: "sparkles")
+                            }
+
+                            Button {
+                                let json = DesignExporter.generateFigmaTokensJson(
+                                    title: item.title,
+                                    style: item.style
+                                )
+                                exportSheetTitle = "Figma Design Tokens (W3C JSON)"
+                                exportSheetContent = json
+                            } label: {
+                                Label("Экспорт в Figma (Tokens JSON)", systemImage: "paintpalette")
+                            }
+
+                            Button {
+                                let diag = DesignExporter.generateFigJamDiagram(
+                                    title: item.title,
+                                    concept: item.concept,
+                                    style: item.style
+                                )
+                                exportSheetTitle = "FigJam Architecture Diagram"
+                                exportSheetContent = diag
+                            } label: {
+                                Label("Схема для FigJam (Mermaid / Flowchart)", systemImage: "arrow.triangle.branch")
+                            }
+                        } label: {
+                            Label("Экспорт 🎨", systemImage: "square.and.arrow.up")
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Экспорт дизайн-системы и токенов в Google Stitch или Figma")
                     }
 
                     if let err = aiError {
@@ -369,6 +416,12 @@ struct ItemDetail: View {
                     }
                 }
                 .padding(24)
+            }
+            .sheet(isPresented: Binding(
+                get: { exportSheetContent != nil },
+                set: { if !$0 { exportSheetContent = nil } }
+            )) {
+                exportSheetModal
             }
         } else {
             ContentUnavailableView("Выберите идею", systemImage: "lightbulb", description: Text("Выберите идею в списке слева или создайте новую."))
@@ -437,6 +490,67 @@ struct ItemDetail: View {
             NSSound.beep()
         } catch {
             aiError = error.localizedDescription
+        }
+    }
+
+    private var exportSheetModal: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text(exportSheetTitle)
+                    .font(.title3.bold())
+                Spacer()
+                Button("Закрыть") {
+                    exportSheetContent = nil
+                }
+                .buttonStyle(.bordered)
+            }
+
+            TextEditor(text: Binding(
+                get: { exportSheetContent ?? "" },
+                set: { exportSheetContent = $0 }
+            ))
+            .font(.system(.caption, design: .monospaced))
+            .padding(8)
+            .background(Color(nsColor: .textBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            HStack {
+                Button("Скопировать в буфер 📋") {
+                    if let text = exportSheetContent {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                        NSSound.beep()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+
+                Spacer()
+
+                Button("Сохранить файл на диск 💾") {
+                    saveExportFile()
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 540, minHeight: 460)
+    }
+
+    private func saveExportFile() {
+        guard let content = exportSheetContent else { return }
+        let savePanel = NSSavePanel()
+        savePanel.canCreateDirectories = true
+        if exportSheetTitle.contains("Stitch") {
+            savePanel.nameFieldStringValue = "DESIGN.md"
+        } else if exportSheetTitle.contains("Figma") {
+            savePanel.nameFieldStringValue = "tokens.json"
+        } else {
+            savePanel.nameFieldStringValue = "architecture.mmd"
+        }
+        if savePanel.runModal() == .OK, let url = savePanel.url {
+            try? content.write(to: url, atomically: true, encoding: .utf8)
+            NSSound.beep()
+            exportSheetContent = nil
         }
     }
 }
