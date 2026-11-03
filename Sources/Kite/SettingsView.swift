@@ -24,6 +24,7 @@ struct SettingsView: View {
             switch tab {
             case .general: GeneralSettings()
             case .appearance: AppearanceSettings()
+            case .ai: AISettingsView()
             case .sync: SyncSettingsView()
             }
         }
@@ -35,7 +36,7 @@ struct SettingsView: View {
 
 /// The Settings tabs. Snapshot mode walks through every case.
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, appearance, sync
+    case general, appearance, ai, sync
 
     var id: String { rawValue }
 
@@ -43,6 +44,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: "General"
         case .appearance: "Appearance"
+        case .ai: "AI & Models"
         case .sync: "Sync & Data"
         }
     }
@@ -51,7 +53,50 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape"
         case .appearance: "paintpalette"
+        case .ai: "sparkles"
         case .sync: "arrow.triangle.2.circlepath"
+        }
+    }
+}
+
+struct AISettingsView: View {
+    @AppStorage("ai_provider") private var aiProvider = "Gemini API"
+    @AppStorage("gemini_api_key") private var geminiApiKey = ""
+    @AppStorage("gemini_model") private var geminiModel = "gemini-2.5-flash"
+    @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
+    @AppStorage("ollama_model") private var ollamaModel = "llama3"
+
+    var body: some View {
+        Section("Провайдер AI") {
+            Picker("Движок генерации", selection: $aiProvider) {
+                Text("Google Gemini API").tag("Gemini API")
+                Text("Локальный Ollama").tag("Local Ollama")
+                Text("Локальный компилятор (Офлайн)").tag("Local Blueprint (Offline)")
+            }
+            .pickerStyle(.radioGroup)
+        }
+
+        if aiProvider == "Gemini API" {
+            Section("Настройки Gemini") {
+                SecureField("Gemini API Key", text: $geminiApiKey)
+                    .textFieldStyle(.roundedBorder)
+
+                Picker("Модель", selection: $geminiModel) {
+                    Text("gemini-2.5-flash (Быстрая, рекомендуемая)").tag("gemini-2.5-flash")
+                    Text("gemini-2.5-pro (Глубокая архитектура)").tag("gemini-2.5-pro")
+                }
+
+                Text("Ключ сохраняется локально и используется только для прямой генерации спецификаций.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } else if aiProvider == "Local Ollama" {
+            Section("Настройки Ollama") {
+                TextField("Эндпоинт", text: $ollamaEndpoint)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Имя модели (например, llama3 или qwen)", text: $ollamaModel)
+                    .textFieldStyle(.roundedBorder)
+            }
         }
     }
 }

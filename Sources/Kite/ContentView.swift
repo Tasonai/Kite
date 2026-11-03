@@ -160,6 +160,14 @@ struct ItemDetail: View {
     @Query private var items: [Item]
     @State private var isCopied = false
     @State private var scaffoldSuccessPath: String?
+    @State private var isGeneratingAI = false
+    @State private var aiError: String?
+
+    @AppStorage("ai_provider") private var aiProvider = "Gemini API"
+    @AppStorage("gemini_api_key") private var geminiApiKey = ""
+    @AppStorage("gemini_model") private var geminiModel = "gemini-2.5-flash"
+    @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
+    @AppStorage("ollama_model") private var ollamaModel = "llama3"
 
     private let platforms = ["Web", "Mobile", "Desktop"]
     private let styles = [
@@ -237,20 +245,27 @@ struct ItemDetail: View {
                     // Generator Action
                     HStack(spacing: 12) {
                         Button {
-                            item.generatedPrompt = PromptCompiler.compileBlueprint(
-                                title: item.title,
-                                concept: item.concept,
-                                platform: item.platform,
-                                style: item.style
-                            )
+                            Task {
+                                await generateSpecification(for: item)
+                            }
                         } label: {
-                            Label("Сгенерировать Antigravity Blueprint 🪄", systemImage: "sparkles")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
+                            HStack(spacing: 6) {
+                                if isGeneratingAI {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                    Text("AI генерирует архитектуру...")
+                                } else {
+                                    Image(systemName: "sparkles")
+                                    Text("Сгенерировать AI-спецификацию 🪄")
+                                }
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(Color.accentColor)
+                        .disabled(isGeneratingAI)
 
                         if !item.generatedPrompt.isEmpty {
                             Button {
@@ -276,6 +291,19 @@ struct ItemDetail: View {
                         }
                         .buttonStyle(.bordered)
                         .help("Создать папку проекта с README, SPEC, PLAN и git init")
+                    }
+
+                    if let err = aiError {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Color.red)
+                            Text(err)
+                                .font(.caption)
+                                .foregroundStyle(Color.red)
+                        }
+                        .padding(8)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
 
                     if let path = scaffoldSuccessPath {
@@ -351,6 +379,36 @@ struct ItemDetail: View {
             } catch {
                 print("Failed to scaffold project: \(error)")
             }
+        }
+    }
+
+    private func generateSpecification(for item: Item) async {
+        isGeneratingAI = true
+        aiError = nil
+        defer { isGeneratingAI = false }
+
+        let provider: AIProvider
+        switch aiProvider {
+        case "Local Ollama": provider = .localOllama
+        case "Local Blueprint (Offline)": provider = .localCompiler
+        default: provider = .gemini
+        }
+
+        do {
+            let result = try await AIGenerator.generateSpecification(
+                title: item.title,
+                concept: item.concept,
+                platform: item.platform,
+                style: item.style,
+                apiKey: geminiApiKey,
+                provider: provider,
+                modelName: aiProvider == "Local Ollama" ? ollamaModel : geminiModel,
+                ollamaEndpoint: ollamaEndpoint
+            )
+            item.generatedPrompt = result
+            NSSound.beep()
+        } catch {
+            aiError = error.localizedDescription
         }
     }
 }
