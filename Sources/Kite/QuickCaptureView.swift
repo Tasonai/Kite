@@ -25,7 +25,7 @@ struct QuickCaptureView: View {
     ]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack(alignment: .center, spacing: 8) {
                 Image(systemName: "paperplane.fill")
@@ -40,7 +40,7 @@ struct QuickCaptureView: View {
                 Text("⌘⇧K")
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(Color.secondary.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -63,7 +63,7 @@ struct QuickCaptureView: View {
                 .onSubmit {
                     saveAndClose(copyBlueprint: false)
                 }
-                .padding(10)
+                .padding(12)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
@@ -71,8 +71,8 @@ struct QuickCaptureView: View {
             // Concept Input
             TextEditor(text: $concept)
                 .font(.body)
-                .frame(minHeight: 64, maxHeight: 90)
-                .padding(6)
+                .frame(minHeight: 64, maxHeight: 96)
+                .padding(8)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
@@ -81,8 +81,8 @@ struct QuickCaptureView: View {
                         Text("Краткое описание, JTBD или фичи (необязательно)...")
                             .font(.body)
                             .foregroundStyle(.secondary.opacity(0.7))
-                            .padding(.top, 10)
-                            .padding(.leading, 10)
+                            .padding(.top, 8)
+                            .padding(.leading, 8)
                             .allowsHitTesting(false)
                     }
                 }
@@ -101,7 +101,7 @@ struct QuickCaptureView: View {
                                 .padding(.vertical, 4)
                                 .background(platform == p ? Color.accentColor : Color.secondary.opacity(0.1))
                                 .foregroundStyle(platform == p ? Color.white : Color.primary)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .buttonStyle(.plain)
                     }
@@ -167,8 +167,8 @@ struct QuickCaptureView: View {
         .padding(16)
         .frame(width: 580)
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
         .shadow(color: Color.black.opacity(0.25), radius: 24, x: 0, y: 12)
         .onAppear {
             isTitleFocused = true

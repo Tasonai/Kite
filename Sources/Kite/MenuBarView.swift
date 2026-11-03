@@ -42,7 +42,7 @@ struct MenuBarView: View {
                 Text("\(allItems.count) идей")
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(Color.secondary.opacity(0.12))
                     .clipShape(Capsule())
@@ -57,12 +57,12 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
                 .help("Открыть окно быстрого захвата (⌘⇧K)")
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .padding(.top, 12)
-            .padding(.bottom, 10)
+            .padding(.bottom, 8)
             
             // Inline Quick Add Field
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: "sparkle")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -84,22 +84,22 @@ struct MenuBarView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
-            .padding(.horizontal, 14)
-            .padding(.bottom, 10)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
             
             // Filter Pills
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 filterPill("Все", tag: "all", count: allItems.count)
                 filterPill("В планах", tag: "backlog", count: allItems.filter { $0.status == "backlog" }.count)
                 filterPill("В работе", tag: "in_progress", count: allItems.filter { $0.status == "in_progress" }.count)
                 Spacer()
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .padding(.bottom, 8)
             
             Divider()
@@ -123,18 +123,18 @@ struct MenuBarView: View {
                             HStack(spacing: 8) {
                                 Circle()
                                     .fill(statusColor(item.status))
-                                    .frame(width: 7, height: 7)
+                                    .frame(width: 8, height: 8)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.title)
                                         .font(.subheadline.weight(.medium))
                                         .lineLimit(1)
                                     
-                                    HStack(spacing: 6) {
+                                    HStack(spacing: 8) {
                                         Text(item.platform)
                                             .font(.system(size: 9, weight: .semibold))
                                             .padding(.horizontal, 4)
-                                            .padding(.vertical, 1)
+                                            .padding(.vertical, 2)
                                             .background(Color.secondary.opacity(0.12))
                                             .clipShape(Capsule())
                                         
@@ -160,8 +160,8 @@ struct MenuBarView: View {
                                 .buttonStyle(.plain)
                                 .help("Скопировать блупринт для Antigravity")
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 openItemInMain(item)
@@ -171,13 +171,13 @@ struct MenuBarView: View {
                     }
                     .padding(.vertical, 4)
                 }
-                .frame(maxHeight: 220)
+                .frame(maxHeight: 224)
             }
             
             Divider()
             
             // Footer Actions
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Button {
                     openMainWindow()
                 } label: {
@@ -206,8 +206,8 @@ struct MenuBarView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
         }
         .frame(width: 360)
@@ -220,8 +220,8 @@ struct MenuBarView: View {
         } label: {
             Text("\(title) \(count)")
                 .font(.system(size: 10, weight: selectedFilter == tag ? .semibold : .regular))
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
                 .background(selectedFilter == tag ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.08))
                 .foregroundStyle(selectedFilter == tag ? Color.accentColor : Color.secondary)
                 .clipShape(Capsule())
@@ -290,7 +290,7 @@ private struct HoverModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(isHovered ? Color.secondary.opacity(0.08) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
             .onHover { isHovered = $0 }
     }
 }

@@ -73,7 +73,7 @@ struct ItemList: View {
         @Bindable var model = model
         List(visible, selection: $model.selection) { item in
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: item.status == "completed" ? "checkmark.circle.fill" : (item.status == "in_progress" ? "bolt.circle.fill" : "circle"))
                         .foregroundStyle(item.status == "completed" ? Color.green : (item.status == "in_progress" ? Color.blue : Color.secondary))
                         .font(.system(size: 13))
@@ -91,11 +91,11 @@ struct ItemList: View {
                     }
                 }
 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Text(item.platform)
                         .font(.caption2)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1.5)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
                         .background(Color.secondary.opacity(0.12))
                         .clipShape(Capsule())
 
@@ -223,12 +223,12 @@ struct ItemDetail: View {
                         }
                         .pickerStyle(.menu)
                     }
-                    .padding(10)
+                    .padding(12)
                     .background(Color(nsColor: .controlBackgroundColor))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
                     // Concept Input
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Концепция и сценарий (JTBD)")
                             .font(.headline)
                             .foregroundStyle(.primary)
@@ -249,7 +249,7 @@ struct ItemDetail: View {
                                 await generateSpecification(for: item)
                             }
                         } label: {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 if isGeneratingAI {
                                     ProgressView()
                                         .controlSize(.small)
@@ -294,7 +294,7 @@ struct ItemDetail: View {
                     }
 
                     if let err = aiError {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 8) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(Color.red)
                             Text(err)
@@ -303,7 +303,7 @@ struct ItemDetail: View {
                         }
                         .padding(8)
                         .background(Color.red.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
 
                     if let path = scaffoldSuccessPath {
@@ -319,14 +319,14 @@ struct ItemDetail: View {
                             .font(.caption)
                             .buttonStyle(.bordered)
                         }
-                        .padding(10)
+                        .padding(12)
                         .background(Color.green.opacity(0.12))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
 
                     // Generated Output
                     if !item.generatedPrompt.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("Инженерный план Antigravity (/plan)")
                                 .font(.headline)
 
@@ -433,7 +433,7 @@ struct StylesCatalogView: View {
 
     var body: some View {
         List(styles) { style in
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Circle()
                         .fill(Color.accentColor)
@@ -468,7 +468,7 @@ struct StylesCatalogView: View {
                     .buttonStyle(.bordered)
                 }
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
         }
         .navigationTitle("Стили и токены")
     }
