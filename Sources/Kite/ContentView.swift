@@ -138,6 +138,14 @@ struct ItemList: View {
         .navigationTitle(page.title)
         .toolbar {
             ToolbarItem {
+                Button {
+                    QuickCaptureManager.shared.show()
+                } label: {
+                    Label("Быстрый захват", systemImage: "sparkles")
+                }
+                .help("Быстрый захват идеи (Command-Shift-K)")
+            }
+            ToolbarItem {
                 Button("Новая идея", systemImage: "plus") {
                     model.addItem(title: "Новый проект", concept: "Опишите здесь ключевой сценарий...")
                 }

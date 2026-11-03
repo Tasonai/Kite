@@ -23,6 +23,9 @@ struct KiteApp: App {
                 .themed()
                 .overlay { if GridOverlay.enabled { GridOverlay() } }
                 .frame(minWidth: 760, minHeight: 480)
+                .task {
+                    QuickCaptureManager.shared.start(model: model)
+                }
         }
         .modelContainer(model.container)
         .defaultSize(width: 1100, height: 720)
@@ -33,8 +36,20 @@ struct KiteApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("New Item") { model.addItem() }
                     .keyboardShortcut("n")
+                Button("Quick Capture...") {
+                    QuickCaptureManager.shared.show()
+                }
+                .keyboardShortcut("k", modifiers: [.command, .shift])
             }
         }
+
+        MenuBarExtra("Kite", systemImage: "paperplane") {
+            MenuBarView()
+                .environment(model)
+                .modelContainer(model.container)
+                .themed()
+        }
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView()
@@ -52,7 +67,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            for window in NSApp.windows where window.identifier?.rawValue == "main" {
+                window.makeKeyAndOrderFront(nil)
+                return true
+            }
+        }
+        return true
+    }
 
     /// The self-test's result becomes the exit code, after a normal quit.
     func applicationWillTerminate(_ notification: Notification) {
