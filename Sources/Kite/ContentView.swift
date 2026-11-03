@@ -159,6 +159,7 @@ struct ItemDetail: View {
     @Environment(AppModel.self) private var model
     @Query private var items: [Item]
     @State private var isCopied = false
+    @State private var scaffoldSuccessPath: String?
 
     private let platforms = ["Web", "Mobile", "Desktop"]
     private let styles = [
@@ -266,6 +267,33 @@ struct ItemDetail: View {
                             }
                             .buttonStyle(.bordered)
                         }
+
+                        Button {
+                            scaffoldProject(for: item)
+                        } label: {
+                            Label("Развернуть проект 📁", systemImage: "folder.badge.plus")
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Создать папку проекта с README, SPEC, PLAN и git init")
+                    }
+
+                    if let path = scaffoldSuccessPath {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Color.green)
+                            Text("Проект создан: \(URL(fileURLWithPath: path).lastPathComponent)")
+                                .font(.caption.weight(.medium))
+                            Spacer()
+                            Button("Показать в Finder ↗️") {
+                                NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: "")
+                            }
+                            .font(.caption)
+                            .buttonStyle(.bordered)
+                        }
+                        .padding(10)
+                        .background(Color.green.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
 
                     // Generated Output
@@ -289,6 +317,40 @@ struct ItemDetail: View {
         } else {
             ContentUnavailableView("Выберите идею", systemImage: "lightbulb", description: Text("Выберите идею в списке слева или создайте новую."))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func scaffoldProject(for item: Item) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Создать здесь"
+        panel.message = "Выберите папку для размещения проекта «\(item.title)»"
+
+        let devDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Developer", isDirectory: true)
+        if FileManager.default.fileExists(atPath: devDir.path) {
+            panel.directoryURL = devDir
+        }
+
+        if panel.runModal() == .OK, let targetURL = panel.url {
+            do {
+                let result = try ProjectScaffolder.scaffold(
+                    at: targetURL,
+                    title: item.title,
+                    concept: item.concept,
+                    platform: item.platform,
+                    style: item.style,
+                    planPrompt: item.generatedPrompt
+                )
+                item.status = "in_progress"
+                scaffoldSuccessPath = result.directory.path
+                NSSound.beep()
+                NSWorkspace.shared.selectFile(result.directory.path, inFileViewerRootedAtPath: "")
+            } catch {
+                print("Failed to scaffold project: \(error)")
+            }
         }
     }
 }

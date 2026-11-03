@@ -75,4 +75,47 @@ final class AppModel {
         container.mainContext.insert(item)
         selection = item.id
     }
+
+    func exportIdeas() -> Data? {
+        let items = (try? container.mainContext.fetch(FetchDescriptor<Item>())) ?? []
+        let dtos = items.map { item in
+            IdeaDTO(
+                id: item.uuid.uuidString,
+                title: item.title,
+                description: item.concept,
+                platform: item.platform.lowercased(),
+                preferredStyle: item.style,
+                status: item.status,
+                tags: item.tags.components(separatedBy: ",").filter { !$0.isEmpty },
+                isStarred: item.isStarred,
+                createdAt: ISO8601DateFormatter().string(from: item.createdAt)
+            )
+        }
+        let payload = IdeaExportModel(ideas: dtos)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try? encoder.encode(payload)
+    }
+
+    @discardableResult
+    func importIdeas(from data: Data) -> Int {
+        guard let payload = try? JSONDecoder().decode(IdeaExportModel.self, from: data) else {
+            return 0
+        }
+        let context = container.mainContext
+        var count = 0
+        for dto in payload.ideas {
+            let item = Item(title: dto.title)
+            item.concept = dto.description
+            item.platform = dto.platform.capitalized
+            item.style = dto.preferredStyle
+            item.status = dto.status
+            item.isStarred = dto.isStarred
+            item.tags = dto.tags.joined(separator: ",")
+            context.insert(item)
+            count += 1
+        }
+        try? context.save()
+        return count
+    }
 }
