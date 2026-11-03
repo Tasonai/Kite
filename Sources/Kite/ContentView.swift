@@ -10,16 +10,29 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
-        } content: {
-            if model.sidebar == .styles {
-                StylesCatalogView()
-                    .navigationSplitViewColumnWidth(min: 280, ideal: 340)
-            } else {
-                ItemList(page: model.sidebar ?? .all)
-                    .navigationSplitViewColumnWidth(min: 280, ideal: 340)
-            }
         } detail: {
-            ItemDetail()
+            switch model.sidebar {
+            case .translator:
+                PromptTranslatorView()
+            case .skills:
+                SkillsCatalogView()
+            case .inspirations:
+                InspirationGalleryView()
+            case .styles:
+                HSplitView {
+                    StylesCatalogView()
+                        .frame(minWidth: 300, idealWidth: 340, maxWidth: 420)
+                    ItemDetail()
+                        .frame(minWidth: 460)
+                }
+            default:
+                HSplitView {
+                    ItemList(page: model.sidebar ?? .all)
+                        .frame(minWidth: 280, idealWidth: 320, maxWidth: 420)
+                    ItemDetail()
+                        .frame(minWidth: 460)
+                }
+            }
         }
         .task {
             SeedData.insertIfRequested(into: model)
@@ -30,11 +43,26 @@ struct ContentView: View {
 
     private var sidebar: some View {
         @Bindable var model = model
-        return List(SidebarItem.allCases, selection: $model.sidebar) { page in
-            Label(page.title, systemImage: page.symbol)
-                .tag(page)
+        return List(selection: $model.sidebar) {
+            Section("Идеи и проекты") {
+                ForEach([SidebarItem.all, .inProgress, .completed, .starred]) { page in
+                    Label(page.title, systemImage: page.symbol).tag(page)
+                }
+            }
+
+            Section("Студия Antigravity") {
+                ForEach([SidebarItem.translator, .skills]) { page in
+                    Label(page.title, systemImage: page.symbol).tag(page)
+                }
+            }
+
+            Section("Дизайн и референсы") {
+                ForEach([SidebarItem.inspirations, .styles]) { page in
+                    Label(page.title, systemImage: page.symbol).tag(page)
+                }
+            }
         }
-        .navigationSplitViewColumnWidth(min: 190, ideal: 220)
+        .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 280)
     }
 }
 
@@ -54,7 +82,7 @@ struct ItemList: View {
             filtered = items.filter { $0.status == "in_progress" }
         case .completed:
             filtered = items.filter { $0.status == "completed" }
-        case .all, .styles:
+        default:
             filtered = items
         }
 

@@ -22,13 +22,13 @@ struct KiteApp: App {
                 .environment(model)
                 .themed()
                 .overlay { if GridOverlay.enabled { GridOverlay() } }
-                .frame(minWidth: 760, minHeight: 480)
+                .frame(minWidth: 840, minHeight: 520)
                 .task {
                     QuickCaptureManager.shared.start(model: model)
                 }
         }
         .modelContainer(model.container)
-        .defaultSize(width: 1100, height: 720)
+        .defaultSize(width: 1240, height: 780)
         .windowToolbarStyle(.unified)
         .commands {
             SidebarCommands()
