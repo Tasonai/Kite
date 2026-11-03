@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Kite Main Soaring Wing (Leading Facet) -->
-  <path d="M 653 183 L 723 507 L 381 741 L 539 417 Z" 
-        fill="#FFFFFF" 
-        stroke="#FFFFFF" 
-        stroke-width="20" 
-        stroke-linejoin="round" />
+  <!-- Minimalist Precision Liquid Glass Monogram K -->
+  <!-- Left Vertical Pillar / Spine -->
+  <rect x="270" y="220" width="110" height="584" rx="44"
+        fill="#FFFFFF" stroke="#FFFFFF" stroke-width="20" stroke-linejoin="round" />
+  
+  <!-- Right Aerodynamic Chevron Arms of K -->
+  <!-- Upper Wing Arm -->
+  <path d="M 416 512 L 674 220 L 754 278 L 496 570 Z"
+        fill="#FFFFFF" stroke="#FFFFFF" stroke-width="20" stroke-linejoin="round" />
+  
+  <!-- Lower Stabilizer Arm -->
+  <path d="M 496 454 L 754 746 L 674 804 L 416 512 Z"
+        fill="#FFFFFF" stroke="#FFFFFF" stroke-width="20" stroke-linejoin="round" />
 </svg>
