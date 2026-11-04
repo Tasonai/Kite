@@ -82,6 +82,16 @@ struct KiteApp: App {
                 model.importIdeas(from: data)
             }
         }
+        server.exportCanvasProvider = { @Sendable in
+            await MainActor.run {
+                model.exportCanvas()
+            }
+        }
+        server.importCanvasHandler = { @Sendable data in
+            await MainActor.run {
+                model.importCanvas(from: data)
+            }
+        }
         server.start()
     }
 }

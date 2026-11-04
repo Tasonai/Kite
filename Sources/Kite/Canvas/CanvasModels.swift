@@ -84,3 +84,28 @@ public struct CanvasReferenceCard: Identifiable, Sendable, Equatable, Codable {
         self.description = description
     }
 }
+
+public struct CanvasExportModel: Codable, Sendable {
+    public var version: Int
+    public var exportedAt: String
+    public var frames: [CanvasFrame]
+    public var stickies: [CanvasSticky]
+    public var referenceCards: [CanvasReferenceCard]
+    public var connections: [CanvasConnection]
+
+    public init(
+        version: Int = 1,
+        exportedAt: String = ISO8601DateFormatter().string(from: Date()),
+        frames: [CanvasFrame] = [],
+        stickies: [CanvasSticky] = [],
+        referenceCards: [CanvasReferenceCard] = [],
+        connections: [CanvasConnection] = []
+    ) {
+        self.version = version
+        self.exportedAt = exportedAt
+        self.frames = frames
+        self.stickies = stickies
+        self.referenceCards = referenceCards
+        self.connections = connections
+    }
+}

@@ -157,4 +157,73 @@ final class AppModel {
         try? context.save()
         return count
     }
+
+    // MARK: - Canvas State & Sync
+    var canvasFrames: [CanvasFrame] = [
+        CanvasFrame(
+            title: "Архитектурные принципы и UI/UX",
+            colorHex: "#3B82F6",
+            x: 480,
+            y: 40,
+            width: 440,
+            height: 520
+        )
+    ]
+    var canvasStickies: [CanvasSticky] = [
+        CanvasSticky(text: "Архитектурный контраст: отказ от серого слопа", colorHex: "#FEF08A", position: CGPoint(x: 600, y: 140)),
+        CanvasSticky(text: "44px Touch Targets & Apple HIG 4pt Grid", colorHex: "#BBF7D0", position: CGPoint(x: 600, y: 380)),
+        CanvasSticky(text: "Zero-latency нативный отклик SwiftData", colorHex: "#DDD6FE", position: CGPoint(x: 200, y: 440))
+    ]
+    var canvasReferenceCards: [CanvasReferenceCard] = [
+        CanvasReferenceCard(
+            title: "Linear Navigation & Command HUD",
+            source: "Mobbin",
+            url: "https://mobbin.com",
+            colorHex: "#10B981",
+            position: CGPoint(x: 200, y: 180),
+            tags: ["Shortcuts", "Ergonomics", "Dark Mode"],
+            description: "Референс компактной навигации и быстрого доступа через клавиши."
+        )
+    ]
+    var canvasConnections: [CanvasConnection] = []
+
+    func exportCanvas() -> Data? {
+        let payload = CanvasExportModel(
+            frames: canvasFrames,
+            stickies: canvasStickies,
+            referenceCards: canvasReferenceCards,
+            connections: canvasConnections
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try? encoder.encode(payload)
+    }
+
+    @discardableResult
+    func importCanvas(from data: Data) -> Bool {
+        guard let payload = try? JSONDecoder().decode(CanvasExportModel.self, from: data) else {
+            return false
+        }
+        for frame in payload.frames {
+            if !canvasFrames.contains(where: { $0.title == frame.title || $0.id == frame.id }) {
+                canvasFrames.append(frame)
+            }
+        }
+        for sticky in payload.stickies {
+            if !canvasStickies.contains(where: { $0.text == sticky.text || $0.id == sticky.id }) {
+                canvasStickies.append(sticky)
+            }
+        }
+        for refCard in payload.referenceCards {
+            if !canvasReferenceCards.contains(where: { $0.title == refCard.title || $0.id == refCard.id }) {
+                canvasReferenceCards.append(refCard)
+            }
+        }
+        for conn in payload.connections {
+            if !canvasConnections.contains(where: { $0.fromId == conn.fromId && $0.toId == conn.toId }) {
+                canvasConnections.append(conn)
+            }
+        }
+        return true
+    }
 }

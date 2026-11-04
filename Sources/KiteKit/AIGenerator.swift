@@ -81,7 +81,7 @@ public enum AIGenerator {
         Ты — Kite AI-Архитектор и Principal Software Engineer экосистемы Antigravity на macOS.
         Твоя специализация:
         1. Проектирование современных архитектур (React 19, Vite, Next.js, SwiftUI, Flutter, Tailwind CSS, SwiftData).
-        2. Подбор и рекомендация системных навыков Antigravity (@site-md, @design-md, @taste-design, @impeccable, @emil-design-eng, @a11y-debugging, @gsd-execute-phase, @superpowers, @vercel-plugin, @figma, @bama).
+        2. Подбор и рекомендация системных навыков Antigravity (/site-md, /design-md, /taste-design, /impeccable, /emil-design-eng, /a11y-debugging, /gsd-execute-phase, /superpowers, /vercel-plugin, /figma, /bama).
         3. Дизайн-системы, точные токены и экспорт в Google Stitch (DESIGN.md) и Figma.
         4. Практические советы по устранению AI-слопа (Zero AI Slop), соблюдению 4pt-сетки Apple HIG и оптимизации UX.
 
@@ -117,11 +117,11 @@ public enum AIGenerator {
             ### Рекомендация по дизайн-системе (Stitch & Figma)
 
             Для вашего интерфейса рекомендую гибридную архитектуру с экспортом токенов:
-            - **Google Stitch:** используйте команду `@design-md` для генерации файла `DESIGN.md`. Он включает семантические токены (`surface`, `primary`, `headlineFont`, `roundness`).
-            - **Figma Code Connect:** подключите плагин `@figma` для двусторонней связи компонентов с кодовой базой.
+            - **Google Stitch:** используйте команду `/design-md` для генерации файла `DESIGN.md`. Он включает семантические токены (`surface`, `primary`, `headlineFont`, `roundness`).
+            - **Figma Code Connect:** подключите плагин `/figma` для двусторонней связи компонентов с кодовой базой.
 
             **Рекомендуемый стек скиллов:**
-            `/plan @design-md @taste-design @emil-design-eng @figma`
+            `/plan /design-md /taste-design /emil-design-eng /figma`
 
             Нажмите кнопку **«В Stitch»** или **«В Figma»** в тулбаре для генерации готовой спецификации.
             """
@@ -136,7 +136,7 @@ public enum AIGenerator {
             4. **Хоткеи:** Carbon Events API (`InstallEventHandler`) для глобального HUD без запроса прав доступности.
 
             **Рекомендуемые скиллы:**
-            `/plan @new-mac-app @apple-design @swift-swiftui @impeccable`
+            `/plan /new-mac-app /apple-design /swift-swiftui /impeccable`
             """
         } else {
             return """
@@ -149,10 +149,10 @@ public enum AIGenerator {
             - Соблюдение принципа Zero AI Slop: отказ от безликих серых карточек в пользу выверенной типографики и тактильного отклика.
 
             **2. Рекомендуемые навыки Antigravity:**
-            - `@site-md` — конституция и архитектурный контракт
-            - `@design-md` — семантическая дизайн-система
-            - `@impeccable` — чистота кода и строгая типизация
-            - `@emil-design-eng` — пружинная физика микро-интеракций
+            - `/site-md` — конституция и архитектурный контракт
+            - `/design-md` — семантическая дизайн-система
+            - `/impeccable` — чистота кода и строгая типизация
+            - `/emil-design-eng` — пружинная физика микро-интеракций
 
             Вы можете нажать **«В идею»** ниже, чтобы превратить этот разбор в проект в вашем каталоге.
             """
@@ -262,7 +262,7 @@ public enum AIGenerator {
 
         ТРЕБОВАНИЯ К ОТВЕТУ:
         1. В первой строке ОБЯЗАТЕЛЬНО укажи команду Antigravity с релевантными скиллами:
-           /plan @site-md @design-md @taste-design @impeccable @emil-design-eng
+           /plan /site-md /design-md /taste-design /impeccable /emil-design-eng
         2. Формат: Строгий Markdown, профессиональный технический тон, Zero AI Slop.
         3. Разделы плана:
            # ПОЛНЫЙ АРХИТЕКТУРНЫЙ ПЛАН: \(title)
