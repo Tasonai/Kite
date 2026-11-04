@@ -165,7 +165,7 @@ public enum PromptCompiler {
         concept: String,
         platform: String,
         style: String,
-        skills: [String] = ["@site-md", "@design-md", "@taste-design", "@impeccable", "@emil-design-eng"]
+        skills: [String] = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     ) -> String {
         let skillsLine = skills.joined(separator: " ")
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -208,7 +208,7 @@ public enum PromptCompiler {
         concept: String,
         platform: String,
         style: String,
-        skills: [String] = ["@enhance-prompt", "@design-md", "@taste-design", "@impeccable", "@emil-design-eng"]
+        skills: [String] = ["/enhance-prompt", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     ) -> String {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanConcept = concept.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -251,7 +251,7 @@ public enum PromptCompiler {
         concept: String,
         platform: String,
         style: String,
-        skills: [String] = ["@enhance-prompt", "@emil-design-eng", "@impeccable"]
+        skills: [String] = ["/enhance-prompt", "/emil-design-eng", "/impeccable"]
     ) -> String {
         let cleanConcept = concept.trimmingCharacters(in: .whitespacesAndNewlines)
         let effectiveConcept = cleanConcept.isEmpty ? title : cleanConcept

@@ -12,7 +12,7 @@ struct PromptTranslatorView: View {
     @State private var selectedMode: String = "full"
     @State private var selectedPlatform: String = "Web"
     @State private var selectedStyle: String = "Editorial & Swiss Modern"
-    @State private var activeSkills: Set<String> = ["@site-md", "@design-md", "@taste-design", "@impeccable", "@emil-design-eng"]
+    @State private var activeSkills: Set<String> = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     @State private var isCopied: Bool = false
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -47,9 +47,9 @@ struct PromptTranslatorView: View {
     ]
 
     private let availableSkills = [
-        "@enhance-prompt", "@design-md", "@site-md", "@taste-design",
-        "@impeccable", "@emil-design-eng", "@a11y-debugging",
-        "@subagent-driven-development"
+        "/enhance-prompt", "/design-md", "/site-md", "/taste-design",
+        "/impeccable", "/emil-design-eng", "/a11y-debugging",
+        "/subagent-driven-development"
     ]
 
     // Quality Score (0-100)
