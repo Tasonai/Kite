@@ -111,12 +111,18 @@ struct ItemList: View {
         if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
             return filtered
         }
-        let q = searchText.lowercased()
-        return filtered.filter {
-            $0.title.lowercased().contains(q) ||
-            $0.concept.lowercased().contains(q) ||
-            $0.style.lowercased().contains(q)
+        let ranked: [(item: Item, score: Int)] = filtered.compactMap { item in
+            let fields = [
+                ItemSearch.Field(item.title, weight: 5),
+                ItemSearch.Field(item.tags, weight: 3),
+                ItemSearch.Field(item.concept, weight: 2),
+                ItemSearch.Field(item.style, weight: 1),
+                ItemSearch.Field(item.platform, weight: 1)
+            ]
+            guard let score = ItemSearch.score(query: searchText, fields: fields) else { return nil }
+            return (item, score)
         }
+        return ranked.sorted { $0.score > $1.score }.map(\.item)
     }
 
     var body: some View {

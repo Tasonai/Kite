@@ -265,9 +265,9 @@ public enum ProjectScaffolder {
             struct ContentView: View {
                 var body: some View {
                     VStack(spacing: 16) {
-                        Text("\(title)")
+                        Text("\(swiftLiteral(title))")
                             .font(.title)
-                        Text("\(effectiveConcept)")
+                        Text("\(swiftLiteral(concept.isEmpty ? title : concept))")
                             .font(.body)
                             .foregroundStyle(.secondary)
                     }
@@ -301,5 +301,12 @@ public enum ProjectScaffolder {
         process.waitUntilExit()
         
         return Result(directory: projectDir, files: createdFiles)
+    }
+
+    /// Escapes text so it can sit inside a generated Swift string literal.
+    private static func swiftLiteral(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: " ")
     }
 }

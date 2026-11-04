@@ -10,11 +10,7 @@ echo "=== 1. Apple HIG 4pt/8pt Grid Lint ==="
 "$here/grid-lint.sh"
 
 echo ""
-echo "=== 2. SwiftData In-App Self-Test ==="
-"$here/selftest.sh"
-
-echo ""
-echo "=== 3. Zero Emojis Audit ==="
+echo "=== 2. Zero Emojis Audit ==="
 python3 -c "
 import os, sys, unicodedata
 folder = '$root/Sources'
@@ -38,12 +34,25 @@ print('PASS Zero Emojis (100% System Glyphs)')
 "
 
 echo ""
-echo "=== 4. Swift Release Compilation & Warnings Audit ==="
+echo "=== 3. Swift Release Compilation & Warnings Audit ==="
 scratch="$HOME/Library/Developer/Kite/build"
-swift build -c release --package-path "$root" --scratch-path "$scratch" 2>&1 | grep -i "warning:" && {
-    echo "FAIL: Compiler warnings detected!"
+build_log=$(mktemp)
+if ! swift build -c release --package-path "$root" --scratch-path "$scratch" >"$build_log" 2>&1; then
+    grep -E "error:" "$build_log" | head -20
+    echo "FAIL: swift build failed"
     exit 1
-} || echo "PASS 0 compiler warnings"
+fi
+if grep -qE "(error|warning):" "$build_log"; then
+    grep -E "(error|warning):" "$build_log" | head -20
+    echo "FAIL: compiler errors or warnings detected"
+    exit 1
+fi
+echo "PASS build succeeded with 0 warnings"
+
+echo ""
+echo "=== 4. Install fresh build and run SwiftData Self-Test ==="
+"$root/build.sh"
+"$here/selftest.sh"
 
 echo ""
 echo "ALL QUALITY GATES PASSED (BAMA Craftsmanship Standard Verified)"
