@@ -65,19 +65,23 @@ struct SkillsCatalogView: View {
     }
 
     private var filteredPlugins: [AntigravityPluginInfo] {
-        PluginsRepository.installed.filter { p in
-            let matchesCat = selectedCategory == "Все" || p.category == selectedCategory
-            if !matchesCat { return false }
-            if searchQuery.trimmingCharacters(in: .whitespaces).isEmpty { return true }
-            let q = searchQuery.lowercased()
-            return p.name.lowercased().contains(q) ||
-                   p.id.lowercased().contains(q) ||
-                   p.summary.lowercased().contains(q) ||
-                   p.author.lowercased().contains(q) ||
-                   (p.mcpServer?.lowercased().contains(q) ?? false) ||
-                   (p.cliCommand?.lowercased().contains(q) ?? false) ||
-                   p.skills.contains { $0.lowercased().contains(q) }
+        let inCategory = PluginsRepository.installed.filter { selectedCategory == "Все" || $0.category == selectedCategory }
+        let queryTokens = ItemSearch.tokens(searchQuery)
+        if queryTokens.isEmpty { return inCategory }
+        let ranked: [(plugin: AntigravityPluginInfo, score: Int)] = inCategory.compactMap { plugin in
+            let document = ItemSearch.Document(fields: [
+                .init(plugin.name, weight: 6),
+                .init(plugin.id, weight: 5),
+                .init(plugin.skills.joined(separator: " "), weight: 3),
+                .init(plugin.cliCommand ?? "", weight: 2),
+                .init(plugin.mcpServer ?? "", weight: 2),
+                .init(plugin.author, weight: 2),
+                .init(plugin.summary, weight: 2)
+            ])
+            guard let score = document.score(queryTokens: queryTokens) else { return nil }
+            return (plugin, score)
         }
+        return ranked.sorted { $0.score > $1.score }.map(\.plugin)
     }
 
     var body: some View {
@@ -128,7 +132,7 @@ struct SkillsCatalogView: View {
                     List(filteredSkills, selection: $selectedSkill) { skill in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 8) {
-                                Text(skill.command)
+                                Text(searchHighlighted(skill.command, query: searchQuery))
                                     .font(.system(.subheadline, design: .monospaced).bold())
                                     .foregroundStyle(Color.accentColor)
 
@@ -159,7 +163,7 @@ struct SkillsCatalogView: View {
                                     .foregroundStyle(.secondary)
                             }
 
-                            Text(skill.summary)
+                            Text(searchHighlighted(skill.summary, query: searchQuery))
                                 .font(.caption)
                                 .foregroundStyle(.primary)
                                 .lineLimit(2)
@@ -177,7 +181,7 @@ struct SkillsCatalogView: View {
                                     .frame(width: 24, height: 24)
 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(plugin.name)
+                                    Text(searchHighlighted(plugin.name, query: searchQuery))
                                         .font(.subheadline.bold())
 
                                     HStack(spacing: 8) {
@@ -204,7 +208,7 @@ struct SkillsCatalogView: View {
                                     .clipShape(Capsule())
                             }
 
-                            Text(plugin.summary)
+                            Text(searchHighlighted(plugin.summary, query: searchQuery))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
