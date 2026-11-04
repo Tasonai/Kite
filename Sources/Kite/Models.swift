@@ -226,4 +226,17 @@ final class AppModel {
         }
         return true
     }
+
+    func addCapturedReferenceCard(title: String, imageURL: URL, recognizedText: String) {
+        let card = CanvasReferenceCard(
+            title: title.isEmpty ? "Снимок экрана" : title,
+            source: "Screen Snip",
+            url: imageURL.path,
+            colorHex: "#3B82F6",
+            position: CGPoint(x: 200 + CGFloat(canvasReferenceCards.count * 20), y: 220 + CGFloat(canvasReferenceCards.count * 20)),
+            tags: ["Capture", "Vision OCR", "Reference"],
+            description: recognizedText.isEmpty ? "Фрагмент интерфейса, захваченный с экрана." : recognizedText
+        )
+        canvasReferenceCards.append(card)
+    }
 }

@@ -45,6 +45,30 @@ struct QuickCaptureView: View {
                     }
                 }
 
+                ScreenSnipButton(
+                    onHidePanel: {
+                        QuickCaptureManager.shared.hide()
+                    },
+                    onRestorePanel: {
+                        QuickCaptureManager.shared.show()
+                    }
+                ) { imageURL, recognizedText in
+                    if !recognizedText.isEmpty {
+                        if title.isEmpty {
+                            let firstLine = recognizedText.components(separatedBy: "\n").first ?? ""
+                            title = String(firstLine.prefix(40))
+                            concept = recognizedText
+                        } else {
+                            concept = (concept.isEmpty ? "" : concept + "\n\n") + recognizedText
+                        }
+                    }
+                    model.addCapturedReferenceCard(
+                        title: title.isEmpty ? "Снимок экрана" : title,
+                        imageURL: imageURL,
+                        recognizedText: recognizedText
+                    )
+                }
+
                 Text("⌘⇧K")
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.secondary)
