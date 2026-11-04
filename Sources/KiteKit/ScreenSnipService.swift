@@ -2,8 +2,12 @@ import AppKit
 import Foundation
 import Vision
 
+@MainActor
 public enum ScreenSnipService {
-    public static func captureInteractive(hideWindow: (() -> Void)? = nil, restoreWindow: (() -> Void)? = nil) async -> (imageURL: URL, recognizedText: String)? {
+    public static func captureInteractive(
+        hideWindow: (() -> Void)? = nil,
+        restoreWindow: (() -> Void)? = nil
+    ) async -> (imageURL: URL, recognizedText: String)? {
         let capturesDir = URL.applicationSupportDirectory
             .appending(path: "Kite", directoryHint: .isDirectory)
             .appending(path: "Captures", directoryHint: .isDirectory)
@@ -11,32 +15,27 @@ public enum ScreenSnipService {
         
         let fileURL = capturesDir.appending(path: "snip_\(UUID().uuidString).png")
         
-        await MainActor.run {
-            hideWindow?()
-        }
+        hideWindow?()
         
         // Give macOS window server a brief moment to clear the overlay
         try? await Task.sleep(for: .milliseconds(150))
         
+        let path = fileURL.path
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-i", "-s", fileURL.path]
+        process.arguments = ["-i", "-s", path]
         
         do {
             try process.run()
             process.waitUntilExit()
         } catch {
-            await MainActor.run {
-                restoreWindow?()
-            }
+            restoreWindow?()
             return nil
         }
         
-        await MainActor.run {
-            restoreWindow?()
-        }
+        restoreWindow?()
         
-        guard FileManager.default.fileExists(atPath: fileURL.path),
+        guard FileManager.default.fileExists(atPath: path),
               let nsImage = NSImage(contentsOf: fileURL),
               let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return nil
@@ -46,7 +45,7 @@ public enum ScreenSnipService {
         return (fileURL, recognized)
     }
     
-    public static func recognizeText(in image: CGImage) async -> String {
+    nonisolated public static func recognizeText(in image: CGImage) async -> String {
         await withCheckedContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 guard error == nil,
