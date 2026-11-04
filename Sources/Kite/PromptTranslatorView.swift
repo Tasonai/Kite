@@ -25,15 +25,21 @@ struct PromptTranslatorView: View {
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
 
     private let modes = [
-        ("full", "📐 Полнейший план"),
-        ("concise", "📄 Краткий бриф"),
-        ("action", "⚡️ Только действия"),
-        ("refactor", "🛠 Рефакторинг")
+        ("full", "📐 План"),
+        ("stitch", "🧵 Stitch"),
+        ("edit", "🎯 Точечный"),
+        ("concise", "📄 Бриф"),
+        ("action", "⚡️ Действия")
     ]
 
     private let platforms = ["Web", "Mobile", "Desktop"]
     private let styles = [
         "Editorial & Swiss Modern",
+        "Claude Parchment",
+        "Codex Minimal",
+        "Terracotta Clay",
+        "Risograph Two-Color",
+        "Bento Contemporary",
         "Linear & DevTool Cockpit",
         "Neo-Brutalism & Tactical",
         "Voxel & 3D Isometric",
@@ -41,7 +47,7 @@ struct PromptTranslatorView: View {
     ]
 
     private let availableSkills = [
-        "@site-md", "@design-md", "@taste-design",
+        "@enhance-prompt", "@design-md", "@site-md", "@taste-design",
         "@impeccable", "@emil-design-eng", "@a11y-debugging",
         "@subagent-driven-development"
     ]
@@ -72,12 +78,18 @@ struct PromptTranslatorView: View {
                     }
 
                     // Mode Selector
-                    Picker("Режим вывода", selection: $selectedMode) {
-                        ForEach(modes, id: \.0) { m in
-                            Text(m.1).tag(m.0)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Режим вывода")
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                        Picker("", selection: $selectedMode) {
+                            ForEach(modes, id: \.0) { m in
+                                Text(m.1).tag(m.0)
+                            }
                         }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
 
                     // Presets Bar
                     VStack(alignment: .leading, spacing: 8) {
@@ -87,10 +99,13 @@ struct PromptTranslatorView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                presetButton("Minimalist Reader", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Швейцарский типографический ридер лонгридов с чистой модульной сеткой, ночным режимом и оффлайн-кэшированием.")
-                                presetButton("Agent Cockpit", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
-                                presetButton("Habit Radar", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
-                                presetButton("Voxel Studio", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
+                                presetButton("Stitch Landing 🧵", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Лендинг цифрового сервиса с шапкой, карточками преимуществ, формой обратной связи и четкой дизайн-системой.")
+                                presetButton("Claude Paper 📜", style: "Claude Parchment", platform: "Web", prompt: "Академический исследовательский интерфейс на теплом пергаменте со строгой типографикой, цитатами и минимальным шумом.")
+                                presetButton("Codex Minimal ⚪️", style: "Codex Minimal", platform: "Web", prompt: "Радикально чистый монохромный интерфейс без теней, чистый белый холст и швейцарские шрифты.")
+                                presetButton("Terracotta Journal 🏺", style: "Terracotta Clay", platform: "Web", prompt: "Теплый глиняный журнал с мягкими тенями, тактильными пилюлями и кремовым фоном.")
+                                presetButton("Agent Cockpit ⚡️", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
+                                presetButton("Habit Radar 🎯", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
+                                presetButton("Voxel Studio 🧊", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
                             }
                         }
                     }
@@ -221,13 +236,13 @@ struct PromptTranslatorView: View {
                             Circle()
                                 .fill(qualityColor)
                                 .frame(width: 8, height: 8)
-                            Text("Индекс плотности плана:")
+                            Text(selectedMode == "stitch" ? "Google Stitch Спецификация 🧵" : selectedMode == "edit" ? "Таргетированный эдит 🎯" : "Индекс плотности плана:")
                                 .font(.caption.bold())
                             Text("\(qualityScore)%")
                                 .font(.caption.monospaced().bold())
                                 .foregroundStyle(qualityColor)
                         }
-                        Text(qualityDescription)
+                        Text(selectedMode == "stitch" ? "Спецификация по стандарту enhance-prompt + design-md." : (selectedMode == "edit" ? "Хирургическое изменение конкретного узла без регрессий." : qualityDescription))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -237,7 +252,7 @@ struct PromptTranslatorView: View {
                         Button {
                             copyBlueprint()
                         } label: {
-                            Label(isCopied ? "Скопировано!" : "Скопировать план 📋", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                            Label(isCopied ? "Скопировано!" : (selectedMode == "stitch" ? "Копировать для Stitch 🧵" : "Скопировать план 📋"), systemImage: isCopied ? "checkmark" : "doc.on.doc")
                                 .font(.caption.weight(.medium))
                         }
                         .buttonStyle(.bordered)
@@ -317,15 +332,54 @@ struct PromptTranslatorView: View {
         default: provider = .gemini
         }
 
-        do {
-            if aiProvider == "Local Blueprint (Offline)" || (aiProvider == "Gemini API" && geminiApiKey.isEmpty) {
-                generatedBlueprint = PromptCompiler.compileBlueprint(
+        func compileLocally() -> String {
+            switch selectedMode {
+            case "stitch":
+                return PromptCompiler.compileStitchPrompt(
                     title: cleanTitle,
                     concept: rawPrompt,
                     platform: selectedPlatform,
                     style: selectedStyle,
                     skills: skillsArray
                 )
+            case "edit":
+                return PromptCompiler.compileTargetedEditPrompt(
+                    title: cleanTitle,
+                    concept: rawPrompt,
+                    platform: selectedPlatform,
+                    style: selectedStyle,
+                    skills: skillsArray
+                )
+            case "concise":
+                return PromptCompiler.compileConcisePrompt(
+                    title: cleanTitle,
+                    concept: rawPrompt,
+                    platform: selectedPlatform,
+                    style: selectedStyle,
+                    skills: skillsArray
+                )
+            case "action":
+                return PromptCompiler.compileActionPrompt(
+                    title: cleanTitle,
+                    concept: rawPrompt,
+                    platform: selectedPlatform,
+                    style: selectedStyle,
+                    skills: skillsArray
+                )
+            default:
+                return PromptCompiler.compileBlueprint(
+                    title: cleanTitle,
+                    concept: rawPrompt,
+                    platform: selectedPlatform,
+                    style: selectedStyle,
+                    skills: skillsArray
+                )
+            }
+        }
+
+        do {
+            if aiProvider == "Local Blueprint (Offline)" || (aiProvider == "Gemini API" && geminiApiKey.isEmpty) {
+                generatedBlueprint = compileLocally()
             } else {
                 generatedBlueprint = try await AIGenerator.generateSpecification(
                     title: cleanTitle,
@@ -341,14 +395,7 @@ struct PromptTranslatorView: View {
             NSSound.beep()
         } catch {
             errorMessage = error.localizedDescription
-            // Fallback
-            generatedBlueprint = PromptCompiler.compileBlueprint(
-                title: cleanTitle,
-                concept: rawPrompt,
-                platform: selectedPlatform,
-                style: selectedStyle,
-                skills: skillsArray
-            )
+            generatedBlueprint = compileLocally()
         }
     }
 
