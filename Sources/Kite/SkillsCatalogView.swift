@@ -204,7 +204,7 @@ struct SkillsCatalogView: View {
                 }
             }
             .frame(minWidth: 320, idealWidth: 380)
-            .searchable(text: $searchQuery, prompt: selectedTab == .skills ? "Поиск скиллов (@design-md)..." : "Поиск плагинов (Figma, Vercel)...")
+            .searchable(text: $searchQuery, prompt: selectedTab == .skills ? "Поиск скиллов (/design-md)..." : "Поиск плагинов (Figma, Vercel)...")
 
             // Right Detail
             if selectedTab == .skills {
@@ -524,7 +524,7 @@ struct SkillsCatalogView: View {
                                                 }
                                             } label: {
                                                 HStack(spacing: 4) {
-                                                    Text("@\(skillName)")
+                                                    Text("/\(skillName)")
                                                         .font(.system(size: 11, design: .monospaced))
                                                         .lineLimit(1)
                                                     Spacer()

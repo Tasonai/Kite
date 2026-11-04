@@ -55,7 +55,7 @@ for c in chunks:
     if m_id and m_name:
         sid = m_id.group(1)
         name = m_name.group(1)
-        cmd = m_cmd.group(1) if m_cmd else f"@{sid}"
+        cmd = f"/{sid}"
         cat = m_cat.group(1) if m_cat else "Система и ядро Antigravity"
         summary = m_sum.group(1) if m_sum else ""
         desc = m_desc.group(1) if m_desc else ""
@@ -211,7 +211,7 @@ def generate_rich_skill_data(s):
 
     # 5. Example Prompt
     prompt_tpl = PROMPT_TEMPLATES.get(cat, "Активируй скилл {name} для выполнения комплексного анализа и реализации задачи.")
-    example_prompt = f"@{s['name']} " + prompt_tpl.format(name=s['name'])
+    example_prompt = f"/{s['name']} " + prompt_tpl.format(name=s['name'])
 
     # 6. Principles (real principles without emoji)
     principles = s["principles"]
