@@ -1,6 +1,7 @@
 import AppKit
 import SwiftData
 import SwiftUI
+import KiteKit
 
 // Kite
 //   Kite                      the app
@@ -25,6 +26,7 @@ struct KiteApp: App {
                 .frame(minWidth: 840, minHeight: 520)
                 .task {
                     QuickCaptureManager.shared.start(model: model)
+                    configureSyncServer(model: model)
                 }
         }
         .modelContainer(model.container)
@@ -57,6 +59,21 @@ struct KiteApp: App {
                 .themed()
         }
         .windowResizability(.contentSize)
+    }
+
+    private func configureSyncServer(model: AppModel) {
+        let server = KiteSyncServer.shared
+        server.exportIdeasProvider = { @Sendable in
+            await MainActor.run {
+                model.exportIdeas()
+            }
+        }
+        server.importIdeasHandler = { @Sendable data in
+            await MainActor.run {
+                model.importIdeas(from: data)
+            }
+        }
+        server.start()
     }
 }
 
