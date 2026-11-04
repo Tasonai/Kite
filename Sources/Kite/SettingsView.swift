@@ -152,6 +152,16 @@ struct SyncSettingsView: View {
             }
         }
 
+        Section("P2P-Синхронизация с Windows (KiteWin)") {
+            @AppStorage("windows_sync_endpoint") var winEndpoint = "http://127.0.0.1:24243"
+            TextField("Адрес KiteWin (порт 24243)", text: $winEndpoint)
+                .textFieldStyle(.roundedBorder)
+
+            Text("Порт локального сервера Kite macOS: 24242. KiteWin слушает порт 24243.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
         Section("Локальное хранилище") {
             LabeledContent("SwiftData Store") {
                 Text(Store.url.path)

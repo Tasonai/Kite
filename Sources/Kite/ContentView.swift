@@ -18,6 +18,8 @@ struct ContentView: View {
                 PromptTranslatorView()
             case .skills:
                 SkillsCatalogView()
+            case .winSync:
+                WindowsSyncView()
             case .canvas:
                 InfiniteCanvasView()
             case .designLab:
@@ -52,23 +54,37 @@ struct ContentView: View {
         return List(selection: $model.sidebar) {
             Section("Идеи и проекты") {
                 ForEach([SidebarItem.all, .inProgress, .completed, .starred]) { page in
-                    Label(page.title, systemImage: page.symbol).tag(page)
+                    sidebarRow(page)
                 }
             }
 
             Section("Студия Antigravity") {
-                ForEach([SidebarItem.aiChat, .translator, .skills]) { page in
-                    Label(page.title, systemImage: page.symbol).tag(page)
+                ForEach([SidebarItem.aiChat, .translator, .skills, .winSync]) { page in
+                    sidebarRow(page)
                 }
             }
 
             Section("Дизайн и референсы") {
                 ForEach([SidebarItem.canvas, .designLab, .inspirations, .styles]) { page in
-                    Label(page.title, systemImage: page.symbol).tag(page)
+                    sidebarRow(page)
                 }
             }
         }
+        .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
+    }
+
+    private func sidebarRow(_ page: SidebarItem) -> some View {
+        Label {
+            Text(page.title)
+                .font(.body)
+        } icon: {
+            Image(systemName: page.symbol)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(model.sidebar == page ? Color.accentColor : Color.secondary)
+                .frame(width: 18, alignment: .center)
+        }
+        .tag(page)
     }
 }
 

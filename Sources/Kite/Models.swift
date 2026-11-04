@@ -25,7 +25,7 @@ final class Item {
 /// The sidebar pages. Snapshot mode walks through every case.
 enum SidebarItem: String, CaseIterable, Identifiable {
     case all, inProgress, completed, starred
-    case aiChat, translator, skills
+    case aiChat, translator, skills, winSync
     case canvas, designLab, inspirations, styles
 
     var id: String { rawValue }
@@ -39,6 +39,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .aiChat: "AI-Архитектор"
         case .translator: "Промпт-переводчик"
         case .skills: "База скиллов"
+        case .winSync: "Синхронизация P2P"
         case .canvas: "Холст идей"
         case .designLab: "Лаборатория дизайна"
         case .inspirations: "Вдохновение"
@@ -55,6 +56,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .aiChat: "sparkles"
         case .translator: "wand.and.stars"
         case .skills: "cpu"
+        case .winSync: "arrow.triangle.2.circlepath"
         case .canvas: "rectangle.split.3x3"
         case .designLab: "slider.horizontal.3"
         case .inspirations: "photo.stack"
@@ -65,7 +67,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var sectionTitle: String {
         switch self {
         case .all, .inProgress, .completed, .starred: "Идеи и проекты"
-        case .aiChat, .translator, .skills: "Студия Antigravity"
+        case .aiChat, .translator, .skills, .winSync: "Студия Antigravity"
         case .canvas, .designLab, .inspirations, .styles: "Дизайн и референсы"
         }
     }
@@ -125,8 +127,23 @@ final class AppModel {
             return 0
         }
         let context = container.mainContext
+        let existing = (try? context.fetch(FetchDescriptor<Item>())) ?? []
         var count = 0
+
         for dto in payload.ideas {
+            let cleanTitle = dto.title.trimmingCharacters(in: .whitespaces).lowercased()
+            if let match = existing.first(where: {
+                $0.title.trimmingCharacters(in: .whitespaces).lowercased() == cleanTitle ||
+                $0.uuid.uuidString.lowercased() == dto.id.lowercased()
+            }) {
+                // Update existing item in place
+                if !dto.description.isEmpty && match.concept.isEmpty { match.concept = dto.description }
+                if match.status != dto.status { match.status = dto.status }
+                if match.isStarred != dto.isStarred { match.isStarred = dto.isStarred }
+                if !dto.preferredStyle.isEmpty && match.style.isEmpty { match.style = dto.preferredStyle }
+                continue
+            }
+
             let item = Item(title: dto.title)
             item.concept = dto.description
             item.platform = dto.platform.capitalized
