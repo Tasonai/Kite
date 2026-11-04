@@ -1,38 +1,45 @@
 import Foundation
 
 public struct IdeaExportModel: Codable {
-    public let version: Int
-    public let exportedAt: String
-    public let ideas: [IdeaDTO]
+    public var version: Int
+    public var exportedAt: String
+    public var ideas: [IdeaDTO]
     
     public init(ideas: [IdeaDTO]) {
         self.version = 1
         self.exportedAt = ISO8601DateFormatter().string(from: Date())
         self.ideas = ideas
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.version = (try? container.decode(Int.self, forKey: .version)) ?? 1
+        self.exportedAt = (try? container.decode(String.self, forKey: .exportedAt)) ?? ISO8601DateFormatter().string(from: Date())
+        self.ideas = (try? container.decode([IdeaDTO].self, forKey: .ideas)) ?? []
+    }
 }
 
 public struct IdeaDTO: Codable, Identifiable {
-    public let id: String
-    public let title: String
-    public let description: String
-    public let platform: String
-    public let preferredStyle: String
-    public let status: String
-    public let tags: [String]
-    public let isStarred: Bool
-    public let createdAt: String
+    public var id: String
+    public var title: String
+    public var description: String
+    public var platform: String
+    public var preferredStyle: String
+    public var status: String
+    public var tags: [String]
+    public var isStarred: Bool
+    public var createdAt: String
     
     public init(
-        id: String,
+        id: String = UUID().uuidString,
         title: String,
-        description: String,
-        platform: String,
-        preferredStyle: String,
-        status: String,
-        tags: [String],
-        isStarred: Bool,
-        createdAt: String
+        description: String = "",
+        platform: String = "web",
+        preferredStyle: String = "Editorial & Swiss Modern",
+        status: String = "backlog",
+        tags: [String] = [],
+        isStarred: Bool = false,
+        createdAt: String = ISO8601DateFormatter().string(from: Date())
     ) {
         self.id = id
         self.title = title
@@ -43,6 +50,19 @@ public struct IdeaDTO: Codable, Identifiable {
         self.tags = tags
         self.isStarred = isStarred
         self.createdAt = createdAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = (try? container.decode(String.self, forKey: .id)) ?? UUID().uuidString
+        self.title = (try? container.decode(String.self, forKey: .title)) ?? "Без названия"
+        self.description = (try? container.decode(String.self, forKey: .description)) ?? ""
+        self.platform = (try? container.decode(String.self, forKey: .platform)) ?? "web"
+        self.preferredStyle = (try? container.decode(String.self, forKey: .preferredStyle)) ?? "Editorial & Swiss Modern"
+        self.status = (try? container.decode(String.self, forKey: .status)) ?? "backlog"
+        self.tags = (try? container.decode([String].self, forKey: .tags)) ?? []
+        self.isStarred = (try? container.decode(Bool.self, forKey: .isStarred)) ?? false
+        self.createdAt = (try? container.decode(String.self, forKey: .createdAt)) ?? ISO8601DateFormatter().string(from: Date())
     }
 }
 
