@@ -248,21 +248,95 @@ struct SkillsCatalogView: View {
                             Divider()
 
                             // Summary & Details
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Назначение и возможности")
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("Обзор и назначение")
                                     .font(.headline)
+
                                 Text(skill.summary)
                                     .font(.body)
                                     .foregroundStyle(.primary)
 
-                                if !skill.description.isEmpty && skill.description != skill.summary {
-                                    Text(skill.description)
+                                if !skill.description.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Архитектура и рабочий процесс")
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+
+                                        Text(skill.description)
+                                            .font(.callout)
+                                            .foregroundStyle(.primary)
+                                            .lineSpacing(4)
+                                    }
+                                    .padding(14)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.secondary.opacity(0.06))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                            }
+
+                            // When to use
+                            if !skill.whenToUse.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "info.circle.fill")
+                                            .foregroundStyle(Color.accentColor)
+                                        Text("Когда применять")
+                                            .font(.headline)
+                                    }
+
+                                    Text(skill.whenToUse)
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                         .padding(12)
                                         .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color.accentColor.opacity(0.06))
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                }
+                            }
+
+                            // Capabilities
+                            if !skill.capabilities.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Ключевые возможности")
+                                        .font(.headline)
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        ForEach(skill.capabilities, id: \.self) { cap in
+                                            HStack(alignment: .top, spacing: 8) {
+                                                Image(systemName: "arrow.right.circle")
+                                                    .foregroundStyle(Color.accentColor)
+                                                    .font(.caption)
+                                                    .padding(.top, 2)
+                                                Text(cap)
+                                                    .font(.subheadline)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Example Prompt
+                            if !skill.examplePrompt.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text("Пример готового промпта")
+                                            .font(.headline)
+                                        Spacer()
+                                        Button {
+                                            copyText(skill.examplePrompt)
+                                        } label: {
+                                            Label("Копировать промпт", systemImage: "doc.on.doc")
+                                                .font(.caption)
+                                        }
+                                        .buttonStyle(.borderless)
+                                    }
+
+                                    Text(skill.examplePrompt)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .padding(12)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                         .background(Color.secondary.opacity(0.08))
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .textSelection(.enabled)
                                 }
                             }
 
@@ -271,14 +345,14 @@ struct SkillsCatalogView: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Триггеры активации")
                                         .font(.headline)
-                                    HStack(spacing: 8) {
+                                    FlowLayout(spacing: 6) {
                                         ForEach(skill.triggers, id: \.self) { t in
                                             Text(t)
                                                 .font(.system(size: 10, design: .monospaced))
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 4)
                                                 .background(Color.secondary.opacity(0.1))
-                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
                                         }
                                     }
                                 }
