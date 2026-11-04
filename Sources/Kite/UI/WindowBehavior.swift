@@ -69,6 +69,10 @@ private struct WindowHook: NSViewRepresentable {
             clear(window)
         }
 
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+
         /// AppKit picks a first control right after the window shows. Clear it after that.
         private func clear(_ window: NSWindow) {
             DispatchQueue.main.async { window.makeFirstResponder(nil) }
