@@ -3,91 +3,6 @@ import SwiftData
 import SwiftUI
 import KiteKit
 
-struct CanvasSticky: Identifiable, Sendable, Equatable, Codable {
-    let id: UUID
-    var text: String
-    var colorHex: String
-    var position: CGPoint
-
-    init(id: UUID = UUID(), text: String, colorHex: String, position: CGPoint) {
-        self.id = id
-        self.text = text
-        self.colorHex = colorHex
-        self.position = position
-    }
-}
-
-struct CanvasConnection: Identifiable, Sendable, Equatable, Codable {
-    let id: UUID
-    let fromId: String
-    let toId: String
-    var label: String
-    var colorHex: String
-
-    init(id: UUID = UUID(), fromId: String, toId: String, label: String = "", colorHex: String = "#D97757") {
-        self.id = id
-        self.fromId = fromId
-        self.toId = toId
-        self.label = label
-        self.colorHex = colorHex
-    }
-}
-
-struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
-    let id: UUID
-    var title: String
-    var colorHex: String
-    var x: CGFloat
-    var y: CGFloat
-    var width: CGFloat
-    var height: CGFloat
-
-    init(id: UUID = UUID(), title: String, colorHex: String = "#3B82F6", x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
-        self.id = id
-        self.title = title
-        self.colorHex = colorHex
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-    }
-
-    var rect: CGRect {
-        CGRect(x: x, y: y, width: width, height: height)
-    }
-}
-
-struct CanvasReferenceCard: Identifiable, Sendable, Equatable, Codable {
-    let id: UUID
-    var title: String
-    var source: String // Mobbin, Figma, Recent Design
-    var url: String
-    var colorHex: String
-    var position: CGPoint
-    var tags: [String]
-    var description: String
-
-    init(
-        id: UUID = UUID(),
-        title: String,
-        source: String,
-        url: String,
-        colorHex: String,
-        position: CGPoint,
-        tags: [String],
-        description: String
-    ) {
-        self.id = id
-        self.title = title
-        self.source = source
-        self.url = url
-        self.colorHex = colorHex
-        self.position = position
-        self.tags = tags
-        self.description = description
-    }
-}
-
 struct InfiniteCanvasView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
@@ -170,7 +85,7 @@ struct InfiniteCanvasView: View {
 
             // Zoomed and Panned World
             ZStack(alignment: .topLeading) {
-                // 1. Frames rendered in the back layer (Feature 1)
+                // 1. Frames rendered in the back layer
                 ForEach(frames) { frame in
                     frameView(frame)
                 }
@@ -188,7 +103,7 @@ struct InfiniteCanvasView: View {
                         .position(srcPoint) // grid: ok canvas source indicator
                 }
 
-                // 3. Reference Cards from Mobbin / Figma (Feature 3)
+                // 3. Reference Cards from Mobbin / Figma
                 ForEach(referenceCards) { ref in
                     referenceCardView(ref)
                 }
@@ -227,7 +142,7 @@ struct InfiniteCanvasView: View {
 
                     Spacer(minLength: 8)
 
-                    // AI Auto-Layout Button (Feature 2)
+                    // AI Auto-Layout Button
                     Button {
                         performAIAutoLayout()
                     } label: {
@@ -241,7 +156,7 @@ struct InfiniteCanvasView: View {
                     .tint(.indigo)
                     .help("Упорядочить элементы и создать смысловые секции с помощью AI")
 
-                    // Add Frame Button (Feature 1)
+                    // Add Frame Button
                     Button {
                         addFrame()
                     } label: {
@@ -250,7 +165,7 @@ struct InfiniteCanvasView: View {
                     }
                     .buttonStyle(.bordered)
 
-                    // Add Reference Button (Feature 3)
+                    // Add Reference Button
                     Button {
                         isReferencePickerOpen = true
                     } label: {
@@ -419,7 +334,16 @@ struct InfiniteCanvasView: View {
             .padding(16)
         }
         .sheet(isPresented: $isReferencePickerOpen) {
-            referencePickerSheet
+            CanvasReferencePickerSheet(
+                onSelect: { card in
+                    referenceCards.append(card)
+                    isReferencePickerOpen = false
+                    showToast("Референс добавлен на холст 🖼️")
+                },
+                onDismiss: {
+                    isReferencePickerOpen = false
+                }
+            )
         }
         .onAppear {
             initializePositionsIfNeeded()
@@ -434,7 +358,7 @@ struct InfiniteCanvasView: View {
         )
     }
 
-    // MARK: - Frame View (Feature 1)
+    // MARK: - Frame View
     private func frameView(_ frame: CanvasFrame) -> some View {
         let isDragged = draggedFrameId == frame.id
         let curX = frame.x + (isDragged ? frameDragOffset.width : 0)
@@ -509,7 +433,7 @@ struct InfiniteCanvasView: View {
         .position(x: curX + frame.width / 2, y: curY + frame.height / 2) // grid: ok frame center position
     }
 
-    // MARK: - Reference Card View (Feature 3)
+    // MARK: - Reference Card View
     private func referenceCardView(_ ref: CanvasReferenceCard) -> some View {
         let isDragged = draggedRefCardId == ref.id
         let pos = CGPoint(
@@ -917,7 +841,7 @@ struct InfiniteCanvasView: View {
         return nil
     }
 
-    // MARK: - AI Auto-Layout (Feature 2)
+    // MARK: - AI Auto-Layout
     private func performAIAutoLayout() {
         withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
             // Column 1: Reference Cards (Left, x = 180)
@@ -1053,129 +977,7 @@ struct InfiniteCanvasView: View {
         showToast("Идея создана 💡")
     }
 
-    // MARK: - Reference Picker Sheet (Feature 3)
-    private var referencePickerSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                HStack(spacing: 8) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .foregroundStyle(Color.accentColor)
-                    Text("Каталог референсов на холст")
-                        .font(.headline)
-                }
-
-                Spacer()
-
-                Button("Закрыть") {
-                    isReferencePickerOpen = false
-                }
-                .buttonStyle(.bordered)
-            }
-
-            Text("Выберите готовый паттерн из Mobbin или Figma для добавления на холст:")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            ScrollView {
-                VStack(spacing: 12) {
-                    referenceOptionCard(
-                        title: "Linear: Navigation & Fast Command Palette",
-                        source: "Mobbin",
-                        url: "https://mobbin.com",
-                        colorHex: "#10B981",
-                        tags: ["Keyboard", "Speed", "Cockpit UX"],
-                        desc: "Компактная эргономика меню и мгновенный поиск через ⌘K."
-                    )
-
-                    referenceOptionCard(
-                        title: "Apple HIG: iOS 18 Modular Grid & Haptics",
-                        source: "Mobbin",
-                        url: "https://mobbin.com",
-                        colorHex: "#3B82F6",
-                        tags: ["Apple HIG", "44px Targets", "Spring Motion"],
-                        desc: "Строгое следование 4pt модульной сетке и нативным анимациям."
-                    )
-
-                    referenceOptionCard(
-                        title: "Figma Community: W3C Design Tokens System",
-                        source: "Figma",
-                        url: "https://figma.com",
-                        colorHex: "#8B5CF6",
-                        tags: ["Tokens Studio", "Variables", "Multi-Theme"],
-                        desc: "Архитектура дизайн-токенов с семантическими алиасами для dark/light."
-                    )
-
-                    referenceOptionCard(
-                        title: "Recent Design: Swiss Modern Editorial Layout",
-                        source: "Recent Design",
-                        url: "https://recent.design",
-                        colorHex: "#D97757",
-                        tags: ["Anti-Slop", "Editorial", "Serif Typography"],
-                        desc: "Асимметричные журнальные сплиты и акцидентная типографика."
-                    )
-                }
-                .padding(.vertical, 8)
-            }
-        }
-        .padding(24)
-        .frame(width: 540, height: 480)
-    }
-
-    private func referenceOptionCard(
-        title: String,
-        source: String,
-        url: String,
-        colorHex: String,
-        tags: [String],
-        desc: String
-    ) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(source)
-                        .font(.system(size: 9, weight: .bold, design: .monospaced)) // grid: ok font
-                        .foregroundStyle(Color(hex: colorHex))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(Color(hex: colorHex).opacity(0.16))
-                        .clipShape(Capsule())
-
-                    Text(title)
-                        .font(.subheadline.bold())
-                }
-
-                Text(desc)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
-
-            Spacer()
-
-            Button("+ На холст") {
-                let newRef = CanvasReferenceCard(
-                    title: title,
-                    source: source,
-                    url: url,
-                    colorHex: colorHex,
-                    position: CGPoint(x: 240, y: 220),
-                    tags: tags,
-                    description: desc
-                )
-                referenceCards.append(newRef)
-                isReferencePickerOpen = false
-                showToast("Референс добавлен на холст 🖼️")
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Color(hex: colorHex))
-        }
-        .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.15), lineWidth: 1))
-    }
-
-    // Export Helpers
+    // MARK: - Export Helpers
     private func exportAsSVG() {
         let svg = CanvasExporter.exportSVG(
             items: items,
@@ -1245,61 +1047,5 @@ struct InfiniteCanvasView: View {
                 }
             }
         }
-    }
-}
-
-// Arrow Head Shape
-struct ArrowHead: Shape {
-    let at: CGPoint
-    let from: CGPoint
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let angle = atan2(at.y - from.y, at.x - from.x)
-        let arrowLength: CGFloat = 12
-        let arrowWidth: CGFloat = 8
-
-        let p1 = CGPoint(
-            x: at.x - arrowLength * cos(angle) + arrowWidth * sin(angle),
-            y: at.y - arrowLength * sin(angle) - arrowWidth * cos(angle)
-        )
-        let p2 = CGPoint(
-            x: at.x - arrowLength * cos(angle) - arrowWidth * sin(angle),
-            y: at.y - arrowLength * sin(angle) + arrowWidth * cos(angle)
-        )
-
-        path.move(to: at)
-        path.addLine(to: p1)
-        path.addLine(to: p2)
-        path.closeSubpath()
-        return path
-    }
-}
-
-// Background Dot Matrix
-struct CanvasGridBackground: View {
-    let offset: CGSize
-    let scale: CGFloat
-
-    var body: some View {
-        GeometryReader { _ in
-            Canvas { context, size in
-                let spacing: CGFloat = 24 * max(0.5, scale)
-                let xOffset = offset.width.truncatingRemainder(dividingBy: spacing)
-                let yOffset = offset.height.truncatingRemainder(dividingBy: spacing)
-
-                var x = xOffset - spacing
-                while x < size.width + spacing {
-                    var y = yOffset - spacing
-                    while y < size.height + spacing {
-                        let rect = CGRect(x: x - 1, y: y - 1, width: 2, height: 2)
-                        context.fill(Path(ellipseIn: rect), with: .color(Color.secondary.opacity(0.18)))
-                        y += spacing
-                    }
-                    x += spacing
-                }
-            }
-        }
-        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
