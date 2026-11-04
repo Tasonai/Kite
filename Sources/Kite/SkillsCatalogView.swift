@@ -76,8 +76,8 @@ struct SkillsCatalogView: View {
                 // Top Segmented Picker: Skills vs Plugins
                 HStack(spacing: 8) {
                     Picker("Режим каталога", selection: $selectedTab) {
-                        Text("⚡️ Скиллы (\(SkillsRepository.curated.count))").tag(CatalogTab.skills)
-                        Text("🧩 Плагины (\(PluginsRepository.installed.count))").tag(CatalogTab.plugins)
+                        Text("Скиллы (\(SkillsRepository.curated.count))").tag(CatalogTab.skills)
+                        Text("Плагины (\(PluginsRepository.installed.count))").tag(CatalogTab.plugins)
                     }
                     .pickerStyle(.segmented)
                     .onChange(of: selectedTab) { _, _ in
@@ -122,7 +122,7 @@ struct SkillsCatalogView: View {
                                     .foregroundStyle(Color.accentColor)
 
                                 if let pluginId = skill.pluginId {
-                                    Text("🧩 \(pluginId)")
+                                    Text(pluginId)
                                         .font(.system(size: 8, weight: .semibold))
                                         .padding(.horizontal, 4)
                                         .padding(.vertical, 2)
@@ -160,8 +160,10 @@ struct SkillsCatalogView: View {
                     List(filteredPlugins, selection: $selectedPlugin) { plugin in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 8) {
-                                Text(plugin.icon)
+                                Image(systemName: plugin.icon)
                                     .font(.title3)
+                                    .foregroundStyle(Palette.accentText)
+                                    .frame(width: 24, height: 24)
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(plugin.name)
@@ -307,7 +309,7 @@ struct SkillsCatalogView: View {
                             Button {
                                 model.sidebar = .translator
                             } label: {
-                                Label("Использовать в Промпт-переводчике 🪄", systemImage: "wand.and.stars")
+                                Label("Использовать в Промпт-переводчике", systemImage: "wand.and.stars")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 8)
@@ -328,9 +330,10 @@ struct SkillsCatalogView: View {
                             // Title Bar
                             HStack(alignment: .top) {
                                 HStack(spacing: 12) {
-                                    Text(plugin.icon)
-                                        .font(.system(size: 36))
-                                        .padding(8)
+                                    Image(systemName: plugin.icon)
+                                        .font(.system(size: 28))
+                                        .foregroundStyle(Palette.accentText)
+                                        .frame(width: 48, height: 48)
                                         .background(Color.secondary.opacity(0.1))
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
 

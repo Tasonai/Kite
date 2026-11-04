@@ -155,7 +155,7 @@ struct QuickCaptureView: View {
                 Button {
                     saveAndClose(copyBlueprint: true)
                 } label: {
-                    Label("В буфер 🪄", systemImage: "sparkles")
+                    Label("В буфер", systemImage: "sparkles")
                         .font(.caption.weight(.medium))
                 }
                 .buttonStyle(.bordered)

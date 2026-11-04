@@ -25,11 +25,11 @@ struct PromptTranslatorView: View {
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
 
     private let modes = [
-        ("full", "📐 План"),
-        ("stitch", "🧵 Stitch"),
-        ("edit", "🎯 Точечный"),
-        ("concise", "📄 Бриф"),
-        ("action", "⚡️ Действия")
+        ("full", "План"),
+        ("stitch", "Stitch"),
+        ("edit", "Точечный"),
+        ("concise", "Бриф"),
+        ("action", "Действия")
     ]
 
     private let platforms = ["Web", "Mobile", "Desktop"]
@@ -70,7 +70,7 @@ struct PromptTranslatorView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // Header
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Промпт-переводчик Antigravity 🪄")
+                        Text("Промпт-переводчик Antigravity")
                             .font(.title2.bold())
                         Text("Превращайте идеи и эскизы в точную инженерную спецификацию /plan.")
                             .font(.caption)
@@ -99,13 +99,13 @@ struct PromptTranslatorView: View {
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                presetButton("Stitch Landing 🧵", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Лендинг цифрового сервиса с шапкой, карточками преимуществ, формой обратной связи и четкой дизайн-системой.")
-                                presetButton("Claude Paper 📜", style: "Claude Parchment", platform: "Web", prompt: "Академический исследовательский интерфейс на теплом пергаменте со строгой типографикой, цитатами и минимальным шумом.")
-                                presetButton("Codex Minimal ⚪️", style: "Codex Minimal", platform: "Web", prompt: "Радикально чистый монохромный интерфейс без теней, чистый белый холст и швейцарские шрифты.")
-                                presetButton("Terracotta Journal 🏺", style: "Terracotta Clay", platform: "Web", prompt: "Теплый глиняный журнал с мягкими тенями, тактильными пилюлями и кремовым фоном.")
-                                presetButton("Agent Cockpit ⚡️", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
-                                presetButton("Habit Radar 🎯", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
-                                presetButton("Voxel Studio 🧊", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
+                                presetButton("Stitch Landing", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Лендинг цифрового сервиса с шапкой, карточками преимуществ, формой обратной связи и четкой дизайн-системой.")
+                                presetButton("Claude Paper", style: "Claude Parchment", platform: "Web", prompt: "Академический исследовательский интерфейс на теплом пергаменте со строгой типографикой, цитатами и минимальным шумом.")
+                                presetButton("Codex Minimal", style: "Codex Minimal", platform: "Web", prompt: "Радикально чистый монохромный интерфейс без теней, чистый белый холст и швейцарские шрифты.")
+                                presetButton("Terracotta Journal", style: "Terracotta Clay", platform: "Web", prompt: "Теплый глиняный журнал с мягкими тенями, тактильными пилюлями и кремовым фоном.")
+                                presetButton("Agent Cockpit", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
+                                presetButton("Habit Radar", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
+                                presetButton("Voxel Studio", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
                             }
                         }
                     }
@@ -192,7 +192,7 @@ struct PromptTranslatorView: View {
                                     Text("Трансляция архитектуры...")
                                 } else {
                                     Image(systemName: "wand.and.stars")
-                                    Text("Скомпилировать /plan 🪄")
+                                    Text("Скомпилировать /plan")
                                 }
                             }
                             .font(.headline)
@@ -206,7 +206,7 @@ struct PromptTranslatorView: View {
                         Button {
                             saveAsNewIdea()
                         } label: {
-                            Label(isSavedToIdeas ? "Сохранено!" : "В идеи 💡", systemImage: isSavedToIdeas ? "checkmark" : "plus.circle")
+                            Label(isSavedToIdeas ? "Сохранено" : "В идеи", systemImage: isSavedToIdeas ? "checkmark" : "plus.circle")
                                 .padding(.vertical, 8)
                         }
                         .buttonStyle(.bordered)
@@ -236,7 +236,7 @@ struct PromptTranslatorView: View {
                             Circle()
                                 .fill(qualityColor)
                                 .frame(width: 8, height: 8)
-                            Text(selectedMode == "stitch" ? "Google Stitch Спецификация 🧵" : selectedMode == "edit" ? "Таргетированный эдит 🎯" : "Индекс плотности плана:")
+                            Text(selectedMode == "stitch" ? "Google Stitch Спецификация" : selectedMode == "edit" ? "Таргетированный эдит" : "Индекс плотности плана:")
                                 .font(.caption.bold())
                             Text("\(qualityScore)%")
                                 .font(.caption.monospaced().bold())
@@ -252,7 +252,7 @@ struct PromptTranslatorView: View {
                         Button {
                             copyBlueprint()
                         } label: {
-                            Label(isCopied ? "Скопировано!" : (selectedMode == "stitch" ? "Копировать для Stitch 🧵" : "Скопировать план 📋"), systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                            Label(isCopied ? "Скопировано" : (selectedMode == "stitch" ? "Копировать для Stitch" : "Скопировать план"), systemImage: isCopied ? "checkmark" : "doc.on.doc")
                                 .font(.caption.weight(.medium))
                         }
                         .buttonStyle(.bordered)

@@ -26,12 +26,12 @@ struct KiteApp: App {
     }
 
     var body: some Scene {
-        Window("Kite", id: "main") {
+        WindowGroup("Kite", id: "main") {
             ContentView()
                 .environment(model)
                 .themed()
                 .overlay { if GridOverlay.enabled { GridOverlay() } }
-                .frame(minWidth: 960, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity, alignment: .leading)
+                .frame(minWidth: 960, minHeight: 600)
                 .task {
                     guard !SelfTest.requested && !Snapshot.requested else { return }
                     QuickCaptureManager.shared.start(model: model)
@@ -106,10 +106,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
-            for window in NSApp.windows where window.identifier?.rawValue == "main" {
+            for window in NSApp.windows where window.canBecomeMain && !window.isSheet {
                 window.makeKeyAndOrderFront(nil)
                 return true
             }
+            return false
         }
         return true
     }

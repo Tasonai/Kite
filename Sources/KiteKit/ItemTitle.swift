@@ -241,7 +241,7 @@ public enum PromptCompiler {
         **Antigravity Skills Active:** \(skillsLine)
 
         ---
-        💡 **Tip:** For consistent designs across multiple screens, create a DESIGN.md file using the `design-md` skill. This ensures all generated pages share the same visual language.
+        **Tip:** For consistent designs across multiple screens, create a DESIGN.md file using the `design-md` skill. This ensures all generated pages share the same visual language.
         """
     }
 

@@ -24,7 +24,7 @@ struct AIChatView: View {
         ChatMessageItem(
             role: "assistant",
             content: """
-            Привет! Я **Kite AI-Архитектор** 🤖
+            Привет! Я **Kite AI-Архитектор**
 
             Я помогу спроектировать архитектуру вашего продукта, подобрать стек, выстроить дизайн-систему по канонам **Apple HIG / Vercel** и подготовить экспорт в **Google Stitch** и **Figma**.
 
@@ -227,7 +227,7 @@ struct AIChatView: View {
                         Button {
                             createIdeaFromMessage(msg.content)
                         } label: {
-                            Label("В идею 💡", systemImage: "lightbulb")
+                            Label("В идею", systemImage: "lightbulb")
                                 .font(.caption2)
                         }
                         .buttonStyle(.bordered)
@@ -235,7 +235,7 @@ struct AIChatView: View {
                         Button {
                             exportToStitch(from: msg.content)
                         } label: {
-                            Label("В Stitch 🧵", systemImage: "sparkles")
+                            Label("В Stitch", systemImage: "sparkles")
                                 .font(.caption2)
                         }
                         .buttonStyle(.bordered)
@@ -243,7 +243,7 @@ struct AIChatView: View {
                         Button {
                             exportToFigma(from: msg.content)
                         } label: {
-                            Label("В Figma 📐", systemImage: "paintpalette")
+                            Label("В Figma", systemImage: "paintpalette")
                                 .font(.caption2)
                         }
                         .buttonStyle(.bordered)
@@ -251,7 +251,7 @@ struct AIChatView: View {
                         Button {
                             model.sidebar = .translator
                         } label: {
-                            Label("В переводчик 🪄", systemImage: "wand.and.stars")
+                            Label("В переводчик", systemImage: "wand.and.stars")
                                 .font(.caption2)
                         }
                         .buttonStyle(.bordered)
@@ -294,7 +294,7 @@ struct AIChatView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             HStack {
-                Button("Скопировать в буфер 📋") {
+                Button("Скопировать в буфер") {
                     if let text = exportSheetContent {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(text, forType: .string)
@@ -305,7 +305,7 @@ struct AIChatView: View {
 
                 Spacer()
 
-                Button("Сохранить файл на диск 💾") {
+                Button("Сохранить файл на диск") {
                     saveFileToDisk()
                 }
                 .buttonStyle(.bordered)

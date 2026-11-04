@@ -50,9 +50,9 @@ struct InfiniteCanvasView: View {
 
     // Stickies
     @State private var stickies: [CanvasSticky] = [
-        CanvasSticky(text: "⚡️ Архитектурный контраст: отказ от серого слопа", colorHex: "#FEF08A", position: CGPoint(x: 600, y: 140)),
-        CanvasSticky(text: "📱 44px Touch Targets & Apple HIG 4pt Grid", colorHex: "#BBF7D0", position: CGPoint(x: 600, y: 380)),
-        CanvasSticky(text: "🪄 Zero-latency нативный отклик SwiftData", colorHex: "#DDD6FE", position: CGPoint(x: 200, y: 440))
+        CanvasSticky(text: "Архитектурный контраст: отказ от серого слопа", colorHex: "#FEF08A", position: CGPoint(x: 600, y: 140)),
+        CanvasSticky(text: "44px Touch Targets & Apple HIG 4pt Grid", colorHex: "#BBF7D0", position: CGPoint(x: 600, y: 380)),
+        CanvasSticky(text: "Zero-latency нативный отклик SwiftData", colorHex: "#DDD6FE", position: CGPoint(x: 200, y: 440))
     ]
     @State private var draggedStickyId: UUID?
     @State private var stickyDragOffset: CGSize = .zero
@@ -342,7 +342,7 @@ struct InfiniteCanvasView: View {
                 onSelect: { card in
                     referenceCards.append(card)
                     isReferencePickerOpen = false
-                    showToast("Референс добавлен на холст 🖼️")
+                    showToast("Референс добавлен на холст")
                 },
                 onDismiss: {
                     isReferencePickerOpen = false
@@ -511,9 +511,9 @@ struct InfiniteCanvasView: View {
                         platform: "Web",
                         style: "Linear & DevTool Cockpit"
                     )
-                    showToast("Создан проект на базе референса 💡")
+                    showToast("Создан проект на базе референса")
                 } label: {
-                    Text("В идею 💡")
+                    Text("В идею")
                         .font(.system(size: 9, weight: .semibold)) // grid: ok font
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
@@ -742,7 +742,7 @@ struct InfiniteCanvasView: View {
             connections.append(newConn)
             connectingSourceId = nil
             isConnectingMode = false
-            showToast("Связь успешно создана 🔗")
+            showToast("Связь успешно создана")
         }
     }
 
@@ -908,7 +908,7 @@ struct InfiniteCanvasView: View {
                 )
             ]
         }
-        showToast("🪄 AI Auto-Layout: элементы упорядочены по смысловым фреймам!")
+        showToast("AI Auto-Layout: элементы упорядочены по смысловым фреймам")
     }
 
     private func addFrame() {
@@ -923,7 +923,7 @@ struct InfiniteCanvasView: View {
             height: 380
         )
         frames.append(newFrame)
-        showToast("Фрейм добавлен на холст 🗂️")
+        showToast("Фрейм добавлен на холст")
     }
 
     private func initializePositionsIfNeeded() {
@@ -981,7 +981,7 @@ struct InfiniteCanvasView: View {
             position: CGPoint(x: 360, y: 240)
         )
         stickies.append(newSticky)
-        showToast("Стикер добавлен на холст 📝")
+        showToast("Стикер добавлен на холст")
     }
 
     private func addNewIdea() {
@@ -991,7 +991,7 @@ struct InfiniteCanvasView: View {
             platform: "Web",
             style: "Linear & DevTool Cockpit"
         )
-        showToast("Идея создана 💡")
+        showToast("Идея создана")
     }
 
     // MARK: - Export Helpers
@@ -1006,7 +1006,7 @@ struct InfiniteCanvasView: View {
         )
         if let data = svg.data(using: .utf8) {
             CanvasExporter.saveWithPanel(data: data, defaultFilename: "kite-canvas-architecture.svg", fileExtension: "svg")
-            showToast("Экспорт в SVG выполнен! 📐")
+            showToast("Экспорт в SVG выполнен")
         }
     }
 
@@ -1023,7 +1023,7 @@ struct InfiniteCanvasView: View {
            let rep = NSBitmapImageRep(data: tiff),
            let pngData = rep.representation(using: .png, properties: [:]) {
             CanvasExporter.saveWithPanel(data: pngData, defaultFilename: "kite-canvas-preview.png", fileExtension: "png")
-            showToast("Экспорт в PNG выполнен! 🖼️")
+            showToast("Экспорт в PNG выполнен")
         }
     }
 
@@ -1037,7 +1037,7 @@ struct InfiniteCanvasView: View {
             referenceCards: referenceCards
         ) {
             CanvasExporter.saveWithPanel(data: pdfData, defaultFilename: "kite-canvas-document.pdf", fileExtension: "pdf")
-            showToast("Экспорт в PDF выполнен! 📄")
+            showToast("Экспорт в PDF выполнен")
         }
     }
 
@@ -1050,7 +1050,7 @@ struct InfiniteCanvasView: View {
             frames: frames,
             referenceCards: referenceCards
         )
-        showToast("Скопировано в буфер обмена 📋")
+        showToast("Скопировано в буфер обмена")
     }
 
     private func showToast(_ message: String) {

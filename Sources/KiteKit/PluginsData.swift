@@ -24,7 +24,7 @@ public struct AntigravityPluginInfo: Identifiable, Hashable, Sendable {
         skills: [String],
         mcpServer: String? = nil,
         cliCommand: String? = nil,
-        icon: String = "🧩"
+        icon: String = "cube.box"
     ) {
         self.id = id
         self.name = name
@@ -53,7 +53,7 @@ public enum PluginsRepository {
             skills: ["bama", "mac-design", "new-mac-app", "swift-swiftui", "test-mac-app"],
             mcpServer: nil,
             cliCommand: "bama",
-            icon: ""
+            icon: "apple.logo"
         ),
         AntigravityPluginInfo(
             id: "bawa",
@@ -66,7 +66,7 @@ public enum PluginsRepository {
             skills: ["agent-cli", "app-brief", "app-icon", "bawa", "build-and-verify", "clone", "csharp-winui", "design-from-app", "design-kit", "design-system", "distribute", "improve-architecture", "improve-loop", "layout-grid", "new-windows-app", "os-integrations", "performance", "research", "test-windows-app", "user-stories", "ux-design", "windows-design"],
             mcpServer: nil,
             cliCommand: "bawa",
-            icon: "🪟"
+            icon: "macwindow"
         ),
         AntigravityPluginInfo(
             id: "canva",
@@ -79,7 +79,7 @@ public enum PluginsRepository {
             skills: ["canva-brand-check", "canva-branded-presentation", "canva-bulk-create", "canva-classroom-helper", "canva-cli", "canva-design-feedback", "canva-edit-design", "canva-implement-feedback", "canva-presentation-time-fitting", "canva-resize-for-social-media", "canva-translate-design"],
             mcpServer: "canva_canva",
             cliCommand: nil,
-            icon: "🎨"
+            icon: "paintpalette"
         ),
         AntigravityPluginInfo(
             id: "chrome-devtools-plugin",
@@ -92,7 +92,7 @@ public enum PluginsRepository {
             skills: ["a11y-debugging", "chrome-devtools", "cookie-debugging", "debug-optimize-lcp", "memory-leak-debugging", "troubleshooting"],
             mcpServer: "chrome-devtools",
             cliCommand: nil,
-            icon: "🌐"
+            icon: "globe"
         ),
         AntigravityPluginInfo(
             id: "coderabbit",
@@ -105,7 +105,7 @@ public enum PluginsRepository {
             skills: ["autofix", "code-review"],
             mcpServer: nil,
             cliCommand: "coderabbit",
-            icon: "🐇"
+            icon: "hare"
         ),
         AntigravityPluginInfo(
             id: "figma",
@@ -118,7 +118,7 @@ public enum PluginsRepository {
             skills: ["figma-code-connect", "figma-code-workflows", "figma-create-new-file", "figma-design-to-code", "figma-generate-design", "figma-generate-diagram", "figma-generate-library", "figma-generative-plugins", "figma-implement-motion", "figma-shaders", "figma-spec", "figma-swiftui", "figma-use", "figma-use-figjam", "figma-use-motion", "figma-use-slides", "generate-project-plan", "video-interaction-mapper"],
             mcpServer: "figma_figma",
             cliCommand: nil,
-            icon: "📐"
+            icon: "square.split.2x2"
         ),
         AntigravityPluginInfo(
             id: "firebase",
@@ -131,7 +131,7 @@ public enum PluginsRepository {
             skills: ["extension-to-functions-codebase", "firebase-ai-logic-basics", "firebase-app-hosting-basics", "firebase-auth-basics", "firebase-basics", "firebase-crashlytics", "firebase-data-connect", "firebase-firestore", "firebase-hosting-basics", "firebase-remote-config-basics", "firebase-security-rules-auditor", "firestore-rules-creation", "xcode-project-setup"],
             mcpServer: nil,
             cliCommand: "firebase",
-            icon: "🔥"
+            icon: "flame"
         ),
         AntigravityPluginInfo(
             id: "flutter",
@@ -144,7 +144,7 @@ public enum PluginsRepository {
             skills: ["dart-add-unit-test", "dart-build-cli-app", "dart-collect-coverage", "dart-fix-runtime-errors", "dart-generate-test-mocks", "dart-migrate-to-checks-package", "dart-resolve-package-conflicts", "dart-run-static-analysis", "dart-setup-ffi-assets", "dart-use-doc-examples", "dart-use-ffigen", "dart-use-path-package", "dart-use-pattern-matching", "dart-use-primary-constructors", "dart-write-documentation", "flutter-add-integration-test", "flutter-add-widget-preview", "flutter-add-widget-test", "flutter-apply-architecture-best-practices", "flutter-build-responsive-layout", "flutter-fix-layout-issues", "flutter-implement-json-serialization", "flutter-setup-declarative-routing", "flutter-setup-localization", "flutter-use-http-package"],
             mcpServer: nil,
             cliCommand: "flutter / dart",
-            icon: "💙"
+            icon: "iphone"
         ),
         AntigravityPluginInfo(
             id: "gemini-api",
@@ -157,7 +157,7 @@ public enum PluginsRepository {
             skills: ["gemini-api-dev", "gemini-live-api-dev", "gemini-omni-flash-api"],
             mcpServer: "gemini-api_gemini-api-docs",
             cliCommand: nil,
-            icon: "✨"
+            icon: "sparkles"
         ),
         AntigravityPluginInfo(
             id: "google_maps_platform",
@@ -170,7 +170,7 @@ public enum PluginsRepository {
             skills: ["google-maps-platform"],
             mcpServer: nil,
             cliCommand: nil,
-            icon: "🗺️"
+            icon: "map"
         ),
         AntigravityPluginInfo(
             id: "mobbin",
@@ -183,7 +183,7 @@ public enum PluginsRepository {
             skills: ["best-practices", "plain-writing", "redesign-screen", "search"],
             mcpServer: "mobbin_mobbin",
             cliCommand: nil,
-            icon: "📱"
+            icon: "photo.stack"
         ),
         AntigravityPluginInfo(
             id: "modern-web-guidance-plugin",
@@ -196,7 +196,7 @@ public enum PluginsRepository {
             skills: ["chrome-extensions", "modern-web-guidance"],
             mcpServer: nil,
             cliCommand: nil,
-            icon: "⚡️"
+            icon: "safari"
         ),
         AntigravityPluginInfo(
             id: "stitch-build",
@@ -209,7 +209,7 @@ public enum PluginsRepository {
             skills: ["react-vite-dashboard", "remotion", "shadcn-ui", "stitch::react-components", "stitch::react-native"],
             mcpServer: "stitch",
             cliCommand: nil,
-            icon: "🧵"
+            icon: "hammer"
         ),
         AntigravityPluginInfo(
             id: "stitch-design",
@@ -222,7 +222,7 @@ public enum PluginsRepository {
             skills: ["stitch::code-to-design", "stitch::extract-design-md", "stitch::extract-static-html", "stitch::generate-design", "stitch::manage-design-system", "stitch::upload-to-stitch"],
             mcpServer: "stitch",
             cliCommand: nil,
-            icon: "🧶"
+            icon: "pencil.and.ruler"
         ),
         AntigravityPluginInfo(
             id: "stitch-utilities",
@@ -235,7 +235,7 @@ public enum PluginsRepository {
             skills: ["design-md", "enhance-prompt", "site-md", "stitch-loop", "taste-design"],
             mcpServer: "stitch",
             cliCommand: nil,
-            icon: "🪡"
+            icon: "wrench.and.screwdriver"
         ),
         AntigravityPluginInfo(
             id: "supabase",
@@ -248,7 +248,7 @@ public enum PluginsRepository {
             skills: ["supabase", "supabase-postgres-best-practices"],
             mcpServer: "supabase_mcp",
             cliCommand: nil,
-            icon: "⚡️"
+            icon: "cylinder"
         ),
         AntigravityPluginInfo(
             id: "superpowers",
@@ -261,7 +261,7 @@ public enum PluginsRepository {
             skills: ["brainstorming", "diagnosing-superpowers", "dispatching-parallel-agents", "executing-plans", "finishing-a-development-branch", "receiving-code-review", "requesting-code-review", "subagent-driven-development", "systematic-debugging", "test-driven-development", "using-git-worktrees", "using-superpowers", "verification-before-completion", "writing-plans", "writing-skills"],
             mcpServer: nil,
             cliCommand: nil,
-            icon: "🦸‍♂️"
+            icon: "bolt.shield"
         ),
         AntigravityPluginInfo(
             id: "vercel-plugin",
@@ -274,7 +274,7 @@ public enum PluginsRepository {
             skills: ["access-protected-vercel-deployment", "ai-gateway", "ai-sdk", "auth", "bootstrap", "build-agents", "cdn-caching", "chat-sdk", "create-a-backend", "custom-metrics", "daemons", "deployments-cicd", "domains", "env-vars", "eve", "flags-sdk", "is-agentic", "knowledge-update", "marketplace", "microfrontends", "offload-to-sandbox", "queues", "react-best-practices", "routing-middleware", "runtime-cache", "vercel-agent", "vercel-cli", "vercel-connect", "vercel-firewall", "vercel-flags", "vercel-functions", "vercel-react-best-practices", "vercel-sandbox", "vercel-services", "vercel-storage", "vercel-tracing", "verification", "workflow"],
             mcpServer: nil,
             cliCommand: "vercel",
-            icon: "▲"
+            icon: "triangle"
         ),
     ]
 }

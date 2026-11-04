@@ -114,7 +114,7 @@ public enum AIGenerator {
         let q = userText.lowercased()
         if q.contains("figma") || q.contains("stitch") || q.contains("дизайн") {
             return """
-            ### 🎨 Рекомендация по дизайн-системе (Stitch & Figma)
+            ### Рекомендация по дизайн-системе (Stitch & Figma)
 
             Для вашего интерфейса рекомендую гибридную архитектуру с экспортом токенов:
             - **Google Stitch:** используйте команду `@design-md` для генерации файла `DESIGN.md`. Он включает семантические токены (`surface`, `primary`, `headlineFont`, `roundness`).
@@ -123,11 +123,11 @@ public enum AIGenerator {
             **Рекомендуемый стек скиллов:**
             `/plan @design-md @taste-design @emil-design-eng @figma`
 
-            Нажмите кнопку **«В Stitch 🧵»** или **«В Figma 📐»** в тулбаре для генерации готовой спецификации.
+            Нажмите кнопку **«В Stitch»** или **«В Figma»** в тулбаре для генерации готовой спецификации.
             """
         } else if q.contains("mac") || q.contains("swift") || q.contains("меню") {
             return """
-            ###  Архитектурный план для macOS (SwiftUI)
+            ### Архитектурный план для macOS (SwiftUI)
 
             Для нативного приложения под macOS рекомендую:
             1. **Стек:** Swift 6, SwiftUI, SwiftData для SQLite-персистентности без ORM overhead.
@@ -140,7 +140,7 @@ public enum AIGenerator {
             """
         } else {
             return """
-            ### ⚡️ Архитектурный разбор Kite Copilot
+            ### Архитектурный разбор Kite Copilot
 
             Анализ задачи: **«\(userText)»**
 
@@ -154,7 +154,7 @@ public enum AIGenerator {
             - `@impeccable` — чистота кода и строгая типизация
             - `@emil-design-eng` — пружинная физика микро-интеракций
 
-            Вы можете нажать **«В идею 💡»** ниже, чтобы превратить этот разбор в проект в вашем каталоге.
+            Вы можете нажать **«В идею»** ниже, чтобы превратить этот разбор в проект в вашем каталоге.
             """
         }
     }

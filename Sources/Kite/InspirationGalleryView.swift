@@ -41,7 +41,7 @@ struct InspirationGalleryView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Галерея дизайн-вдохновения 🎨")
+                        Text("Галерея дизайн-вдохновения")
                             .font(.title2.bold())
                         Text("Курированная коллекция визуальных систем, палитр и типографических сеток.")
                             .font(.caption)
@@ -221,7 +221,7 @@ private struct InspirationCardView: View {
                 Button {
                     onUseAsProject()
                 } label: {
-                    Label(isCreated ? "Создано!" : "В проект 💡", systemImage: isCreated ? "checkmark" : "plus.circle")
+                    Label(isCreated ? "Создано" : "В проект", systemImage: isCreated ? "checkmark" : "plus.circle")
                         .font(.caption.weight(.medium))
                 }
                 .buttonStyle(.borderedProminent)
@@ -342,7 +342,7 @@ private struct InspirationInspectorSheet: View {
                 Spacer()
                 Button("Закрыть") { onDismiss() }
                     .buttonStyle(.bordered)
-                Button("Создать проект на основе референса 💡") { onUseAsProject() }
+                Button("Создать проект на основе референса") { onUseAsProject() }
                     .buttonStyle(.borderedProminent)
             }
             .padding(16)

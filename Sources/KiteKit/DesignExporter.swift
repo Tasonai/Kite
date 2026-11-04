@@ -204,12 +204,12 @@ public enum DesignExporter {
     ) -> String {
         """
         flowchart TD
-            User(["👤 Пользователь"]) --> Client["💻 Клиент (\(title))"]
-            Client --> UI["🎨 Слой UI (\(style))"]
-            UI --> State["⚡️ Управление состоянием (Store)"]
-            State --> Engine["⚙️ Архитектурное ядро"]
-            Engine --> Storage[("💾 Локальная БД")]
-            Engine --> AI["🤖 Интеллектуальные сервисы"]
+            User(["Пользователь"]) --> Client["Клиент (\(title))"]
+            Client --> UI["Слой UI (\(style))"]
+            UI --> State["Управление состоянием (Store)"]
+            State --> Engine["Архитектурное ядро"]
+            Engine --> Storage[("Локальная БД")]
+            Engine --> AI["Интеллектуальные сервисы"]
             
             subgraph DesignSystem["Дизайн-система"]
                 Tokens["Токены цветов & типографики"]

@@ -86,13 +86,13 @@ public enum ProjectScaffolder {
         > **Visual System:** \(style)  
         > **Scaffolded by:** [Kite for macOS](https://github.com/chase/kite)  
         
-        ## 💡 Концепция
+        ## Концепция
         \(concept.isEmpty ? "Описание концепции и сценария использования." : concept)
         
-        ## 🚀 Быстрый старт
+        ## Быстрый старт
         Ознакомьтесь с [SPEC.md](./SPEC.md) и [PLAN.md](./PLAN.md) для реализации через Antigravity / Cursor.
         
-        ## 📋 Чек-лист разработки
+        ## Чек-лист разработки
         - [ ] Первичная инициализация компонентов
         - [ ] Локальное хранилище данных
         - [ ] Реализация основного пользовательского сценария

@@ -68,8 +68,7 @@ struct ContentView: View {
                 }
             }
         }
-        .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 280)
+        .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
     }
 }
 
@@ -240,9 +239,9 @@ struct ItemDetail: View {
                     // Metadata Selectors
                     HStack(spacing: 16) {
                         Picker("Статус", selection: $item.status) {
-                            Text("📌 В планах").tag("backlog")
-                            Text("🚀 В разработке").tag("in_progress")
-                            Text("✅ Готово").tag("completed")
+                            Text("В планах").tag("backlog")
+                            Text("В разработке").tag("in_progress")
+                            Text("Готово").tag("completed")
                         }
                         .pickerStyle(.menu)
 
@@ -293,7 +292,7 @@ struct ItemDetail: View {
                                     Text("AI генерирует архитектуру...")
                                 } else {
                                     Image(systemName: "sparkles")
-                                    Text("Сгенерировать AI-спецификацию 🪄")
+                                    Text("Сгенерировать AI-спецификацию")
                                 }
                             }
                             .font(.headline)
@@ -315,7 +314,7 @@ struct ItemDetail: View {
                                         isCopied = false
                                     }
                                 } label: {
-                                    Label(isCopied ? "Скопировано!" : "Скопировать план 📋", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                                    Label(isCopied ? "Скопировано" : "Скопировать план", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                                         .padding(.vertical, 4)
                                 }
                                 .buttonStyle(.bordered)
@@ -324,7 +323,7 @@ struct ItemDetail: View {
                             Button {
                                 scaffoldProject(for: item)
                             } label: {
-                                Label("Развернуть проект 📁", systemImage: "folder.badge.plus")
+                                Label("Развернуть проект", systemImage: "folder.badge.plus")
                                     .padding(.vertical, 4)
                             }
                             .buttonStyle(.bordered)
@@ -367,7 +366,7 @@ struct ItemDetail: View {
                                     Label("Схема для FigJam (Mermaid / Flowchart)", systemImage: "arrow.triangle.branch")
                                 }
                             } label: {
-                                Label("Экспорт 🎨", systemImage: "square.and.arrow.up")
+                                Label("Экспорт", systemImage: "square.and.arrow.up")
                                     .padding(.vertical, 4)
                             }
                             .buttonStyle(.bordered)
@@ -395,7 +394,7 @@ struct ItemDetail: View {
                             Text("Проект создан: \(URL(fileURLWithPath: path).lastPathComponent)")
                                 .font(.caption.weight(.medium))
                             Spacer()
-                            Button("Показать в Finder ↗️") {
+                            Button("Показать в Finder") {
                                 NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: "")
                             }
                             .font(.caption)
@@ -522,7 +521,7 @@ struct ItemDetail: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             HStack {
-                Button("Скопировать в буфер 📋") {
+                Button("Скопировать в буфер") {
                     if let text = exportSheetContent {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(text, forType: .string)
@@ -533,7 +532,7 @@ struct ItemDetail: View {
 
                 Spacer()
 
-                Button("Сохранить файл на диск 💾") {
+                Button("Сохранить файл на диск") {
                     saveExportFile()
                 }
                 .buttonStyle(.bordered)

@@ -45,7 +45,7 @@ struct DesignLabView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Лаборатория дизайна 🧪")
+                        Text("Лаборатория дизайна")
                             .font(.title2.bold())
                         Text("Интерактивный микшер типографики, палитр и дизайн-токенов.")
                             .font(.caption)
@@ -165,7 +165,7 @@ struct DesignLabView: View {
                     Button {
                         createProjectFromLab()
                     } label: {
-                        Label("Создать проект с этими токенами 💡", systemImage: "sparkles")
+                        Label("Создать проект с этими токенами", systemImage: "sparkles")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
