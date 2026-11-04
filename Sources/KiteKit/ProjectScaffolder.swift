@@ -152,7 +152,135 @@ public enum ProjectScaffolder {
         try plan.write(to: projectDir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
         createdFiles.append("PLAN.md")
         
-        // 4. .gitignore
+        // 4. DESIGN.md
+        let tokens = DesignSystemTokens.resolve(for: style)
+        let designMd = """
+        # Design System Specification — DESIGN.md
+        > **Project:** \(title)
+        > **Aesthetic:** \(style) (\(tokens.theme))
+        
+        ## Color Tokens
+        - **Background:** \(tokens.background)
+        - **Surface:** \(tokens.surface)
+        - **Primary Accent:** \(tokens.accent) (\(tokens.accentRole))
+        - **Text Primary:** \(tokens.textPrimary)
+        - **Text Secondary:** \(tokens.textSecondary)
+        
+        ## Components & Elevation
+        - **Buttons:** \(tokens.buttons)
+        - **Cards & Panels:** \(tokens.cards)
+        - **Typography:** \(tokens.typography)
+        - **Layout Grid:** Strict 4pt/8pt modular grid (touch targets >= 44px).
+        """
+        try designMd.write(to: projectDir.appendingPathComponent("DESIGN.md"), atomically: true, encoding: .utf8)
+        createdFiles.append("DESIGN.md")
+
+        // 5. CLAUDE.md (Agent Guidelines)
+        let claudeMd = """
+        # Engineering Constitution for \(title)
+        
+        ## Core Rules
+        - **Zero AI Slop:** No generic template filler, no unstyled placeholders, no emojis.
+        - **Craftsmanship:** Strict 4pt/8pt modular grid. Every touch target >= 44px.
+        - **Architecture:** Local-first, sub-250ms spring transitions, offline resilience.
+        
+        ## Antigravity Skills
+        Execute work with slash syntax:
+        - `/site-md` — Architecture mapping and project constitution
+        - `/design-md` — Visual system and design token sync
+        - `/taste-design` — Typography curation and visual hierarchy
+        - `/impeccable` — Interface polish and high-density details
+        - `/emil-design-eng` — Physical spring micro-interactions
+        - `/a11y-debugging` — WCAG AA compliance and keyboard accessibility
+        - `/gsd-execute-phase` — Wave-based execution with atomic commits
+        """
+        try claudeMd.write(to: projectDir.appendingPathComponent("CLAUDE.md"), atomically: true, encoding: .utf8)
+        createdFiles.append("CLAUDE.md")
+
+        // 6. Platform Scaffold
+        let effectiveFolderName = folderName.isEmpty ? "App" : folderName
+        if platform.lowercased() == "web" {
+            let pkgJson = """
+            {
+              "name": "\(effectiveFolderName.lowercased())",
+              "private": true,
+              "version": "1.0.0",
+              "type": "module",
+              "scripts": {
+                "dev": "vite",
+                "build": "tsc -b && vite build",
+                "preview": "vite preview"
+              },
+              "dependencies": {
+                "react": "^19.0.0",
+                "react-dom": "^19.0.0",
+                "lucide-react": "^1.16.0"
+              },
+              "devDependencies": {
+                "@vitejs/plugin-react": "^4.3.4",
+                "typescript": "^5.7.2",
+                "vite": "^6.2.0"
+              }
+            }
+            """
+            try pkgJson.write(to: projectDir.appendingPathComponent("package.json"), atomically: true, encoding: .utf8)
+            createdFiles.append("package.json")
+        } else if platform.lowercased() == "desktop" {
+            let safeTargetName = effectiveFolderName.replacingOccurrences(of: "-", with: "_")
+            let swiftPkg = """
+            // swift-tools-version: 6.0
+            import PackageDescription
+
+            let package = Package(
+                name: "\(safeTargetName)",
+                platforms: [.macOS(.v14)],
+                products: [
+                    .executable(name: "\(safeTargetName)", targets: ["\(safeTargetName)"])
+                ],
+                targets: [
+                    .executableTarget(
+                        name: "\(safeTargetName)",
+                        path: "Sources"
+                    )
+                ]
+            )
+            """
+            try swiftPkg.write(to: projectDir.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
+            createdFiles.append("Package.swift")
+            
+            let srcDir = projectDir.appendingPathComponent("Sources")
+            try? FileManager.default.createDirectory(at: srcDir, withIntermediateDirectories: true)
+            let mainSwift = """
+            import SwiftUI
+
+            @main
+            struct \(safeTargetName)App: App {
+                var body: some Scene {
+                    WindowGroup {
+                        ContentView()
+                    }
+                }
+            }
+
+            struct ContentView: View {
+                var body: some View {
+                    VStack(spacing: 16) {
+                        Text("\(title)")
+                            .font(.title)
+                        Text("\(effectiveConcept)")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(24)
+                    .frame(minWidth: 600, minHeight: 400)
+                }
+            }
+            """
+            try mainSwift.write(to: srcDir.appendingPathComponent("App.swift"), atomically: true, encoding: .utf8)
+            createdFiles.append("Sources/App.swift")
+        }
+
+        // 7. .gitignore
         let gitignore = """
         .DS_Store
         node_modules/
@@ -164,7 +292,7 @@ public enum ProjectScaffolder {
         try gitignore.write(to: projectDir.appendingPathComponent(".gitignore"), atomically: true, encoding: .utf8)
         createdFiles.append(".gitignore")
         
-        // 5. Initialize git if available
+        // 8. Initialize git if available
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
         process.currentDirectoryURL = projectDir
