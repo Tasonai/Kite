@@ -37,10 +37,13 @@ public final class KiteSyncServer: @unchecked Sendable {
                 switch state {
                 case .ready:
                     self?.isRunning = true
-                case .failed:
+                    KiteLog.sync.info("KiteSyncServer listening on port \(port)")
+                case .failed(let err):
+                    KiteLog.sync.error("KiteSyncServer failed: \(err.localizedDescription)")
                     self?.stop()
                 case .cancelled:
                     self?.isRunning = false
+                    KiteLog.sync.info("KiteSyncServer stopped")
                 default:
                     break
                 }
@@ -48,7 +51,7 @@ public final class KiteSyncServer: @unchecked Sendable {
 
             listener.start(queue: queue)
         } catch {
-            // Port might be in use
+            KiteLog.sync.error("KiteSyncServer failed to bind port \(port): \(error.localizedDescription)")
         }
     }
 
@@ -98,6 +101,7 @@ public final class KiteSyncServer: @unchecked Sendable {
 
         let method = tokens[0].uppercased()
         let path = tokens[1]
+        KiteLog.sync.debug("Incoming \(method) \(path)")
 
         // CORS Preflight
         if method == "OPTIONS" {

@@ -480,7 +480,7 @@ struct ItemDetail: View {
                 NSSound.beep()
                 NSWorkspace.shared.selectFile(result.directory.path, inFileViewerRootedAtPath: "")
             } catch {
-                print("Failed to scaffold project: \(error)")
+                KiteLog.app.error("Failed to scaffold project: \(error.localizedDescription)")
             }
         }
     }
