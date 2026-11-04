@@ -20,30 +20,41 @@ public enum ItemSearch {
             .filter { !$0.isEmpty }
     }
 
-    /// Returns nil when any token has no match, otherwise a score (higher is better).
-    public static func score(query: String, fields: [Field]) -> Int? {
-        let queryTokens = tokens(query)
-        guard !queryTokens.isEmpty else { return 0 }
+    /// A document whose fields are tokenized once, for searching large catalogs on every keystroke.
+    public struct Document: Sendable {
+        fileprivate let indexed: [(words: [String], weight: Int)]
 
-        let indexed = fields.map { (words: tokens($0.text), weight: $0.weight) }
-        var total = 0
-        for token in queryTokens {
-            var best = 0
-            for field in indexed {
-                for word in field.words {
-                    if word == token {
-                        best = max(best, field.weight * 3)
-                    } else if word.hasPrefix(token) {
-                        best = max(best, field.weight * 2)
-                    } else if word.contains(token) {
-                        best = max(best, field.weight)
+        public init(fields: [Field]) {
+            indexed = fields.map { (ItemSearch.tokens($0.text), $0.weight) }
+        }
+
+        /// Returns nil when any query token has no match, otherwise a score (higher is better).
+        public func score(queryTokens: [String]) -> Int? {
+            guard !queryTokens.isEmpty else { return 0 }
+            var total = 0
+            for token in queryTokens {
+                var best = 0
+                for field in indexed {
+                    for word in field.words {
+                        if word == token {
+                            best = max(best, field.weight * 3)
+                        } else if word.hasPrefix(token) {
+                            best = max(best, field.weight * 2)
+                        } else if word.contains(token) {
+                            best = max(best, field.weight)
+                        }
                     }
                 }
+                if best == 0 { return nil }
+                total += best
             }
-            if best == 0 { return nil }
-            total += best
+            return total
         }
-        return total
+    }
+
+    /// Returns nil when any token has no match, otherwise a score (higher is better).
+    public static func score(query: String, fields: [Field]) -> Int? {
+        Document(fields: fields).score(queryTokens: tokens(query))
     }
 
     /// Splits text into runs so a view can emphasize the parts that matched.

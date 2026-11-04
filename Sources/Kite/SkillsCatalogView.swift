@@ -38,19 +38,30 @@ struct SkillsCatalogView: View {
         selectedTab == .skills ? skillCategories : pluginCategories
     }
 
+    /// Tokenized once; searching 355 long descriptions on every keystroke would lag otherwise.
+    private static let skillIndex: [String: ItemSearch.Document] = Dictionary(
+        SkillsRepository.curated.map { skill in
+            (skill.id, ItemSearch.Document(fields: [
+                .init(skill.name, weight: 6),
+                .init(skill.command, weight: 6),
+                .init(skill.triggers.joined(separator: " "), weight: 4),
+                .init(skill.pluginId ?? "", weight: 2),
+                .init(skill.summary, weight: 2),
+                .init(skill.description, weight: 1)
+            ]))
+        },
+        uniquingKeysWith: { first, _ in first }
+    )
+
     private var filteredSkills: [AntigravitySkillInfo] {
-        SkillsRepository.curated.filter { s in
-            let matchesCat = selectedCategory == "Все" || s.category == selectedCategory
-            if !matchesCat { return false }
-            if searchQuery.trimmingCharacters(in: .whitespaces).isEmpty { return true }
-            let q = searchQuery.lowercased()
-            return s.name.lowercased().contains(q) ||
-                   s.command.lowercased().contains(q) ||
-                   s.summary.lowercased().contains(q) ||
-                   s.description.lowercased().contains(q) ||
-                   (s.pluginId?.lowercased().contains(q) ?? false) ||
-                   s.triggers.contains { $0.lowercased().contains(q) }
+        let inCategory = SkillsRepository.curated.filter { selectedCategory == "Все" || $0.category == selectedCategory }
+        let queryTokens = ItemSearch.tokens(searchQuery)
+        if queryTokens.isEmpty { return inCategory }
+        let ranked: [(skill: AntigravitySkillInfo, score: Int)] = inCategory.compactMap { skill in
+            guard let score = Self.skillIndex[skill.id]?.score(queryTokens: queryTokens) else { return nil }
+            return (skill, score)
         }
+        return ranked.sorted { $0.score > $1.score }.map(\.skill)
     }
 
     private var filteredPlugins: [AntigravityPluginInfo] {
