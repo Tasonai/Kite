@@ -283,6 +283,10 @@ struct InfiniteCanvasView: View {
                 .padding(.vertical, 8)
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                )
                 .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
 
                 // Connecting Helper Banner
@@ -426,10 +430,13 @@ struct InfiniteCanvasView: View {
                 .fill(Color(hex: frame.colorHex).opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(hex: frame.colorHex).opacity(0.35), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                        .stroke(Color(hex: frame.colorHex).opacity(isDragged ? 0.6 : 0.35), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
                 )
                 .frame(width: frame.width, height: frame.height)
         }
+        .scaleEffect(isDragged ? 1.01 : 1.0)
+        .shadow(color: isDragged ? Color.black.opacity(0.16) : Color.clear, radius: isDragged ? 16 : 0, y: isDragged ? 8 : 0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isDragged)
         .position(x: curX + frame.width / 2, y: curY + frame.height / 2) // grid: ok frame center position
     }
 
@@ -524,7 +531,10 @@ struct InfiniteCanvasView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isConnectingSource ? Color.orange : Color.secondary.opacity(0.2), lineWidth: isConnectingSource ? 2 : 1)
         )
-        .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
+        .scaleEffect(isDragged ? 1.04 : 1.0)
+        .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.08), radius: isDragged ? 16 : 6, y: isDragged ? 12 : 3)
+        .zIndex(isDragged ? 100 : 1)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isDragged)
         .position(pos) // grid: ok reference card position
         .onTapGesture {
             handleNodeTap(nodeId: nodeId)
@@ -567,6 +577,7 @@ struct InfiniteCanvasView: View {
         let pos = positionFor(item: item, index: index)
         let nodeId = "item-\(item.uuid.uuidString)"
         let isConnectingSource = connectingSourceId == nodeId
+        let isDragged = draggedItemId == item.uuid
 
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
@@ -627,7 +638,10 @@ struct InfiniteCanvasView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isConnectingSource ? Color.orange : Color.secondary.opacity(0.2), lineWidth: isConnectingSource ? 2 : 1)
         )
-        .shadow(color: .black.opacity(0.08), radius: 6, y: 3)
+        .scaleEffect(isDragged ? 1.04 : 1.0)
+        .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.08), radius: isDragged ? 16 : 6, y: isDragged ? 12 : 3)
+        .zIndex(isDragged ? 100 : 1)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isDragged)
         .position(pos) // grid: ok canvas dynamic position
         .onTapGesture {
             handleNodeTap(nodeId: nodeId)
@@ -685,7 +699,10 @@ struct InfiniteCanvasView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(isConnectingSource ? Color.orange : Color.clear, lineWidth: 2)
         )
-        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+        .scaleEffect(isDragged ? 1.05 : 1.0)
+        .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.1), radius: isDragged ? 16 : 4, y: isDragged ? 12 : 2)
+        .zIndex(isDragged ? 100 : 1)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isDragged)
         .position(pos) // grid: ok canvas dynamic position
         .onTapGesture {
             handleNodeTap(nodeId: nodeId)
