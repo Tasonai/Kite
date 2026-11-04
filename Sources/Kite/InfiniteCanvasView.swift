@@ -6,6 +6,7 @@ import KiteKit
 struct InfiniteCanvasView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
+    @Environment(\.colorScheme) private var colorScheme
     @Query private var items: [Item]
 
     // Pan & Zoom State
@@ -693,7 +694,7 @@ struct InfiniteCanvasView: View {
         }
         .padding(16)
         .frame(width: 200, height: 160, alignment: .topLeading)
-        .background(Color(hex: sticky.colorHex))
+        .background(Color(hex: sticky.colorHex).opacity(colorScheme == .dark ? 0.88 : 1))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)

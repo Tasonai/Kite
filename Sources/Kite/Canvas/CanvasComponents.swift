@@ -33,6 +33,9 @@ struct ArrowHead: Shape {
 struct CanvasGridBackground: View {
     let offset: CGSize
     let scale: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isDark: Bool { colorScheme == .dark }
 
     var body: some View {
         GeometryReader { _ in
@@ -46,13 +49,13 @@ struct CanvasGridBackground: View {
                     var y = yOffset - spacing
                     while y < size.height + spacing {
                         let rect = CGRect(x: x - 1, y: y - 1, width: 2, height: 2)
-                        context.fill(Path(ellipseIn: rect), with: .color(Color.secondary.opacity(0.18)))
+                        context.fill(Path(ellipseIn: rect), with: .color(isDark ? Color.white.opacity(0.10) : Color.secondary.opacity(0.18)))
                         y += spacing
                     }
                     x += spacing
                 }
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(isDark ? Color(hex: "#121214") : Color(nsColor: .windowBackgroundColor))
     }
 }
