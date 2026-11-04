@@ -10,7 +10,9 @@ enum CanvasExporter {
         items: [Item],
         itemPositions: [UUID: CGPoint],
         stickies: [CanvasSticky],
-        connections: [CanvasConnection]
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        referenceCards: [CanvasReferenceCard] = []
     ) -> String {
         // Calculate canvas bounds
         var minX: CGFloat = .greatestFiniteMagnitude
@@ -27,10 +29,24 @@ enum CanvasExporter {
         }
 
         for sticky in stickies {
-            minX = min(minX, sticky.position.x)
-            minY = min(minY, sticky.position.y)
-            maxX = max(maxX, sticky.position.x + 200)
-            maxY = max(maxY, sticky.position.y + 160)
+            minX = min(minX, sticky.position.x - 100)
+            minY = min(minY, sticky.position.y - 80)
+            maxX = max(maxX, sticky.position.x + 100)
+            maxY = max(maxY, sticky.position.y + 80)
+        }
+
+        for ref in referenceCards {
+            minX = min(minX, ref.position.x - 120)
+            minY = min(minY, ref.position.y - 90)
+            maxX = max(maxX, ref.position.x + 120)
+            maxY = max(maxY, ref.position.y + 90)
+        }
+
+        for frame in frames {
+            minX = min(minX, frame.x)
+            minY = min(minY, frame.y)
+            maxX = max(maxX, frame.x + frame.width)
+            maxY = max(maxY, frame.y + frame.height)
         }
 
         if minX > maxX {
@@ -60,41 +76,76 @@ enum CanvasExporter {
             .card-desc { font-size: 12px; fill: #A09D95; } // grid: ok svg style
             .sticky-text { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", sans-serif; font-weight: 600; font-size: 13px; fill: #1C1B18; }
             .tag { font-family: "SF Mono", monospace; font-size: 10px; fill: #8C8980; }
+            .frame-title { font-weight: 700; font-size: 12px; fill: #FAF9F5; }
           </style>
 
           <!-- Canvas Background -->
           <rect x="\(Int(originX))" y="\(Int(originY))" width="\(Int(totalW))" height="\(Int(totalH))" fill="#141413" />
 
-          <!-- Connection Lines -->
-          <g id="connections">
+          <!-- Canvas Frames (Sections) -->
+          <g id="frames">
         """
 
+        for frame in frames {
+            let fx = Int(frame.x)
+            let fy = Int(frame.y)
+            let fw = Int(frame.width)
+            let fh = Int(frame.height)
+            svg += """
+
+            <rect x="\(fx)" y="\(fy)" width="\(fw)" height="\(fh)" rx="16" fill="\(frame.colorHex)" fill-opacity="0.06" stroke="\(frame.colorHex)" stroke-width="1.5" stroke-dasharray="6,4" />
+            <rect x="\(fx)" y="\(fy)" width="\(min(fw, 240))" height="28" rx="8" fill="\(frame.colorHex)" />
+            <text x="\(fx + 12)" y="\(fy + 18)" class="frame-title">\(escapeXml(frame.title))</text>
+        """
+        }
+
+        svg += "\n  </g>\n\n  <!-- Connection Lines -->\n  <g id=\"connections\">"
+
         for conn in connections {
-            if let (start, end) = resolvePoints(conn: conn, items: items, itemPositions: itemPositions, stickies: stickies) {
+            if let (start, end) = resolvePoints(conn: conn, items: items, itemPositions: itemPositions, stickies: stickies, refCards: referenceCards) {
                 let dx = end.x - start.x
                 let c1x = start.x + dx * 0.5
                 let c2x = end.x - dx * 0.5
                 svg += """
 
-            <path d="M \(Int(start.x)) \(Int(start.y)) C \(Int(c1x)) \(Int(start.y)), \(Int(c2x)) \(Int(end.y)), \(Int(end.x)) \(Int(end.y))" stroke="#D97757" stroke-width="2.5" fill="none" stroke-dasharray="6,4" marker-end="url(#arrow)" />
+            <path d="M \(Int(start.x)) \(Int(start.y)) C \(Int(c1x)) \(Int(start.y)), \(Int(c2x)) \(Int(end.y)), \(Int(end.x)) \(Int(end.y))" stroke="\(conn.colorHex)" stroke-width="2.5" fill="none" stroke-dasharray="6,4" marker-end="url(#arrow)" />
         """
                 if !conn.label.isEmpty {
                     let midX = (start.x + end.x) / 2
                     let midY = (start.y + end.y) / 2
                     svg += """
 
-            <rect x="\(Int(midX - 40))" y="\(Int(midY - 12))" width="80" height="24" rx="12" fill="#232321" stroke="#D97757" stroke-width="1" />
+            <rect x="\(Int(midX - 40))" y="\(Int(midY - 12))" width="80" height="24" rx="12" fill="#232321" stroke="\(conn.colorHex)" stroke-width="1" />
             <text x="\(Int(midX))" y="\(Int(midY + 4))" font-size="11" font-weight="600" fill="#FAF9F5" text-anchor="middle">\(escapeXml(conn.label))</text>
         """
                 }
             }
         }
 
+        svg += "\n  </g>\n\n  <!-- Reference Cards (Mobbin / Figma) -->\n  <g id=\"references\">"
+
+        for ref in referenceCards {
+            let rx = Int(ref.position.x - 120)
+            let ry = Int(ref.position.y - 80)
+            svg += """
+
+            <g transform="translate(\(rx), \(ry))" filter="url(#shadow)">
+              <rect width="240" height="160" rx="12" fill="#1C1B18" stroke="#33322E" stroke-width="1" />
+              <rect x="12" y="12" width="64" height="18" rx="9" fill="\(ref.colorHex)" fill-opacity="0.2" />
+              <text x="44" y="24" font-size="9" font-weight="bold" fill="\(ref.colorHex)" text-anchor="middle">\(escapeXml(ref.source))</text>
+              <text x="12" y="52" class="card-title" font-size="13">\(escapeXml(ref.title))</text>
+              <text x="12" y="78" class="card-desc">\(escapeXml(String(ref.description.prefix(60))))</text>
+              <rect x="12" y="124" width="216" height="24" rx="6" fill="#292824" />
+              <text x="120" y="140" class="tag" text-anchor="middle">\(escapeXml(ref.tags.joined(separator: " • ")))</text>
+            </g>
+        """
+        }
+
         svg += "\n  </g>\n\n  <!-- Stickies -->\n  <g id=\"stickies\">"
 
         for sticky in stickies {
-            let sx = Int(sticky.position.x)
-            let sy = Int(sticky.position.y)
+            let sx = Int(sticky.position.x - 100)
+            let sy = Int(sticky.position.y - 80)
             svg += """
 
             <g transform="translate(\(sx), \(sy))" filter="url(#shadow)">
@@ -134,9 +185,18 @@ enum CanvasExporter {
         items: [Item],
         itemPositions: [UUID: CGPoint],
         stickies: [CanvasSticky],
-        connections: [CanvasConnection]
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        referenceCards: [CanvasReferenceCard] = []
     ) -> NSImage? {
-        let svgString = exportSVG(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections)
+        let svgString = exportSVG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        )
         guard let data = svgString.data(using: .utf8) else { return nil }
         return NSImage(data: data)
     }
@@ -145,9 +205,18 @@ enum CanvasExporter {
         items: [Item],
         itemPositions: [UUID: CGPoint],
         stickies: [CanvasSticky],
-        connections: [CanvasConnection]
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        referenceCards: [CanvasReferenceCard] = []
     ) -> Data? {
-        guard let image = exportPNG(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections) else { return nil }
+        guard let image = exportPNG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        ) else { return nil }
         let pdfData = NSMutableData()
         var rect = CGRect(origin: .zero, size: image.size)
         guard let consumer = CGDataConsumer(data: pdfData as CFMutableData),
@@ -179,9 +248,18 @@ enum CanvasExporter {
         items: [Item],
         itemPositions: [UUID: CGPoint],
         stickies: [CanvasSticky],
-        connections: [CanvasConnection]
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        referenceCards: [CanvasReferenceCard] = []
     ) {
-        if let image = exportPNG(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections) {
+        if let image = exportPNG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        ) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             pasteboard.writeObjects([image])
@@ -192,10 +270,11 @@ enum CanvasExporter {
         conn: CanvasConnection,
         items: [Item],
         itemPositions: [UUID: CGPoint],
-        stickies: [CanvasSticky]
+        stickies: [CanvasSticky],
+        refCards: [CanvasReferenceCard]
     ) -> (CGPoint, CGPoint)? {
-        guard let start = centerFor(id: conn.fromId, items: items, itemPositions: itemPositions, stickies: stickies),
-              let end = centerFor(id: conn.toId, items: items, itemPositions: itemPositions, stickies: stickies) else {
+        guard let start = centerFor(id: conn.fromId, items: items, itemPositions: itemPositions, stickies: stickies, refCards: refCards),
+              let end = centerFor(id: conn.toId, items: items, itemPositions: itemPositions, stickies: stickies, refCards: refCards) else {
             return nil
         }
         return (start, end)
@@ -205,13 +284,19 @@ enum CanvasExporter {
         id: String,
         items: [Item],
         itemPositions: [UUID: CGPoint],
-        stickies: [CanvasSticky]
+        stickies: [CanvasSticky],
+        refCards: [CanvasReferenceCard]
     ) -> CGPoint? {
         if id.hasPrefix("sticky-") {
             let raw = String(id.dropFirst("sticky-".count))
             guard let uuid = UUID(uuidString: raw),
                   let sticky = stickies.first(where: { $0.id == uuid }) else { return nil }
             return sticky.position
+        } else if id.hasPrefix("ref-") {
+            let raw = String(id.dropFirst("ref-".count))
+            guard let uuid = UUID(uuidString: raw),
+                  let ref = refCards.first(where: { $0.id == uuid }) else { return nil }
+            return ref.position
         } else if id.hasPrefix("item-") {
             let raw = String(id.dropFirst("item-".count))
             guard let uuid = UUID(uuidString: raw),

@@ -33,6 +33,61 @@ struct CanvasConnection: Identifiable, Sendable, Equatable, Codable {
     }
 }
 
+struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
+    let id: UUID
+    var title: String
+    var colorHex: String
+    var x: CGFloat
+    var y: CGFloat
+    var width: CGFloat
+    var height: CGFloat
+
+    init(id: UUID = UUID(), title: String, colorHex: String = "#3B82F6", x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+        self.id = id
+        self.title = title
+        self.colorHex = colorHex
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+    }
+
+    var rect: CGRect {
+        CGRect(x: x, y: y, width: width, height: height)
+    }
+}
+
+struct CanvasReferenceCard: Identifiable, Sendable, Equatable, Codable {
+    let id: UUID
+    var title: String
+    var source: String // Mobbin, Figma, Recent Design
+    var url: String
+    var colorHex: String
+    var position: CGPoint
+    var tags: [String]
+    var description: String
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        source: String,
+        url: String,
+        colorHex: String,
+        position: CGPoint,
+        tags: [String],
+        description: String
+    ) {
+        self.id = id
+        self.title = title
+        self.source = source
+        self.url = url
+        self.colorHex = colorHex
+        self.position = position
+        self.tags = tags
+        self.description = description
+    }
+}
+
 struct InfiniteCanvasView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
@@ -48,11 +103,41 @@ struct InfiniteCanvasView: View {
     @State private var draggedItemId: UUID?
     @State private var itemDragOffset: CGSize = .zero
 
+    // Frames (Feature 1)
+    @State private var frames: [CanvasFrame] = [
+        CanvasFrame(
+            title: "Архитектурные принципы и UI/UX",
+            colorHex: "#3B82F6",
+            x: 480,
+            y: 40,
+            width: 440,
+            height: 520
+        )
+    ]
+    @State private var draggedFrameId: UUID?
+    @State private var frameDragOffset: CGSize = .zero
+
+    // Reference Cards (Feature 3)
+    @State private var referenceCards: [CanvasReferenceCard] = [
+        CanvasReferenceCard(
+            title: "Linear Navigation & Command HUD",
+            source: "Mobbin",
+            url: "https://mobbin.com",
+            colorHex: "#10B981",
+            position: CGPoint(x: 200, y: 180),
+            tags: ["Shortcuts", "Ergonomics", "Dark Mode"],
+            description: "Референс компактной навигации и быстрого доступа через клавиши."
+        )
+    ]
+    @State private var draggedRefCardId: UUID?
+    @State private var refCardDragOffset: CGSize = .zero
+    @State private var isReferencePickerOpen: Bool = false
+
     // Stickies
     @State private var stickies: [CanvasSticky] = [
-        CanvasSticky(text: "⚡️ Архитектурный контраст: отказ от серого слопа", colorHex: "#FEF08A", position: CGPoint(x: 560, y: 120)),
-        CanvasSticky(text: "📱 44px Touch Targets & Apple HIG 4pt Grid", colorHex: "#BBF7D0", position: CGPoint(x: 560, y: 360)),
-        CanvasSticky(text: "🪄 Zero-latency нативный отклик SwiftData", colorHex: "#DDD6FE", position: CGPoint(x: 160, y: 440))
+        CanvasSticky(text: "⚡️ Архитектурный контраст: отказ от серого слопа", colorHex: "#FEF08A", position: CGPoint(x: 600, y: 140)),
+        CanvasSticky(text: "📱 44px Touch Targets & Apple HIG 4pt Grid", colorHex: "#BBF7D0", position: CGPoint(x: 600, y: 380)),
+        CanvasSticky(text: "🪄 Zero-latency нативный отклик SwiftData", colorHex: "#DDD6FE", position: CGPoint(x: 200, y: 440))
     ]
     @State private var draggedStickyId: UUID?
     @State private var stickyDragOffset: CGSize = .zero
@@ -62,8 +147,6 @@ struct InfiniteCanvasView: View {
     @State private var isConnectingMode: Bool = false
     @State private var connectingSourceId: String? = nil
     @State private var selectedConnectionId: UUID? = nil
-    @State private var editingLabelConnId: UUID? = nil
-    @State private var tempConnLabel: String = ""
 
     // Export notification toast
     @State private var exportToast: String? = nil
@@ -87,7 +170,12 @@ struct InfiniteCanvasView: View {
 
             // Zoomed and Panned World
             ZStack(alignment: .topLeading) {
-                // Connection Lines (Rendered below cards)
+                // 1. Frames rendered in the back layer (Feature 1)
+                ForEach(frames) { frame in
+                    frameView(frame)
+                }
+
+                // 2. Connection Lines (Rendered below cards)
                 ForEach(connections) { conn in
                     connectionLineView(conn)
                 }
@@ -100,12 +188,17 @@ struct InfiniteCanvasView: View {
                         .position(srcPoint) // grid: ok canvas source indicator
                 }
 
-                // Stickies
+                // 3. Reference Cards from Mobbin / Figma (Feature 3)
+                ForEach(referenceCards) { ref in
+                    referenceCardView(ref)
+                }
+
+                // 4. Stickies
                 ForEach(stickies) { sticky in
                     stickyView(sticky)
                 }
 
-                // SwiftData Idea Cards
+                // 5. SwiftData Idea Cards
                 ForEach(items) { item in
                     ideaCard(item)
                 }
@@ -119,18 +212,52 @@ struct InfiniteCanvasView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "rectangle.split.3x3")
                             .foregroundStyle(Color.accentColor)
-                        Text("Холст идей")
+                        Text("Холст")
                             .font(.headline)
-                        Text("\(items.count + stickies.count) объектов")
-                            .font(.system(size: 10, design: .monospaced))
+                            .fixedSize()
+                        Text("\(items.count + stickies.count + referenceCards.count)")
+                            .font(.system(size: 10, design: .monospaced)) // grid: ok font
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.secondary.opacity(0.12))
                             .clipShape(Capsule())
                     }
+                    .fixedSize()
 
-                    Spacer()
+                    Spacer(minLength: 8)
+
+                    // AI Auto-Layout Button (Feature 2)
+                    Button {
+                        performAIAutoLayout()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "wand.and.stars")
+                            Text("AI-Раскладка")
+                        }
+                        .font(.caption.bold())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.indigo)
+                    .help("Упорядочить элементы и создать смысловые секции с помощью AI")
+
+                    // Add Frame Button (Feature 1)
+                    Button {
+                        addFrame()
+                    } label: {
+                        Label("+ Фрейм", systemImage: "squareshape.dashed.squareshape")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+
+                    // Add Reference Button (Feature 3)
+                    Button {
+                        isReferencePickerOpen = true
+                    } label: {
+                        Label("+ Референс", systemImage: "photo.on.rectangle.angled")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
 
                     // Connect Mode Toggle Button
                     Button {
@@ -165,7 +292,7 @@ struct InfiniteCanvasView: View {
                     }
                     .buttonStyle(.bordered)
 
-                    // Export Menu (Feature 2)
+                    // Export Menu
                     Menu {
                         Button {
                             exportAsSVG()
@@ -214,7 +341,7 @@ struct InfiniteCanvasView: View {
                         .buttonStyle(.bordered)
 
                         Text("\(Int(zoomScale * 100))%")
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(.system(size: 11, design: .monospaced)) // grid: ok font
                             .frame(width: 44)
 
                         Button {
@@ -248,7 +375,7 @@ struct InfiniteCanvasView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
                             .foregroundStyle(.orange)
-                        Text(connectingSourceId == nil ? "Кликните на первую карточку или стикер" : "Теперь кликните на целевой узел для соединения стрелкой")
+                        Text(connectingSourceId == nil ? "Кликните на первую карточку, стикер или референс" : "Теперь выберите целевой узел для соединения стрелкой")
                             .font(.caption.bold())
                             .foregroundStyle(.primary)
 
@@ -291,6 +418,9 @@ struct InfiniteCanvasView: View {
             }
             .padding(16)
         }
+        .sheet(isPresented: $isReferencePickerOpen) {
+            referencePickerSheet
+        }
         .onAppear {
             initializePositionsIfNeeded()
             setupInitialConnectionsIfNeeded()
@@ -304,6 +434,198 @@ struct InfiniteCanvasView: View {
         )
     }
 
+    // MARK: - Frame View (Feature 1)
+    private func frameView(_ frame: CanvasFrame) -> some View {
+        let isDragged = draggedFrameId == frame.id
+        let curX = frame.x + (isDragged ? frameDragOffset.width : 0)
+        let curY = frame.y + (isDragged ? frameDragOffset.height : 0)
+
+        return VStack(alignment: .leading, spacing: 0) {
+            // Frame Header Tab (Drag Handle)
+            HStack(spacing: 8) {
+                Image(systemName: "folder.fill")
+                    .font(.caption2)
+                Text(frame.title)
+                    .font(.caption.bold())
+                    .lineLimit(1)
+
+                Spacer()
+
+                Button {
+                    frames.removeAll(where: { $0.id == frame.id })
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold)) // grid: ok icon font
+                        .foregroundStyle(Color.white.opacity(0.8))
+                }
+                .buttonStyle(.plain)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(Color(hex: frame.colorHex))
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 0, bottomTrailingRadius: 8, topTrailingRadius: 8))
+            .gesture(
+                DragGesture()
+                    .onChanged { val in
+                        draggedFrameId = frame.id
+                        frameDragOffset = val.translation
+                    }
+                    .onEnded { val in
+                        if let idx = frames.firstIndex(where: { $0.id == frame.id }) {
+                            let dx = val.translation.width
+                            let dy = val.translation.height
+
+                            // Move frame
+                            frames[idx].x += dx
+                            frames[idx].y += dy
+
+                            // Move enclosed items
+                            let box = frame.rect
+                            for (itemId, pos) in itemPositions where box.contains(pos) {
+                                itemPositions[itemId] = CGPoint(x: pos.x + dx, y: pos.y + dy)
+                            }
+                            for sIdx in stickies.indices where box.contains(stickies[sIdx].position) {
+                                stickies[sIdx].position = CGPoint(x: stickies[sIdx].position.x + dx, y: stickies[sIdx].position.y + dy)
+                            }
+                            for rIdx in referenceCards.indices where box.contains(referenceCards[rIdx].position) {
+                                referenceCards[rIdx].position = CGPoint(x: referenceCards[rIdx].position.x + dx, y: referenceCards[rIdx].position.y + dy)
+                            }
+                        }
+                        draggedFrameId = nil
+                        frameDragOffset = .zero
+                    }
+            )
+
+            // Frame Body Bounds
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: frame.colorHex).opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: frame.colorHex).opacity(0.35), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                )
+                .frame(width: frame.width, height: frame.height)
+        }
+        .position(x: curX + frame.width / 2, y: curY + frame.height / 2) // grid: ok frame center position
+    }
+
+    // MARK: - Reference Card View (Feature 3)
+    private func referenceCardView(_ ref: CanvasReferenceCard) -> some View {
+        let isDragged = draggedRefCardId == ref.id
+        let pos = CGPoint(
+            x: ref.position.x + (isDragged ? refCardDragOffset.width : 0),
+            y: ref.position.y + (isDragged ? refCardDragOffset.height : 0)
+        )
+        let nodeId = "ref-\(ref.id.uuidString)"
+        let isConnectingSource = connectingSourceId == nodeId
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                // Source Badge
+                Text(ref.source)
+                    .font(.system(size: 9, weight: .bold, design: .monospaced)) // grid: ok font
+                    .foregroundStyle(Color(hex: ref.colorHex))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Color(hex: ref.colorHex).opacity(0.16))
+                    .clipShape(Capsule())
+
+                Spacer()
+
+                Button {
+                    if let url = URL(string: ref.url) {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Открыть референс в браузере")
+
+                Button {
+                    referenceCards.removeAll(where: { $0.id == ref.id })
+                    connections.removeAll(where: { $0.fromId == nodeId || $0.toId == nodeId })
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text(ref.title)
+                .font(.headline)
+                .lineLimit(2)
+
+            Text(ref.description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+
+            HStack(spacing: 4) {
+                ForEach(ref.tags.prefix(3), id: \.self) { tag in
+                    Text("#\(tag)")
+                        .font(.system(size: 9, design: .monospaced)) // grid: ok font
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    model.addItem(
+                        title: ref.title,
+                        concept: ref.description,
+                        platform: "Web",
+                        style: "Linear & DevTool Cockpit"
+                    )
+                    showToast("Создан проект на базе референса 💡")
+                } label: {
+                    Text("В идею 💡")
+                        .font(.system(size: 9, weight: .semibold)) // grid: ok font
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .frame(width: 260, height: 160)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isConnectingSource ? Color.orange : Color.secondary.opacity(0.2), lineWidth: isConnectingSource ? 2 : 1)
+        )
+        .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
+        .position(pos) // grid: ok reference card position
+        .onTapGesture {
+            handleNodeTap(nodeId: nodeId)
+        }
+        .gesture(
+            DragGesture()
+                .onChanged { val in
+                    guard !isConnectingMode else { return }
+                    draggedRefCardId = ref.id
+                    refCardDragOffset = val.translation
+                }
+                .onEnded { val in
+                    guard !isConnectingMode else { return }
+                    if let idx = referenceCards.firstIndex(where: { $0.id == ref.id }) {
+                        referenceCards[idx].position = CGPoint(
+                            x: ref.position.x + val.translation.width,
+                            y: ref.position.y + val.translation.height
+                        )
+                    }
+                    draggedRefCardId = nil
+                    refCardDragOffset = .zero
+                }
+        )
+    }
+
     private func positionFor(item: Item, index: Int) -> CGPoint {
         if let pos = itemPositions[item.uuid] {
             if draggedItemId == item.uuid {
@@ -311,7 +633,6 @@ struct InfiniteCanvasView: View {
             }
             return pos
         }
-        // Auto-arrange in staggered grid
         let col = index % 3
         let row = index / 3
         return CGPoint(x: 160 + col * 320, y: 160 + row * 240)
@@ -351,14 +672,14 @@ struct InfiniteCanvasView: View {
 
             HStack(spacing: 8) {
                 Text(item.platform)
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9, design: .monospaced)) // grid: ok font
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(Color.secondary.opacity(0.12))
                     .clipShape(Capsule())
 
                 Text(item.style)
-                    .font(.system(size: 9))
+                    .font(.system(size: 9)) // grid: ok font
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
@@ -474,7 +795,7 @@ struct InfiniteCanvasView: View {
             let newConn = CanvasConnection(
                 fromId: source,
                 toId: nodeId,
-                label: "архитектура",
+                label: "связь",
                 colorHex: "#D97757"
             )
             connections.append(newConn)
@@ -496,7 +817,6 @@ struct InfiniteCanvasView: View {
         let dx = end.x - start.x
         let dy = end.y - start.y
 
-        // Smart edge offsets so curves start/end at card borders rather than deep centers
         let startPt: CGPoint
         let endPt: CGPoint
 
@@ -535,7 +855,7 @@ struct InfiniteCanvasView: View {
                 HStack(spacing: 4) {
                     if !conn.label.isEmpty {
                         Text(conn.label)
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced)) // grid: ok font
                             .foregroundStyle(Color.primary)
                     }
 
@@ -545,7 +865,7 @@ struct InfiniteCanvasView: View {
                             selectedConnectionId = nil
                         } label: {
                             Image(systemName: "trash.fill")
-                                .font(.system(size: 9))
+                                .font(.system(size: 9)) // grid: ok font
                                 .foregroundStyle(Color.red)
                         }
                         .buttonStyle(.plain)
@@ -578,6 +898,15 @@ struct InfiniteCanvasView: View {
                 x: sticky.position.x + (isDragged ? stickyDragOffset.width : 0),
                 y: sticky.position.y + (isDragged ? stickyDragOffset.height : 0)
             )
+        } else if nodeId.hasPrefix("ref-") {
+            let raw = String(nodeId.dropFirst("ref-".count))
+            guard let uuid = UUID(uuidString: raw),
+                  let ref = referenceCards.first(where: { $0.id == uuid }) else { return nil }
+            let isDragged = draggedRefCardId == ref.id
+            return CGPoint(
+                x: ref.position.x + (isDragged ? refCardDragOffset.width : 0),
+                y: ref.position.y + (isDragged ? refCardDragOffset.height : 0)
+            )
         } else if nodeId.hasPrefix("item-") {
             let raw = String(nodeId.dropFirst("item-".count))
             guard let uuid = UUID(uuidString: raw),
@@ -586,6 +915,74 @@ struct InfiniteCanvasView: View {
             return positionFor(item: item, index: index)
         }
         return nil
+    }
+
+    // MARK: - AI Auto-Layout (Feature 2)
+    private func performAIAutoLayout() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            // Column 1: Reference Cards (Left, x = 180)
+            for (idx, _) in referenceCards.enumerated() {
+                referenceCards[idx].position = CGPoint(x: 180, y: 160 + CGFloat(idx) * 220)
+            }
+
+            // Column 2: Idea Cards (Center, x = 520)
+            for (idx, item) in items.enumerated() {
+                itemPositions[item.uuid] = CGPoint(x: 520, y: 160 + CGFloat(idx) * 240)
+            }
+
+            // Column 3: Stickies (Right, x = 860)
+            for (idx, _) in stickies.enumerated() {
+                stickies[idx].position = CGPoint(x: 860, y: 160 + CGFloat(idx) * 200)
+            }
+
+            // Auto-Enclosing Frames
+            let refHeight = max(400, CGFloat(max(1, referenceCards.count)) * 240 + 80)
+            let ideasHeight = max(400, CGFloat(max(1, items.count)) * 260 + 80)
+            let stickiesHeight = max(400, CGFloat(max(1, stickies.count)) * 220 + 80)
+
+            frames = [
+                CanvasFrame(
+                    title: "1. Референсы (Mobbin & Figma)",
+                    colorHex: "#10B981",
+                    x: 40,
+                    y: 60,
+                    width: 280,
+                    height: refHeight
+                ),
+                CanvasFrame(
+                    title: "2. Архитектура и задачи (SwiftData)",
+                    colorHex: "#3B82F6",
+                    x: 360,
+                    y: 60,
+                    width: 320,
+                    height: ideasHeight
+                ),
+                CanvasFrame(
+                    title: "3. Дизайн-система и заметки",
+                    colorHex: "#F59E0B",
+                    x: 720,
+                    y: 60,
+                    width: 280,
+                    height: stickiesHeight
+                )
+            ]
+        }
+        showToast("🪄 AI Auto-Layout: элементы упорядочены по смысловым фреймам!")
+    }
+
+    private func addFrame() {
+        let colors = ["#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899"]
+        let chosenColor = colors.randomElement() ?? "#3B82F6"
+        let newFrame = CanvasFrame(
+            title: "Новый спринт / Модуль",
+            colorHex: chosenColor,
+            x: 240,
+            y: 80,
+            width: 360,
+            height: 380
+        )
+        frames.append(newFrame)
+        showToast("Фрейм добавлен на холст 🗂️")
     }
 
     private func initializePositionsIfNeeded() {
@@ -600,16 +997,20 @@ struct InfiniteCanvasView: View {
 
     private func setupInitialConnectionsIfNeeded() {
         guard connections.isEmpty, stickies.count >= 2 else { return }
-        if let firstItem = items.first {
+
+        // Connect first reference card to first sticky or idea
+        if let firstRef = referenceCards.first, !stickies.isEmpty {
             connections.append(
                 CanvasConnection(
-                    fromId: "item-\(firstItem.uuid.uuidString)",
+                    fromId: "ref-\(firstRef.id.uuidString)",
                     toId: "sticky-\(stickies[0].id.uuidString)",
-                    label: "дизайн-токены",
-                    colorHex: "#D97757"
+                    label: "UX референс",
+                    colorHex: "#10B981"
                 )
             )
         }
+
+        // Link sticky 0 to sticky 1
         connections.append(
             CanvasConnection(
                 fromId: "sticky-\(stickies[0].id.uuidString)",
@@ -652,9 +1053,138 @@ struct InfiniteCanvasView: View {
         showToast("Идея создана 💡")
     }
 
-    // Export Helpers (Feature 2)
+    // MARK: - Reference Picker Sheet (Feature 3)
+    private var referencePickerSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .foregroundStyle(Color.accentColor)
+                    Text("Каталог референсов на холст")
+                        .font(.headline)
+                }
+
+                Spacer()
+
+                Button("Закрыть") {
+                    isReferencePickerOpen = false
+                }
+                .buttonStyle(.bordered)
+            }
+
+            Text("Выберите готовый паттерн из Mobbin или Figma для добавления на холст:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ScrollView {
+                VStack(spacing: 12) {
+                    referenceOptionCard(
+                        title: "Linear: Navigation & Fast Command Palette",
+                        source: "Mobbin",
+                        url: "https://mobbin.com",
+                        colorHex: "#10B981",
+                        tags: ["Keyboard", "Speed", "Cockpit UX"],
+                        desc: "Компактная эргономика меню и мгновенный поиск через ⌘K."
+                    )
+
+                    referenceOptionCard(
+                        title: "Apple HIG: iOS 18 Modular Grid & Haptics",
+                        source: "Mobbin",
+                        url: "https://mobbin.com",
+                        colorHex: "#3B82F6",
+                        tags: ["Apple HIG", "44px Targets", "Spring Motion"],
+                        desc: "Строгое следование 4pt модульной сетке и нативным анимациям."
+                    )
+
+                    referenceOptionCard(
+                        title: "Figma Community: W3C Design Tokens System",
+                        source: "Figma",
+                        url: "https://figma.com",
+                        colorHex: "#8B5CF6",
+                        tags: ["Tokens Studio", "Variables", "Multi-Theme"],
+                        desc: "Архитектура дизайн-токенов с семантическими алиасами для dark/light."
+                    )
+
+                    referenceOptionCard(
+                        title: "Recent Design: Swiss Modern Editorial Layout",
+                        source: "Recent Design",
+                        url: "https://recent.design",
+                        colorHex: "#D97757",
+                        tags: ["Anti-Slop", "Editorial", "Serif Typography"],
+                        desc: "Асимметричные журнальные сплиты и акцидентная типографика."
+                    )
+                }
+                .padding(.vertical, 8)
+            }
+        }
+        .padding(24)
+        .frame(width: 540, height: 480)
+    }
+
+    private func referenceOptionCard(
+        title: String,
+        source: String,
+        url: String,
+        colorHex: String,
+        tags: [String],
+        desc: String
+    ) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(source)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced)) // grid: ok font
+                        .foregroundStyle(Color(hex: colorHex))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color(hex: colorHex).opacity(0.16))
+                        .clipShape(Capsule())
+
+                    Text(title)
+                        .font(.subheadline.bold())
+                }
+
+                Text(desc)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            Button("+ На холст") {
+                let newRef = CanvasReferenceCard(
+                    title: title,
+                    source: source,
+                    url: url,
+                    colorHex: colorHex,
+                    position: CGPoint(x: 240, y: 220),
+                    tags: tags,
+                    description: desc
+                )
+                referenceCards.append(newRef)
+                isReferencePickerOpen = false
+                showToast("Референс добавлен на холст 🖼️")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: colorHex))
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.15), lineWidth: 1))
+    }
+
+    // Export Helpers
     private func exportAsSVG() {
-        let svg = CanvasExporter.exportSVG(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections)
+        let svg = CanvasExporter.exportSVG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        )
         if let data = svg.data(using: .utf8) {
             CanvasExporter.saveWithPanel(data: data, defaultFilename: "kite-canvas-architecture.svg", fileExtension: "svg")
             showToast("Экспорт в SVG выполнен! 📐")
@@ -662,7 +1192,14 @@ struct InfiniteCanvasView: View {
     }
 
     private func exportAsPNG() {
-        if let img = CanvasExporter.exportPNG(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections),
+        if let img = CanvasExporter.exportPNG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        ),
            let tiff = img.tiffRepresentation,
            let rep = NSBitmapImageRep(data: tiff),
            let pngData = rep.representation(using: .png, properties: [:]) {
@@ -672,14 +1209,28 @@ struct InfiniteCanvasView: View {
     }
 
     private func exportAsPDF() {
-        if let pdfData = CanvasExporter.exportPDF(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections) {
+        if let pdfData = CanvasExporter.exportPDF(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        ) {
             CanvasExporter.saveWithPanel(data: pdfData, defaultFilename: "kite-canvas-document.pdf", fileExtension: "pdf")
             showToast("Экспорт в PDF выполнен! 📄")
         }
     }
 
     private func copyPNGToClipboard() {
-        CanvasExporter.copyPNGToClipboard(items: items, itemPositions: itemPositions, stickies: stickies, connections: connections)
+        CanvasExporter.copyPNGToClipboard(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        )
         showToast("Скопировано в буфер обмена 📋")
     }
 
