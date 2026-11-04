@@ -82,7 +82,7 @@ struct ContentView: View {
             Image(systemName: page.symbol)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(model.sidebar == page ? Color.accentColor : Color.secondary)
-                .frame(width: 18, alignment: .center)
+                .frame(width: 16, alignment: .center)
         }
         .tag(page)
     }

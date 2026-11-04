@@ -248,7 +248,7 @@ struct SkillsCatalogView: View {
                             Divider()
 
                             // Summary & Details
-                            VStack(alignment: .leading, spacing: 14) {
+                            VStack(alignment: .leading, spacing: 16) {
                                 Text("Обзор и назначение")
                                     .font(.headline)
 
@@ -267,17 +267,17 @@ struct SkillsCatalogView: View {
                                             .foregroundStyle(.primary)
                                             .lineSpacing(4)
                                     }
-                                    .padding(14)
+                                    .padding(16)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(Color.secondary.opacity(0.06))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
                             }
 
                             // When to use
                             if !skill.whenToUse.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    HStack(spacing: 6) {
+                                    HStack(spacing: 8) {
                                         Image(systemName: "info.circle.fill")
                                             .foregroundStyle(Color.accentColor)
                                         Text("Когда применять")
@@ -299,7 +299,7 @@ struct SkillsCatalogView: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Ключевые возможности")
                                         .font(.headline)
-                                    VStack(alignment: .leading, spacing: 6) {
+                                    VStack(alignment: .leading, spacing: 8) {
                                         ForEach(skill.capabilities, id: \.self) { cap in
                                             HStack(alignment: .top, spacing: 8) {
                                                 Image(systemName: "arrow.right.circle")
@@ -345,14 +345,14 @@ struct SkillsCatalogView: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Триггеры активации")
                                         .font(.headline)
-                                    FlowLayout(spacing: 6) {
+                                    FlowLayout(spacing: 8) {
                                         ForEach(skill.triggers, id: \.self) { t in
                                             Text(t)
                                                 .font(.system(size: 10, design: .monospaced))
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 4)
                                                 .background(Color.secondary.opacity(0.1))
-                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
                                         }
                                     }
                                 }

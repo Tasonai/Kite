@@ -33,7 +33,7 @@ struct WindowsSyncView: View {
 
                 // Windows Connection Card
                 GroupBox {
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Image(systemName: "desktopcomputer")
                                 .foregroundStyle(Color.accentColor)
@@ -50,7 +50,7 @@ struct WindowsSyncView: View {
                                         .foregroundStyle(isOnline ? Color.green : Color.red)
                                 }
                                 .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
+                                .padding(.vertical, 4)
                                 .background((isOnline ? Color.green : Color.red).opacity(0.1))
                                 .clipShape(Capsule())
                             }
@@ -79,7 +79,7 @@ struct WindowsSyncView: View {
 
                 // Sync Actions Card
                 GroupBox {
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Двусторонняя синхронизация")
@@ -93,7 +93,7 @@ struct WindowsSyncView: View {
                             Button {
                                 performBidirectionalSync()
                             } label: {
-                                HStack(spacing: 6) {
+                                HStack(spacing: 8) {
                                     if isSyncing {
                                         ProgressView()
                                             .controlSize(.small)
@@ -122,7 +122,7 @@ struct WindowsSyncView: View {
 
                 // Log view
                 GroupBox("Журнал операций") {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         if logs.isEmpty {
                             Text("Журнал пуст. Нажмите «Синхронизировать сейчас» или «Проверить связь».")
                                 .font(.caption)
@@ -141,7 +141,7 @@ struct WindowsSyncView: View {
                             .frame(maxHeight: 180)
                         }
                     }
-                    .padding(6)
+                    .padding(8)
                 }
             }
             .padding(24)
@@ -182,7 +182,7 @@ struct WindowsSyncView: View {
 
         Task {
             do {
-                let (data, response) = try await URLSession.shared.data(for: req)
+                let (_, response) = try await URLSession.shared.data(for: req)
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     await MainActor.run {
                         self.isOnline = true
