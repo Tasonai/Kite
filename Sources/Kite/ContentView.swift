@@ -134,7 +134,7 @@ struct ItemList: View {
                         .foregroundStyle(item.status == "completed" ? Color.green : (item.status == "in_progress" ? Color.blue : Color.secondary))
                         .font(.system(size: 13))
 
-                    Text(item.title)
+                    Text(searchHighlighted(item.title, query: searchText))
                         .font(.headline)
                         .lineLimit(1)
 
@@ -162,7 +162,7 @@ struct ItemList: View {
                 }
 
                 if !item.concept.isEmpty {
-                    Text(item.concept)
+                    Text(searchHighlighted(item.concept, query: searchText))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
