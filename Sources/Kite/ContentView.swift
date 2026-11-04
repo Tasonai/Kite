@@ -27,16 +27,16 @@ struct ContentView: View {
             case .styles:
                 HSplitView {
                     StylesCatalogView()
-                        .frame(minWidth: 300, idealWidth: 340, maxWidth: 420)
+                        .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
                     ItemDetail()
-                        .frame(minWidth: 460)
+                        .frame(minWidth: 400, maxWidth: .infinity)
                 }
             default:
                 HSplitView {
                     ItemList(page: model.sidebar ?? .all)
-                        .frame(minWidth: 280, idealWidth: 320, maxWidth: 420)
+                        .frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
                     ItemDetail()
-                        .frame(minWidth: 460)
+                        .frame(minWidth: 400, maxWidth: .infinity)
                 }
             }
         }
@@ -68,6 +68,7 @@ struct ContentView: View {
                 }
             }
         }
+        .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 280)
     }
 }
@@ -278,8 +279,8 @@ struct ItemDetail: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
                     }
 
-                    // Generator Action
-                    HStack(spacing: 12) {
+                    // Generator Actions
+                    VStack(alignment: .leading, spacing: 8) {
                         Button {
                             Task {
                                 await generateSpecification(for: item)
@@ -303,73 +304,75 @@ struct ItemDetail: View {
                         .tint(Color.accentColor)
                         .disabled(isGeneratingAI)
 
-                        if !item.generatedPrompt.isEmpty {
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(item.generatedPrompt, forType: .string)
-                                NSSound.beep()
-                                isCopied = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                    isCopied = false
+                        HStack(spacing: 8) {
+                            if !item.generatedPrompt.isEmpty {
+                                Button {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(item.generatedPrompt, forType: .string)
+                                    NSSound.beep()
+                                    isCopied = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        isCopied = false
+                                    }
+                                } label: {
+                                    Label(isCopied ? "Скопировано!" : "Скопировать план 📋", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                                        .padding(.vertical, 4)
                                 }
+                                .buttonStyle(.bordered)
+                            }
+
+                            Button {
+                                scaffoldProject(for: item)
                             } label: {
-                                Label(isCopied ? "Скопировано!" : "Скопировать план 📋", systemImage: isCopied ? "checkmark" : "doc.on.doc")
-                                    .padding(.vertical, 8)
+                                Label("Развернуть проект 📁", systemImage: "folder.badge.plus")
+                                    .padding(.vertical, 4)
                             }
                             .buttonStyle(.bordered)
-                        }
+                            .help("Создать папку проекта с README, SPEC, PLAN и git init")
 
-                        Button {
-                            scaffoldProject(for: item)
-                        } label: {
-                            Label("Развернуть проект 📁", systemImage: "folder.badge.plus")
-                                .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.bordered)
-                        .help("Создать папку проекта с README, SPEC, PLAN и git init")
+                            Menu {
+                                Button {
+                                    let md = DesignExporter.generateStitchDesignMd(
+                                        title: item.title,
+                                        style: item.style,
+                                        platform: item.platform,
+                                        concept: item.concept
+                                    )
+                                    exportSheetTitle = "Google Stitch — DESIGN.md"
+                                    exportSheetContent = md
+                                } label: {
+                                    Label("Экспорт в Google Stitch (DESIGN.md)", systemImage: "sparkles")
+                                }
 
-                        Menu {
-                            Button {
-                                let md = DesignExporter.generateStitchDesignMd(
-                                    title: item.title,
-                                    style: item.style,
-                                    platform: item.platform,
-                                    concept: item.concept
-                                )
-                                exportSheetTitle = "Google Stitch — DESIGN.md"
-                                exportSheetContent = md
+                                Button {
+                                    let json = DesignExporter.generateFigmaTokensJson(
+                                        title: item.title,
+                                        style: item.style
+                                    )
+                                    exportSheetTitle = "Figma Design Tokens (W3C JSON)"
+                                    exportSheetContent = json
+                                } label: {
+                                    Label("Экспорт в Figma (Tokens JSON)", systemImage: "paintpalette")
+                                }
+
+                                Button {
+                                    let diag = DesignExporter.generateFigJamDiagram(
+                                        title: item.title,
+                                        concept: item.concept,
+                                        style: item.style
+                                    )
+                                    exportSheetTitle = "FigJam Architecture Diagram"
+                                    exportSheetContent = diag
+                                } label: {
+                                    Label("Схема для FigJam (Mermaid / Flowchart)", systemImage: "arrow.triangle.branch")
+                                }
                             } label: {
-                                Label("Экспорт в Google Stitch (DESIGN.md)", systemImage: "sparkles")
+                                Label("Экспорт 🎨", systemImage: "square.and.arrow.up")
+                                    .padding(.vertical, 4)
                             }
-
-                            Button {
-                                let json = DesignExporter.generateFigmaTokensJson(
-                                    title: item.title,
-                                    style: item.style
-                                )
-                                exportSheetTitle = "Figma Design Tokens (W3C JSON)"
-                                exportSheetContent = json
-                            } label: {
-                                Label("Экспорт в Figma (Tokens JSON)", systemImage: "paintpalette")
-                            }
-
-                            Button {
-                                let diag = DesignExporter.generateFigJamDiagram(
-                                    title: item.title,
-                                    concept: item.concept,
-                                    style: item.style
-                                )
-                                exportSheetTitle = "FigJam Architecture Diagram"
-                                exportSheetContent = diag
-                            } label: {
-                                Label("Схема для FigJam (Mermaid / Flowchart)", systemImage: "arrow.triangle.branch")
-                            }
-                        } label: {
-                            Label("Экспорт 🎨", systemImage: "square.and.arrow.up")
-                                .padding(.vertical, 8)
+                            .buttonStyle(.bordered)
+                            .help("Экспорт дизайн-системы и токенов в Google Stitch или Figma")
                         }
-                        .buttonStyle(.bordered)
-                        .help("Экспорт дизайн-системы и токенов в Google Stitch или Figma")
                     }
 
                     if let err = aiError {

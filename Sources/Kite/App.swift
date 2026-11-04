@@ -15,7 +15,15 @@ import KiteKit
 @main
 struct KiteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    @State private var model = AppModel(container: Store.makeContainer())
+    @State private var model: AppModel
+
+    init() {
+        let appModel = AppModel(container: Store.makeContainer())
+        _model = State(initialValue: appModel)
+        if SelfTest.requested {
+            SelfTest.run(model: appModel)
+        }
+    }
 
     var body: some Scene {
         Window("Kite", id: "main") {
@@ -23,8 +31,9 @@ struct KiteApp: App {
                 .environment(model)
                 .themed()
                 .overlay { if GridOverlay.enabled { GridOverlay() } }
-                .frame(minWidth: 840, minHeight: 520)
+                .frame(minWidth: 960, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity, alignment: .leading)
                 .task {
+                    guard !SelfTest.requested && !Snapshot.requested else { return }
                     QuickCaptureManager.shared.start(model: model)
                     configureSyncServer(model: model)
                 }
@@ -81,10 +90,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Started from a terminal, the process is not a foreground app yet.
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
+
+        DispatchQueue.main.async {
+            for window in NSApp.windows where window.canBecomeMain && !window.isSheet {
+                window.makeKeyAndOrderFront(nil)
+                break
+            }
+        }
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        SelfTest.requested || Snapshot.requested
+    }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
