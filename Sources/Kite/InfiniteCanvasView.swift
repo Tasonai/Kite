@@ -186,9 +186,12 @@ struct InfiniteCanvasView: View {
                         }
                         .font(.caption)
                         .foregroundStyle(isConnectingMode ? Color.white : Color.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(isConnectingMode ? Color.orange : Color.secondary.opacity(0.18))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(isConnectingMode ? .orange : .secondary)
+                    .buttonStyle(.plain)
 
                     // Add Sticky Button
                     Button {
