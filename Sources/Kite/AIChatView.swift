@@ -15,6 +15,7 @@ struct AIChatView: View {
     @AppStorage("ollama_model") private var ollamaModel: String = "llama3"
 
     @State private var inputPrompt: String = ""
+    @State private var historyLoaded = false
     @State private var isThinking: Bool = false
     @State private var errorMessage: String?
     @State private var copiedId: UUID?
@@ -73,6 +74,7 @@ struct AIChatView: View {
                             content: "История диалога очищена. Чем могу помочь в проектировании следующей фичи?"
                         )
                     ]
+                    saveHistory()
                 } label: {
                     Label("Очистить", systemImage: "trash")
                         .font(.caption)
@@ -314,6 +316,45 @@ struct AIChatView: View {
         }
         .padding(24)
         .frame(minWidth: 540, minHeight: 460)
+        .onAppear {
+            if !historyLoaded {
+                historyLoaded = true
+                if let saved = ChatHistoryStore.load() { messages = saved }
+            }
+        }
+    }
+
+    /// What the model may know about the workspace: the catalog, the open idea and the canvas.
+    private func chatContext() -> AIPrompts.ChatContext {
+        let ideas = items.prefix(12).map { item in
+            let concept = item.concept.trimmingCharacters(in: .whitespacesAndNewlines)
+            let brief = concept.isEmpty ? "" : ": " + String(concept.prefix(120))
+            return "\(item.title) (\(item.platform), \(item.style))\(brief)"
+        }
+
+        var selected: String?
+        if let open = items.first(where: { $0.id == model.selection }) {
+            let concept = open.concept.trimmingCharacters(in: .whitespacesAndNewlines)
+            selected = "\(open.title) (\(open.platform), \(open.style), статус: \(open.status))"
+                + (concept.isEmpty ? "" : "\nОписание: " + String(concept.prefix(500)))
+        }
+
+        var canvasLines: [String] = []
+        if !model.canvasFrames.isEmpty {
+            canvasLines.append("Фреймы: " + model.canvasFrames.map(\.title).joined(separator: "; "))
+        }
+        if !model.canvasStickies.isEmpty {
+            canvasLines.append("Стикеры: " + model.canvasStickies.prefix(10).map { String($0.text.prefix(80)) }.joined(separator: "; "))
+        }
+        return AIPrompts.ChatContext(
+            ideas: ideas,
+            selectedIdea: selected,
+            canvas: canvasLines.isEmpty ? nil : canvasLines.joined(separator: "\n")
+        )
+    }
+
+    private func saveHistory() {
+        ChatHistoryStore.save(messages)
     }
 
     private func sendMessage() {
@@ -322,6 +363,7 @@ struct AIChatView: View {
 
         let userMsg = ChatMessageItem(role: "user", content: text)
         messages.append(userMsg)
+        saveHistory()
         inputPrompt = ""
         isThinking = true
         errorMessage = nil
@@ -331,11 +373,7 @@ struct AIChatView: View {
         let model = modelName
         let endpoint = ollamaEndpoint
         let history = messages
-        let workspace = AIPrompts.ChatContext(ideas: items.prefix(12).map { item in
-            let concept = item.concept.trimmingCharacters(in: .whitespacesAndNewlines)
-            let brief = concept.isEmpty ? "" : ": " + String(concept.prefix(120))
-            return "\(item.title) (\(item.platform), \(item.style))\(brief)"
-        })
+        let workspace = chatContext()
 
         Task { @MainActor in
             let reply = ChatMessageItem(role: "assistant", content: "")
@@ -359,8 +397,10 @@ struct AIChatView: View {
                     }
                 }
                 isThinking = false
+                saveHistory()
             } catch {
                 isThinking = false
+                saveHistory()
                 let partial = messages.contains { $0.id == reply.id }
                 errorMessage = partial ? "Ответ оборван: \(error.localizedDescription)" : error.localizedDescription
             }

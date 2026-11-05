@@ -86,10 +86,75 @@ public enum AIPrompts {
         """
     }
 
+    /// One clarifying question with a few quick answers the author can pick.
+    public struct InterviewQuestion: Identifiable, Sendable, Equatable {
+        public let id = UUID()
+        public let text: String
+        public let options: [String]
+        public init(text: String, options: [String]) {
+            self.text = text
+            self.options = options
+        }
+    }
+
+    /// Asks the model for the 2-3 questions whose answers would change the plan the most.
+    public static func interview(idea: String, platform: String, style: String) -> String {
+        """
+        Ты готовишь точный промпт для агента-разработчика по сырой идее автора. Прежде чем писать его, выбери два или три вопроса, ответы на которые сильнее всего изменят результат.
+
+        ТРЕБОВАНИЯ К ВОПРОСАМ
+        - Вопрос привязан к этой идее: называет её сущности, а не спрашивает общее («для кого продукт?», «какие цели?»).
+        - Ответ нельзя угадать из идеи, и он меняет архитектуру, модель данных или состав экранов.
+        - У каждого вопроса два или три коротких варианта ответа (до шести слов), которые автор выбирает одним нажатием.
+        - Не спрашивай про платформу и визуальный стиль: они уже выбраны (\(platform), \(style)).
+        - Формулировка вопроса до 15 слов. Без эмодзи.
+
+        ФОРМАТ ОТВЕТА: только JSON-массив, без текста вокруг и без блока кода:
+        [{"question": "...", "options": ["...", "..."]}]
+
+        ИДЕЯ АВТОРА:
+        \(idea)
+        """
+    }
+
+    /// Reads the model's answer to `interview`. Tolerates code fences and stray text; garbage gives no questions.
+    public static func parseInterview(_ text: String) -> [InterviewQuestion] {
+        guard let start = text.firstIndex(of: "["), let end = text.lastIndex(of: "]"), start < end,
+              let data = String(text[start...end]).data(using: .utf8),
+              let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [] }
+        return raw.compactMap { item -> InterviewQuestion? in
+            guard let question = (item["question"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty else { return nil }
+            let options = ((item["options"] as? [String]) ?? [])
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .prefix(3)
+            return InterviewQuestion(text: question, options: Array(options))
+        }
+        .prefix(3)
+        .map { $0 }
+    }
+
+    /// The idea plus the author's answers, as one text for the translator prompt.
+    public static func enrich(idea: String, answers: [(question: String, answer: String)]) -> String {
+        let given = answers.filter { !$0.answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !given.isEmpty else { return idea }
+        let lines = given.map { "- \($0.question) \($0.answer.trimmingCharacters(in: .whitespacesAndNewlines))" }
+        return idea + "\n\nУточнения автора (считай их фактами, не допущениями):\n" + lines.joined(separator: "\n")
+    }
+
     /// Facts about the user's workspace that the chat model can use.
     public struct ChatContext: Sendable {
         public let ideas: [String]
-        public init(ideas: [String]) { self.ideas = ideas }
+        /// The idea open in the catalog right now, if any.
+        public let selectedIdea: String?
+        /// A short summary of the idea canvas (frames and sticky notes), if it has any content.
+        public let canvas: String?
+
+        public init(ideas: [String], selectedIdea: String? = nil, canvas: String? = nil) {
+            self.ideas = ideas
+            self.selectedIdea = selectedIdea
+            self.canvas = canvas
+        }
     }
 
     /// Verified facts about the user's own products, so the chat does not guess how they work.
@@ -130,7 +195,17 @@ public enum AIPrompts {
 
         \(kiteFacts)
 
-        \(ideasBlock)
+        \(ideasBlock)\(selectedBlock(context))\(canvasBlock(context))
         """
+    }
+
+    private static func selectedBlock(_ context: ChatContext) -> String {
+        guard let idea = context.selectedIdea?.trimmingCharacters(in: .whitespacesAndNewlines), !idea.isEmpty else { return "" }
+        return "\n\nСейчас у пользователя открыта идея (вопрос, скорее всего, о ней):\n\(idea)"
+    }
+
+    private static func canvasBlock(_ context: ChatContext) -> String {
+        guard let canvas = context.canvas?.trimmingCharacters(in: .whitespacesAndNewlines), !canvas.isEmpty else { return "" }
+        return "\n\nХолст идей пользователя:\n\(canvas)"
     }
 }

@@ -8,7 +8,7 @@ public enum AIProvider: String, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
 }
 
-public struct ChatMessageItem: Sendable, Identifiable {
+public struct ChatMessageItem: Sendable, Identifiable, Codable {
     public let id: UUID
     public let role: String // "user" or "assistant" / "model"
     public var content: String
@@ -130,6 +130,25 @@ public enum AIGenerator {
                 ollamaEndpoint: ollamaEndpoint, mode: mode, skills: skills
             )
         }
+    }
+
+    /// Two or three clarifying questions for a rough idea. Returns none when there is no model to ask
+    /// or the answer cannot be read, so the caller can go straight to generating.
+    public static func interviewQuestions(
+        idea: String,
+        platform: String,
+        style: String,
+        apiKey: String,
+        modelName: String = GeminiClient.defaultModel
+    ) async throws -> [AIPrompts.InterviewQuestion] {
+        let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanKey.isEmpty else { return [] }
+        let payload: [String: Any] = [
+            "contents": [["parts": [["text": AIPrompts.interview(idea: idea, platform: platform, style: style)]]]],
+            "generationConfig": generationConfig(thinking: "low")
+        ]
+        let text = try await GeminiClient.generate(payload: payload, apiKey: cleanKey, model: modelName)
+        return AIPrompts.parseInterview(text)
     }
 
     /// Same as `chat`, but delivers the reply piece by piece.

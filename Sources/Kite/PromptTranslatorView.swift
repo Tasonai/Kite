@@ -17,6 +17,10 @@ struct PromptTranslatorView: View {
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
     @State private var errorMessage: String?
+    @AppStorage("translator_interview") private var interviewEnabled = true
+    @State private var interviewQuestions: [AIPrompts.InterviewQuestion] = []
+    @State private var interviewAnswers: [UUID: String] = [:]
+    @State private var isAskingQuestions = false
 
     @AppStorage("ai_provider") private var aiProvider = "Gemini API"
     @AppStorage("gemini_api_key") private var geminiApiKey = ""
@@ -179,17 +183,21 @@ struct PromptTranslatorView: View {
                         }
                     }
 
+                    if !interviewQuestions.isEmpty {
+                        interviewPanel
+                    }
+
                     // Primary Generator Buttons
                     HStack(spacing: 12) {
                         Button {
                             Task {
-                                await runTranslate()
+                                await startTranslate()
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                if isGenerating {
+                                if isGenerating || isAskingQuestions {
                                     ProgressView().controlSize(.small)
-                                    Text("Трансляция архитектуры...")
+                                    Text(isAskingQuestions ? "Формулирую вопросы..." : "Трансляция архитектуры...")
                                 } else {
                                     Image(systemName: "wand.and.stars")
                                     Text("Скомпилировать /plan")
@@ -201,7 +209,7 @@ struct PromptTranslatorView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(Color.accentColor)
-                        .disabled(isGenerating)
+                        .disabled(isGenerating || isAskingQuestions)
 
                         Button {
                             saveAsNewIdea()
@@ -316,7 +324,90 @@ struct PromptTranslatorView: View {
         .buttonStyle(.plain)
     }
 
-    private func runTranslate() async {
+    /// Asks a few clarifying questions first when that makes sense; otherwise generates right away.
+    private func startTranslate() async {
+        let idea = rawPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let canAsk = interviewEnabled
+            && ["full", "stitch"].contains(selectedMode)
+            && aiProvider == "Gemini API"
+            && !geminiApiKey.isEmpty
+            && idea.count >= 8
+        guard canAsk else {
+            await runTranslate()
+            return
+        }
+        isAskingQuestions = true
+        errorMessage = nil
+        defer { isAskingQuestions = false }
+        let questions = (try? await AIGenerator.interviewQuestions(
+            idea: idea,
+            platform: selectedPlatform,
+            style: selectedStyle,
+            apiKey: geminiApiKey,
+            modelName: geminiModel
+        )) ?? []
+        if questions.isEmpty {
+            await runTranslate()
+        } else {
+            interviewAnswers = [:]
+            interviewQuestions = questions
+        }
+    }
+
+    private var interviewPanel: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Уточните, чтобы план вышел точным")
+                .font(.headline)
+
+            ForEach(interviewQuestions) { question in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(question.text)
+                        .font(.subheadline.weight(.semibold))
+                    HStack(spacing: 8) {
+                        ForEach(question.options, id: \.self) { option in
+                            let chosen = interviewAnswers[question.id] == option
+                            Button {
+                                interviewAnswers[question.id] = chosen ? "" : option
+                            } label: {
+                                Text(option)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(chosen ? Color.accentColor : Color.secondary.opacity(0.12))
+                                    .foregroundStyle(chosen ? Color.white : Color.primary)
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    TextField("Свой ответ", text: Binding(
+                        get: { interviewAnswers[question.id] ?? "" },
+                        set: { interviewAnswers[question.id] = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    .font(.caption)
+                }
+            }
+
+            HStack(spacing: 12) {
+                Button("Сгенерировать с ответами") {
+                    let answers = interviewQuestions.map { (question: $0.text, answer: interviewAnswers[$0.id] ?? "") }
+                    Task { await runTranslate(answers: answers) }
+                }
+                .buttonStyle(.borderedProminent)
+                Button("Пропустить") {
+                    Task { await runTranslate() }
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func runTranslate(answers: [(question: String, answer: String)] = []) async {
+        interviewQuestions = []
         isGenerating = true
         errorMessage = nil
         defer { isGenerating = false }
@@ -385,7 +476,7 @@ struct PromptTranslatorView: View {
                 generatedBlueprint = ""
                 for try await piece in AIGenerator.generateSpecificationStream(
                     title: cleanTitle,
-                    concept: rawPrompt,
+                    concept: AIPrompts.enrich(idea: rawPrompt, answers: answers),
                     platform: selectedPlatform,
                     style: selectedStyle,
                     apiKey: geminiApiKey,
