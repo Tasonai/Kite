@@ -2,8 +2,8 @@
 
 **The Sovereign Studio for Ideas, Architecture, and Antigravity Skills**
 
-[![Release](https://img.shields.io/badge/Release-v1.0.0-blue.svg)](https://github.com/Tasonai/Kite/releases/tag/v1.0.0)
-[![Platform](https://img.shields.io/badge/Platform-macOS%2014%2B%20%7C%20Apple%20Silicon%20%26%20Intel-darkgreen.svg)](https://github.com/Tasonai/Kite/releases)
+[![Release](https://img.shields.io/badge/Release-v1.1.0-blue.svg)](https://github.com/Tasonai/Kite/releases/tag/v1.1.0)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2026%2B%20%7C%20Intel%20x86__64-darkgreen.svg)](https://github.com/Tasonai/Kite/releases)
 [![Standard](https://img.shields.io/badge/Standard-Apple%20HIG%20%2F%20BAMA-purple.svg)](#craftsmanship-and-quality-gates)
 [![Quality](https://img.shields.io/badge/Grid%20Lint-PASS%20(4pt%2F8pt)-success.svg)](#craftsmanship-and-quality-gates)
 [![Zero Emojis](https://img.shields.io/badge/Visual%20Standard-100%25%20System%20Glyphs-black.svg)](#craftsmanship-and-quality-gates)
@@ -65,17 +65,22 @@ graph LR
 
 ## 3. Installation & Downloads
 
-Pre-built signed installers are available on the [Releases page](https://github.com/Tasonai/Kite/releases/tag/v1.0.0):
+Pre-built installers are on the [Releases page](https://github.com/Tasonai/Kite/releases/tag/v1.1.0).
+
+> [!IMPORTANT]
+> - The build is **Intel (`x86_64`) only**. There is no Apple Silicon build yet.
+> - It requires **macOS 26 or later** (`LSMinimumSystemVersion` in `Info.plist`).
+> - It is signed with a development certificate and **not notarized**, so Gatekeeper blocks the first launch. Right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/Kite.app`.
 
 | Package | Format | Architecture | Download |
 | :--- | :--- | :--- | :--- |
-| **Kite macOS Disk Image** | `.dmg` | Universal (Apple Silicon & Intel) | [Download DMG](https://github.com/Tasonai/Kite/releases/download/v1.0.0/Kite-1.0.0-macOS.dmg) |
-| **Kite macOS Archive** | `.zip` | Universal (Apple Silicon & Intel) | [Download ZIP](https://github.com/Tasonai/Kite/releases/download/v1.0.0/Kite-1.0.0-macOS.zip) |
+| **Kite macOS Disk Image** | `.dmg` | Intel (x86_64) | [Download DMG](https://github.com/Tasonai/Kite/releases/download/v1.1.0/Kite-1.1.0-macOS.dmg) |
+| **Kite macOS Archive** | `.zip` | Intel (x86_64) | [Download ZIP](https://github.com/Tasonai/Kite/releases/download/v1.1.0/Kite-1.1.0-macOS.zip) |
 
 ### SHA256 Checksums
 ```text
-b9dd9362493547dd1d17690bda4506a53011e9e392fec40854a4eb3595464535  Kite-1.0.0-macOS.dmg
-42def6372226e766207084d6ac3949b3b039d2ea1bfe51c13e5336e49f95b441  Kite-1.0.0-macOS.zip
+8bb8f5ae06ea3e208df1790dbaa45a07a92019b7ee7834a5887f20d98948fb58  Kite-1.1.0-macOS.dmg
+2136ab68793c1f17cd956c26d2c105c1b9f1673c596c7afbd56f0618e63df3e4  Kite-1.1.0-macOS.zip
 ```
 
 ---
@@ -139,7 +144,7 @@ Kite adheres to the strict BAMA (Build Anything on Mac Architecture) craftsmansh
 ## 6. Building from Source
 
 ### Prerequisites
-- macOS 14.0 Sonoma or later
+- macOS 26 or later
 - Xcode 16.0 or later (Swift 6.0 toolchain)
 
 ### Build and Install
