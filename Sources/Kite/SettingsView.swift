@@ -66,6 +66,7 @@ struct AISettingsView: View {
     @AppStorage("gemini_model") private var geminiModel = GeminiClient.defaultModel
     @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
+    @AppStorage("translator_interview") private var interviewEnabled = true
 
     var body: some View {
         Section("Провайдер AI") {
@@ -88,9 +89,17 @@ struct AISettingsView: View {
                     Text("gemini-3.1-pro-preview (Глубокая архитектура)").tag("gemini-3.1-pro-preview")
                 }
 
-                Text("Ключ сохраняется локально и используется только для прямой генерации спецификаций.")
+                Toggle("Уточнять идею вопросами перед планом", isOn: $interviewEnabled)
+
+                Text("Ключ сохраняется локально и используется только для прямой генерации спецификаций. Вопросы задаются только в режимах «План» и «Stitch».")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            .onAppear {
+                // A model name Google has retired would leave the picker blank: show the default instead.
+                if GeminiClient.modelChain(requested: geminiModel).first != geminiModel {
+                    geminiModel = GeminiClient.defaultModel
+                }
             }
         } else if aiProvider == "Local Ollama" {
             Section("Настройки Ollama") {
