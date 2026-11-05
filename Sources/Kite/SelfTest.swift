@@ -69,6 +69,7 @@ enum SelfTest {
         check("the model chain has fallbacks and no repeats", chain.count > 1 && Set(chain).count == chain.count)
         let chat = AIPrompts.chatSystem(context: .init(ideas: ["Трекер подписок (Desktop)"]))
         check("the chat prompt knows the user's ideas", chat.contains("Трекер подписок"))
+        check("the chat prompt states how Kite sync works", chat.contains("24242") && chat.contains("без сервера"))
         check("the chat prompt tells the model to commit to one recommendation", chat.contains("Выбирай один вариант"))
 
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")

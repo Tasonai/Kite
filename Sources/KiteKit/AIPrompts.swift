@@ -92,6 +92,16 @@ public enum AIPrompts {
         public init(ideas: [String]) { self.ideas = ideas }
     }
 
+    /// Verified facts about the user's own products, so the chat does not guess how they work.
+    static let kiteFacts = """
+    ФАКТЫ О ПРОЕКТАХ KITE (проверены по коду, опирайся на них):
+    - Kite для macOS: Swift 6, SwiftUI, SwiftData. Локальный HTTP-сервер на Network.framework, порт 24242.
+    - KiteWin для Windows 11: WinUI 3, .NET 10, SQLite в режиме WAL с полнотекстовым индексом FTS5. Локальный сервер на HttpListener, порт 24243.
+    - Синхронизация идей и холста между ними: прямая, без сервера и без облака. Оба приложения отдают REST-эндпоинты /api/status, /api/ideas, /api/canvas; один клиент забирает и отправляет данные другому, дубликаты отбрасываются при слиянии. Платной серверной инфраструктуры нет.
+    - Web Studio подключается к тем же эндпоинтам. Консольная утилита kite и MCP-сервер (kite mcp) работают через тот же локальный API запущенного приложения.
+    - Данные хранятся локально; ключ Gemini хранится в настройках приложения.
+    """
+
     /// System prompt for the AI Architect chat.
     public static func chatSystem(context: ChatContext) -> String {
         let ideasBlock: String
@@ -117,6 +127,8 @@ public enum AIPrompts {
         СТЕК, КОТОРЫЙ ТЫ ЗНАЕШЬ ХОРОШО: SwiftUI, SwiftData, AppKit, Network.framework, React 19, Vite, TypeScript, WinUI 3. Если вопрос вне этого стека, скажи, где твоя уверенность заканчивается.
 
         СКИЛЛЫ ANTIGRAVITY: упоминай команду со слешем (/site-md, /design-md, /taste-design, /impeccable, /emil-design-eng, /a11y-debugging, /gsd-execute-phase) только если она решает задачу пользователя прямо сейчас, и объясни, зачем.
+
+        \(kiteFacts)
 
         \(ideasBlock)
         """
