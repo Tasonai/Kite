@@ -10,7 +10,7 @@ struct AIChatView: View {
 
     @AppStorage("gemini_api_key") private var apiKey: String = ""
     @AppStorage("ai_provider") private var providerRaw: String = AIProvider.gemini.rawValue
-    @AppStorage("gemini_model") private var modelName: String = "gemini-2.5-flash"
+    @AppStorage("gemini_model") private var modelName: String = GeminiClient.defaultModel
     @AppStorage("ollama_endpoint") private var ollamaEndpoint: String = "http://localhost:11434/api/chat"
     @AppStorage("ollama_model") private var ollamaModel: String = "llama3"
 
@@ -57,7 +57,7 @@ struct AIChatView: View {
                             Circle()
                                 .fill(isThinking ? Color.orange : Color.green)
                                 .frame(width: 8, height: 8)
-                            Text(providerRaw == AIProvider.gemini.rawValue ? (modelName.isEmpty ? "gemini-2.5-flash" : modelName) : "Local Ollama")
+                            Text(providerRaw == AIProvider.gemini.rawValue ? (modelName.isEmpty ? GeminiClient.defaultModel : modelName) : "Local Ollama")
                                 .font(.system(size: 10, design: .monospaced))
                                 .foregroundStyle(.secondary)
                         }

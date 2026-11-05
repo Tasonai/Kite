@@ -1,4 +1,5 @@
 import SwiftUI
+import KiteKit
 
 /// The Settings window (Command-Comma). One tab per topic, at most about
 /// six. Each tab is a grouped Form that sizes to its content, so the
@@ -62,7 +63,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 struct AISettingsView: View {
     @AppStorage("ai_provider") private var aiProvider = "Gemini API"
     @AppStorage("gemini_api_key") private var geminiApiKey = ""
-    @AppStorage("gemini_model") private var geminiModel = "gemini-2.5-flash"
+    @AppStorage("gemini_model") private var geminiModel = GeminiClient.defaultModel
     @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
 
@@ -82,8 +83,9 @@ struct AISettingsView: View {
                     .textFieldStyle(.roundedBorder)
 
                 Picker("Модель", selection: $geminiModel) {
-                    Text("gemini-2.5-flash (Быстрая, рекомендуемая)").tag("gemini-2.5-flash")
-                    Text("gemini-2.5-pro (Глубокая архитектура)").tag("gemini-2.5-pro")
+                    Text("gemini-3.5-flash (Быстрая, рекомендуемая)").tag("gemini-3.5-flash")
+                    Text("gemini-3.1-flash-lite (Самая лёгкая)").tag("gemini-3.1-flash-lite")
+                    Text("gemini-3.1-pro-preview (Глубокая архитектура)").tag("gemini-3.1-pro-preview")
                 }
 
                 Text("Ключ сохраняется локально и используется только для прямой генерации спецификаций.")

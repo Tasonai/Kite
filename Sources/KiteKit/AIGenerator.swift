@@ -36,7 +36,7 @@ public enum AIGenerator {
         style: String,
         apiKey: String,
         provider: AIProvider = .gemini,
-        modelName: String = "gemini-2.5-flash",
+        modelName: String = GeminiClient.defaultModel,
         ollamaEndpoint: String = "http://localhost:11434/api/generate",
         mode: String = "full",
         skills: [String] = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
@@ -83,7 +83,7 @@ public enum AIGenerator {
         messages: [ChatMessageItem],
         apiKey: String,
         provider: AIProvider = .gemini,
-        modelName: String = "gemini-2.5-flash",
+        modelName: String = GeminiClient.defaultModel,
         ollamaEndpoint: String = "http://localhost:11434/api/chat",
         context: AIPrompts.ChatContext = .init(ideas: [])
     ) async throws -> String {
@@ -96,7 +96,7 @@ public enum AIGenerator {
                 messages: messages,
                 systemInstruction: systemPrompt,
                 apiKey: cleanKey,
-                modelName: modelName.isEmpty ? "gemini-2.5-flash" : modelName
+                modelName: modelName
             )
         } else if provider == .localOllama {
             return try await callOllamaChat(
@@ -166,47 +166,15 @@ public enum AIGenerator {
         apiKey: String,
         modelName: String
     ) async throws -> String {
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(modelName):generateContent?key=\(apiKey)"
-        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
-
-        var contentsJson: [[String: Any]] = []
-        for msg in messages {
-            let roleStr = (msg.role == "user") ? "user" : "model"
-            contentsJson.append([
-                "role": roleStr,
-                "parts": [["text": msg.content]]
-            ])
+        let contents: [[String: Any]] = messages.map { msg in
+            ["role": msg.role == "user" ? "user" : "model", "parts": [["text": msg.content]]]
         }
-
         let payload: [String: Any] = [
-            "system_instruction": [
-                "parts": [["text": systemInstruction]]
-            ],
-            "contents": contentsJson,
+            "system_instruction": ["parts": [["text": systemInstruction]]],
+            "contents": contents,
             "generationConfig": generationConfig
         ]
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let err = String(data: data, encoding: .utf8) ?? "Unknown"
-            throw NSError(domain: "GeminiAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Ошибка Gemini: \(err)"])
-        }
-
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let first = candidates.first,
-              let content = first["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let text = parts.first?["text"] as? String else {
-            throw NSError(domain: "GeminiAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Пустой ответ Gemini."])
-        }
-
-        return text
+        return try await GeminiClient.generate(payload: payload, apiKey: apiKey, model: modelName)
     }
 
     private static func callOllamaChat(
@@ -266,52 +234,11 @@ public enum AIGenerator {
         apiKey: String,
         modelName: String
     ) async throws -> String {
-        let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        let effectiveModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "gemini-2.5-flash" : modelName
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(effectiveModel):generateContent?key=\(cleanKey)"
-        
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-
         let payload: [String: Any] = [
-            "contents": [
-                [
-                    "parts": [
-                        ["text": promptText]
-                    ]
-                ]
-            ],
+            "contents": [["parts": [["text": promptText]]]],
             "generationConfig": generationConfig
         ]
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-
-        if httpResponse.statusCode != 200 {
-            let errorText = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NSError(domain: "GeminiAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Gemini API error (\(httpResponse.statusCode)): \(errorText)"])
-        }
-
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let candidates = json["candidates"] as? [[String: Any]],
-              let firstCandidate = candidates.first,
-              let content = firstCandidate["content"] as? [String: Any],
-              let parts = content["parts"] as? [[String: Any]],
-              let firstPart = parts.first,
-              let text = firstPart["text"] as? String else {
-            throw NSError(domain: "GeminiAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Не удалось распарсить ответ от Gemini API."])
-        }
-
-        return text
+        return try await GeminiClient.generate(payload: payload, apiKey: apiKey, model: modelName)
     }
 
     private static func callOllama(

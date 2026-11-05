@@ -20,7 +20,7 @@ struct PromptTranslatorView: View {
 
     @AppStorage("ai_provider") private var aiProvider = "Gemini API"
     @AppStorage("gemini_api_key") private var geminiApiKey = ""
-    @AppStorage("gemini_model") private var geminiModel = "gemini-2.5-flash"
+    @AppStorage("gemini_model") private var geminiModel = GeminiClient.defaultModel
     @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
 
