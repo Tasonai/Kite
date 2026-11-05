@@ -2,6 +2,7 @@ import Foundation
 
 public enum AIProvider: String, CaseIterable, Identifiable, Sendable {
     case gemini = "Gemini API"
+    case openAI = "OpenAI Compatible"
     case localOllama = "Local Ollama"
     case localCompiler = "Local Blueprint (Offline)"
 
@@ -77,6 +78,22 @@ public enum AIGenerator {
                 promptText: promptText,
                 apiKey: apiKey,
                 modelName: modelName
+            )
+        case .openAI:
+            let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            if cleanKey.isEmpty && !ollamaEndpoint.contains("localhost") {
+                return PromptCompiler.compileBlueprint(
+                    title: title,
+                    concept: concept,
+                    platform: platform,
+                    style: style
+                )
+            }
+            return try await callOpenAIAPI(
+                promptText: promptText,
+                apiKey: cleanKey,
+                endpoint: ollamaEndpoint.isEmpty ? "https://api.deepseek.com/v1/chat/completions" : ollamaEndpoint,
+                modelName: modelName.isEmpty ? "deepseek-chat" : modelName
             )
         case .localOllama:
             return try await callOllama(
@@ -212,6 +229,14 @@ public enum AIGenerator {
                 systemInstruction: systemPrompt,
                 apiKey: cleanKey,
                 modelName: modelName
+            )
+        } else if provider == .openAI {
+            return try await callOpenAIChat(
+                messages: messages,
+                systemInstruction: systemPrompt,
+                apiKey: cleanKey,
+                endpoint: ollamaEndpoint.isEmpty ? "https://api.deepseek.com/v1/chat/completions" : ollamaEndpoint,
+                modelName: modelName.isEmpty ? "deepseek-chat" : modelName
             )
         } else if provider == .localOllama {
             return try await callOllamaChat(
@@ -388,5 +413,83 @@ public enum AIGenerator {
         }
 
         return responseText
+    }
+
+    private static func callOpenAIAPI(
+        promptText: String,
+        apiKey: String,
+        endpoint: String,
+        modelName: String
+    ) async throws -> String {
+        guard let url = URL(string: endpoint) else { throw URLError(.badURL) }
+        let payload: [String: Any] = [
+            "model": modelName.isEmpty ? "deepseek-chat" : modelName,
+            "messages": [
+                ["role": "user", "content": promptText]
+            ],
+            "temperature": 0.7
+        ]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let msg = choices.first?["message"] as? [String: Any],
+              let text = msg["content"] as? String else {
+            throw NSError(domain: "OpenAI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Не удалось распарсить ответ API."])
+        }
+        return text
+    }
+
+    private static func callOpenAIChat(
+        messages: [ChatMessageItem],
+        systemInstruction: String,
+        apiKey: String,
+        endpoint: String,
+        modelName: String
+    ) async throws -> String {
+        guard let url = URL(string: endpoint) else { throw URLError(.badURL) }
+        var apiMessages: [[String: String]] = [
+            ["role": "system", "content": systemInstruction]
+        ]
+        for m in messages {
+            apiMessages.append([
+                "role": m.role == "user" ? "user" : "assistant",
+                "content": m.content
+            ])
+        }
+        let payload: [String: Any] = [
+            "model": modelName.isEmpty ? "deepseek-chat" : modelName,
+            "messages": apiMessages,
+            "temperature": 0.7
+        ]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let msg = choices.first?["message"] as? [String: Any],
+              let text = msg["content"] as? String else {
+            throw NSError(domain: "OpenAI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Не удалось распарсить ответ API."])
+        }
+        return text
     }
 }

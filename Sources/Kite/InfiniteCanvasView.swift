@@ -231,6 +231,18 @@ struct InfiniteCanvasView: View {
                             Label("Векторный PDF (.pdf)", systemImage: "doc.richtext")
                         }
 
+                        Button {
+                            exportAsHTML()
+                        } label: {
+                            Label("Интерактивный HTML (.html)", systemImage: "safari")
+                        }
+
+                        Button {
+                            exportAsMermaid()
+                        } label: {
+                            Label("Диаграмма Mermaid (.mmd)", systemImage: "arrow.triangle.branch")
+                        }
+
                         Divider()
 
                         Button {
@@ -1042,6 +1054,29 @@ struct InfiniteCanvasView: View {
         ) {
             CanvasExporter.saveWithPanel(data: pdfData, defaultFilename: "kite-canvas-document.pdf", fileExtension: "pdf")
             showToast("Экспорт в PDF выполнен")
+        }
+    }
+
+    private func exportAsHTML() {
+        let html = CanvasExporter.exportHTML(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        )
+        if let data = html.data(using: .utf8) {
+            CanvasExporter.saveWithPanel(data: data, defaultFilename: "kite-canvas-interactive.html", fileExtension: "html")
+            showToast("Экспорт в интерактивный HTML выполнен")
+        }
+    }
+
+    private func exportAsMermaid() {
+        let mmd = CanvasExporter.exportMermaid(items: items, connections: connections)
+        if let data = mmd.data(using: .utf8) {
+            CanvasExporter.saveWithPanel(data: data, defaultFilename: "kite-canvas-flowchart.mmd", fileExtension: "mmd")
+            showToast("Экспорт в Mermaid выполнен")
         }
     }
 

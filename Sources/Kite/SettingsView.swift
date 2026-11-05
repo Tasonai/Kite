@@ -66,12 +66,16 @@ struct AISettingsView: View {
     @AppStorage("gemini_model") private var geminiModel = GeminiClient.defaultModel
     @AppStorage("ollama_endpoint") private var ollamaEndpoint = "http://localhost:11434/api/generate"
     @AppStorage("ollama_model") private var ollamaModel = "llama3"
+    @AppStorage("openai_endpoint") private var openAIEndpoint = "https://api.deepseek.com/v1/chat/completions"
+    @AppStorage("openai_api_key") private var openAIApiKey = ""
+    @AppStorage("openai_model") private var openAIModel = "deepseek-chat"
     @AppStorage("translator_interview") private var interviewEnabled = true
 
     var body: some View {
         Section("Провайдер AI") {
             Picker("Движок генерации", selection: $aiProvider) {
                 Text("Google Gemini API").tag("Gemini API")
+                Text("OpenAI / DeepSeek / OpenRouter").tag("OpenAI Compatible")
                 Text("Локальный Ollama").tag("Local Ollama")
                 Text("Локальный компилятор (Офлайн)").tag("Local Blueprint (Offline)")
             }
@@ -100,6 +104,15 @@ struct AISettingsView: View {
                 if GeminiClient.modelChain(requested: geminiModel).first != geminiModel {
                     geminiModel = GeminiClient.defaultModel
                 }
+            }
+        } else if aiProvider == "OpenAI Compatible" {
+            Section("Настройки OpenAI / DeepSeek / OpenRouter") {
+                TextField("Эндпоинт", text: $openAIEndpoint)
+                    .textFieldStyle(.roundedBorder)
+                SecureField("API Key", text: $openAIApiKey)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Имя модели (например, deepseek-chat)", text: $openAIModel)
+                    .textFieldStyle(.roundedBorder)
             }
         } else if aiProvider == "Local Ollama" {
             Section("Настройки Ollama") {

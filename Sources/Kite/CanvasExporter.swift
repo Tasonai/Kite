@@ -308,6 +308,122 @@ enum CanvasExporter {
         return nil
     }
 
+    static func exportHTML(
+        items: [Item],
+        itemPositions: [UUID: CGPoint],
+        stickies: [CanvasSticky],
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        referenceCards: [CanvasReferenceCard] = []
+    ) -> String {
+        let svg = exportSVG(
+            items: items,
+            itemPositions: itemPositions,
+            stickies: stickies,
+            connections: connections,
+            frames: frames,
+            referenceCards: referenceCards
+        )
+
+        return """
+        <!DOCTYPE html>
+        <html lang="ru">
+        <head>
+          <meta charset="utf-8">
+          <title>Kite Infinite Canvas</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { background: #141413; color: #FAF9F5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+            #toolbar { position: fixed; top: 16px; left: 16px; z-index: 100; display: flex; gap: 8px; background: rgba(28,27,24,0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; }
+            #search { background: #292824; border: 1px solid #3D3B35; color: #FAF9F5; padding: 6px 12px; border-radius: 6px; font-size: 13px; outline: none; }
+            button { background: #292824; border: 1px solid #3D3B35; color: #FAF9F5; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+            button:hover { background: #383631; }
+            #viewport { width: 100vw; height: 100vh; cursor: grab; }
+            #viewport:active { cursor: grabbing; }
+            .highlight { stroke: #D97757 !important; stroke-width: 3px !important; }
+          </style>
+        </head>
+        <body>
+          <div id="toolbar">
+            <input type="text" id="search" placeholder="Поиск карточек..." oninput="onSearch(this.value)">
+            <button onclick="resetZoom()">Сброс масштаба</button>
+          </div>
+          <div id="viewport">
+            \(svg)
+          </div>
+          <script>
+            let scale = 1, panX = 0, panY = 0, isPanning = false, startX = 0, startY = 0;
+            const vp = document.getElementById('viewport');
+            const svg = vp.querySelector('svg');
+            
+            vp.addEventListener('wheel', e => {
+              e.preventDefault();
+              const delta = e.deltaY < 0 ? 1.1 : 0.9;
+              scale = Math.min(Math.max(0.2, scale * delta), 4);
+              updateTransform();
+            }, { passive: false });
+
+            vp.addEventListener('mousedown', e => {
+              if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+              isPanning = true;
+              startX = e.clientX - panX;
+              startY = e.clientY - panY;
+            });
+
+            window.addEventListener('mousemove', e => {
+              if (!isPanning) return;
+              panX = e.clientX - startX;
+              panY = e.clientY - startY;
+              updateTransform();
+            });
+
+            window.addEventListener('mouseup', () => { isPanning = false; });
+
+            function updateTransform() {
+              svg.style.transformOrigin = '0 0';
+              svg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            }
+
+            function resetZoom() {
+              scale = 1; panX = 0; panY = 0;
+              updateTransform();
+            }
+
+            function onSearch(query) {
+              const q = query.toLowerCase().trim();
+              document.querySelectorAll('#ideas g, #stickies g').forEach(node => {
+                const text = node.textContent.toLowerCase();
+                const rect = node.querySelector('rect');
+                if (rect) {
+                  if (q && text.includes(q)) {
+                    rect.classList.add('highlight');
+                  } else {
+                    rect.classList.remove('highlight');
+                  }
+                }
+              });
+            }
+          </script>
+        </body>
+        </html>
+        """
+    }
+
+    static func exportMermaid(items: [Item], connections: [CanvasConnection]) -> String {
+        var out = "flowchart TD\n"
+        for item in items {
+            let safeTitle = item.title.replacingOccurrences(of: "\"", with: "'")
+            let safeId = "node_" + item.uuid.uuidString.replacingOccurrences(of: "-", with: "_")
+            out += "    \(safeId)[\"\(safeTitle)\"]\n"
+        }
+        for conn in connections {
+            let fromId = conn.fromId.replacingOccurrences(of: "item-", with: "node_").replacingOccurrences(of: "-", with: "_")
+            let toId = conn.toId.replacingOccurrences(of: "item-", with: "node_").replacingOccurrences(of: "-", with: "_")
+            out += "    \(fromId) --> \(toId)\n"
+        }
+        return out
+    }
+
     private static func escapeXml(_ str: String) -> String {
         str.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")

@@ -121,9 +121,9 @@ public enum ProjectScaffolder {
         try readme.write(to: projectDir.appendingPathComponent("README.md"), atomically: true, encoding: .utf8)
         createdFiles.append("README.md")
         
-        // 2. SPEC.md
+        // 2. SPEC.md & PRD.md
         let spec = """
-        # Product Specification: \(title)
+        # Product Requirements Document (PRD): \(title)
         
         ## 1. Problem & JTBD
         - **Target:** \(platform)
@@ -140,7 +140,9 @@ public enum ProjectScaffolder {
         - **State:** Однонаправленный поток данных.
         """
         try spec.write(to: projectDir.appendingPathComponent("SPEC.md"), atomically: true, encoding: .utf8)
+        try spec.write(to: projectDir.appendingPathComponent("PRD.md"), atomically: true, encoding: .utf8)
         createdFiles.append("SPEC.md")
+        createdFiles.append("PRD.md")
         
         // 3. PLAN.md
         let plan = planPrompt.isEmpty ? PromptCompiler.compileBlueprint(
@@ -175,7 +177,68 @@ public enum ProjectScaffolder {
         try designMd.write(to: projectDir.appendingPathComponent("DESIGN.md"), atomically: true, encoding: .utf8)
         createdFiles.append("DESIGN.md")
 
-        // 5. CLAUDE.md (Agent Guidelines)
+        // 5. .planning/ directory for Antigravity GSD agents
+        let planningDir = projectDir.appendingPathComponent(".planning", isDirectory: true)
+        let phasesDir = planningDir.appendingPathComponent("phases/01-foundation", isDirectory: true)
+        try fm.createDirectory(at: phasesDir, withIntermediateDirectories: true)
+
+        let projectMd = """
+        # Project Charter: \(title)
+
+        ## Vision & JTBD
+        \(concept.isEmpty ? "Реализация высокопроизводительного нативного решения." : concept)
+
+        ## Platform & Visual System
+        - **Platform:** \(platform)
+        - **Design System:** \(style) (\(tokens.theme))
+        - **Grid Standard:** 4pt/8pt modular grid, sub-250ms feedback, zero emojis
+
+        ## Required Antigravity Skills
+        - `/site-md` — Architecture mapping and screen catalog
+        - `/design-md` — Visual system and DESIGN.md token sync
+        - `/emil-design-eng` — Micro-interactions and spring physics
+        - `/gsd-execute-phase` — Wave-based execution with atomic commits
+        """
+        try projectMd.write(to: planningDir.appendingPathComponent("PROJECT.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/PROJECT.md")
+
+        let roadmapMd = """
+        # Roadmap: \(title)
+
+        ## Milestone 1: MVP Core
+        - [ ] Phase 1: Foundation & Data Schema
+        - [ ] Phase 2: Core Domain Logic & State Management
+        - [ ] Phase 3: High-Fidelity UI & Token Alignment
+        - [ ] Phase 4: Verification, A11y & Packaging
+        """
+        try roadmapMd.write(to: planningDir.appendingPathComponent("ROADMAP.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/ROADMAP.md")
+
+        let stateMd = """
+        # Project State: \(title)
+
+        - **Current Milestone:** 1.0.0
+        - **Current Phase:** Phase 1 (Foundation & Data Schema)
+        - **Status:** Initialized and ready for agent execution
+        """
+        try stateMd.write(to: planningDir.appendingPathComponent("STATE.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/STATE.md")
+
+        let phase1Plan = """
+        # Phase 1 Plan: Foundation & Data Schema
+
+        ## Goal
+        Establish data models, storage layer, and baseline project structure.
+
+        ## Tasks
+        1. Initialize repository and configuration.
+        2. Setup data models and schema validation.
+        3. Verify local read/write persistence.
+        """
+        try phase1Plan.write(to: phasesDir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/phases/01-foundation/PLAN.md")
+
+        // 6. CLAUDE.md (Agent Guidelines)
         let claudeMd = """
         # Engineering Constitution for \(title)
         

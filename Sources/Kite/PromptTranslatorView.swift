@@ -219,6 +219,15 @@ struct PromptTranslatorView: View {
                         }
                         .buttonStyle(.bordered)
                         .disabled(rawPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                        Button {
+                            scaffoldProject()
+                        } label: {
+                            Label("Экспорт", systemImage: "folder.badge.plus")
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(rawPrompt.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
 
                     if let err = errorMessage {
@@ -527,6 +536,40 @@ struct PromptTranslatorView: View {
         NSSound.beep()
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             isSavedToIdeas = false
+        }
+    }
+
+    private func scaffoldProject() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Создать здесь"
+        panel.message = "Выберите папку для создания проекта"
+
+        let devDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Developer", isDirectory: true)
+        if FileManager.default.fileExists(atPath: devDir.path) {
+            panel.directoryURL = devDir
+        }
+
+        if panel.runModal() == .OK, let targetURL = panel.url {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            do {
+                let result = try ProjectScaffolder.scaffold(
+                    at: targetURL,
+                    title: title,
+                    concept: rawPrompt,
+                    platform: selectedPlatform,
+                    style: selectedStyle,
+                    planPrompt: generatedBlueprint
+                )
+                NSSound.beep()
+                NSWorkspace.shared.selectFile(result.directory.path, inFileViewerRootedAtPath: "")
+            } catch {
+                errorMessage = "Ошибка экспорта: \(error.localizedDescription)"
+            }
         }
     }
 }
