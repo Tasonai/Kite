@@ -24,7 +24,7 @@ public struct ChatMessageItem: Sendable, Identifiable {
 
 public enum AIGenerator {
     /// Shown whenever an answer comes from a fixed offline template instead of a model.
-    public static let offlineNotice = "Офлайн-режим: ключ Gemini не задан, поэтому это шаблонный ответ без ИИ. Добавьте ключ в Настройки, раздел ИИ."
+    public static let offlineNotice = "Офлайн-режим: ключ Gemini не задан, поэтому это шаблонный ответ без ИИ. Добавьте ключ: меню Kite, Настройки (⌘,), вкладка «AI & Models»."
 
     /// Sampling for Gemini: warm enough to avoid the same stock answer every time.
     private static var generationConfig: [String: Any] { ["temperature": 0.8, "topP": 0.95] }
