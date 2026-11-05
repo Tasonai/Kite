@@ -479,7 +479,8 @@ struct ItemDetail: View {
                     concept: item.concept,
                     platform: item.platform,
                     style: item.style,
-                    planPrompt: item.generatedPrompt
+                    planPrompt: item.generatedPrompt,
+                    createGitBranch: true
                 )
                 item.status = "in_progress"
                 scaffoldSuccessPath = result.directory.path

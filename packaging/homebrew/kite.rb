@@ -1,6 +1,6 @@
 cask "kite" do
-  version "1.0.0"
-  sha256 "b9dd9362493547dd1d17690bda4506a53011e9e392fec40854a4eb3595464535"
+  version "1.2.0"
+  sha256 "c75cebd8f84fbbfc74c840963e74357a10fbe1af56ffaea7a79674503d32b5b9"
 
   url "https://github.com/Tasonai/Kite/releases/download/v#{version}/Kite-#{version}-macOS.dmg"
   name "Kite"

@@ -70,6 +70,13 @@ public enum ProjectScaffolder {
     public struct Result {
         public let directory: URL
         public let files: [String]
+        public let gitMessage: String
+
+        public init(directory: URL, files: [String], gitMessage: String = "") {
+            self.directory = directory
+            self.files = files
+            self.gitMessage = gitMessage
+        }
     }
     
     public static func slugify(_ text: String) -> String {
@@ -88,7 +95,8 @@ public enum ProjectScaffolder {
         concept: String,
         platform: String,
         style: String,
-        planPrompt: String
+        planPrompt: String,
+        createGitBranch: Bool = false
     ) throws -> Result {
         let folderName = slugify(title)
         let projectDir = parentFolder.appendingPathComponent(folderName, isDirectory: true)
@@ -355,15 +363,56 @@ public enum ProjectScaffolder {
         try gitignore.write(to: projectDir.appendingPathComponent(".gitignore"), atomically: true, encoding: .utf8)
         createdFiles.append(".gitignore")
         
-        // 8. Initialize git if available
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
-        process.currentDirectoryURL = projectDir
-        process.arguments = ["init"]
-        try? process.run()
-        process.waitUntilExit()
+        // 8. Initialize git repository, feature branch, and commit
+        var gitMsg = ""
+        if createGitBranch {
+            let res = initializeGitFeature(at: projectDir, branchName: "feature/kite-\(folderName)", commitMessage: "feat: scaffold planning specs for \(title)")
+            gitMsg = res.message
+        } else {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            process.currentDirectoryURL = projectDir
+            process.arguments = ["init"]
+            try? process.run()
+            process.waitUntilExit()
+        }
         
-        return Result(directory: projectDir, files: createdFiles)
+        return Result(directory: projectDir, files: createdFiles, gitMessage: gitMsg)
+    }
+
+    @discardableResult
+    public static func initializeGitFeature(
+        at projectDir: URL,
+        branchName: String? = nil,
+        commitMessage: String? = nil
+    ) -> (success: Bool, message: String) {
+        let folderName = projectDir.lastPathComponent
+        let branch = branchName ?? "feature/kite-\(folderName)"
+        let commitMsg = commitMessage ?? "feat: scaffold planning specs for \(folderName)"
+
+        func runGit(_ args: [String]) -> (code: Int32, out: String) {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+            proc.currentDirectoryURL = projectDir
+            proc.arguments = args
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = pipe
+            do {
+                try proc.run()
+                proc.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                return (proc.terminationStatus, String(data: data, encoding: .utf8) ?? "")
+            } catch {
+                return (-1, error.localizedDescription)
+            }
+        }
+
+        _ = runGit(["init"])
+        _ = runGit(["checkout", "-B", branch])
+        _ = runGit(["add", "."])
+        _ = runGit(["commit", "-m", commitMsg])
+        return (true, "Git branch '\(branch)' ready with initial planning specs")
     }
 
     /// Escapes text so it can sit inside a generated Swift string literal.

@@ -14,6 +14,8 @@ public final class KiteSyncServer: @unchecked Sendable {
 
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "com.kite.syncserver", qos: .userInitiated)
+    private var sseConnections: [NWConnection] = []
+    private let sseLock = NSLock()
 
     private init() {}
 
@@ -56,9 +58,59 @@ public final class KiteSyncServer: @unchecked Sendable {
     }
 
     public func stop() {
+        sseLock.lock()
+        for conn in sseConnections {
+            conn.cancel()
+        }
+        sseConnections.removeAll()
+        sseLock.unlock()
+
         listener?.cancel()
         listener = nil
         isRunning = false
+    }
+
+    public func broadcast(event: String, payload: [String: Any] = [:]) {
+        let jsonPayload: String
+        if let data = try? JSONSerialization.data(withJSONObject: payload),
+           let str = String(data: data, encoding: .utf8) {
+            jsonPayload = str
+        } else {
+            jsonPayload = "{}"
+        }
+        let sseString = "event: message\ndata: {\"type\":\"\(event)\",\"payload\":\(jsonPayload)}\n\n"
+        let data = Data(sseString.utf8)
+
+        sseLock.lock()
+        let connections = sseConnections
+        sseLock.unlock()
+
+        for conn in connections {
+            conn.send(content: data, completion: .contentProcessed { [weak self] error in
+                if error != nil {
+                    self?.removeSseConnection(conn)
+                }
+            })
+        }
+    }
+
+    private func addSseConnection(_ connection: NWConnection) {
+        sseLock.lock()
+        sseConnections.append(connection)
+        sseLock.unlock()
+
+        let header = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream; charset=utf-8\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\nAccess-Control-Allow-Origin: *\r\n\r\n"
+        connection.send(content: Data(header.utf8), completion: .contentProcessed { _ in })
+
+        let welcome = "data: {\"type\":\"connected\",\"app\":\"Kite macOS\",\"port\":\(boundPort)}\n\n"
+        connection.send(content: Data(welcome.utf8), completion: .contentProcessed { _ in })
+    }
+
+    private func removeSseConnection(_ connection: NWConnection) {
+        sseLock.lock()
+        sseConnections.removeAll(where: { $0 === connection })
+        sseLock.unlock()
+        connection.cancel()
     }
 
     private func handleConnection(_ connection: NWConnection) {
@@ -117,9 +169,17 @@ public final class KiteSyncServer: @unchecked Sendable {
         }
 
         switch (method, path) {
+        case ("GET", "/"), ("GET", "/index.html"):
+            let html = WebStudio.html(port: Int(boundPort), appName: "Kite macOS")
+            sendResponse(connection: connection, contentType: "text/html; charset=utf-8", body: Data(html.utf8))
+
+        case ("GET", "/api/events"):
+            addSseConnection(connection)
+            return
+
         case ("GET", "/api/status"):
             let json = """
-            {"status":"online","app":"Kite macOS","version":"1.0","port":\(boundPort)}
+            {"status":"online","app":"Kite macOS","version":"1.2.0","port":\(boundPort)}
             """
             sendResponse(connection: connection, body: Data(json.utf8))
 
@@ -129,6 +189,7 @@ public final class KiteSyncServer: @unchecked Sendable {
 
         case ("POST", "/api/ideas"):
             let count = await importIdeasHandler?(bodyData) ?? 0
+            broadcast(event: "ideas_updated", payload: ["imported": count])
             let res = "{\"status\":\"ok\",\"imported\":\(count)}"
             sendResponse(connection: connection, body: Data(res.utf8))
 
@@ -138,6 +199,9 @@ public final class KiteSyncServer: @unchecked Sendable {
 
         case ("POST", "/api/canvas"):
             let ok = await importCanvasHandler?(bodyData) ?? false
+            if ok {
+                broadcast(event: "canvas_updated", payload: ["status": "ok"])
+            }
             let res = "{\"status\":\(ok ? "\"ok\"" : "\"error\"")}"
             sendResponse(connection: connection, body: Data(res.utf8))
 

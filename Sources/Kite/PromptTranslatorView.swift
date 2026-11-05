@@ -563,7 +563,8 @@ struct PromptTranslatorView: View {
                     concept: rawPrompt,
                     platform: selectedPlatform,
                     style: selectedStyle,
-                    planPrompt: generatedBlueprint
+                    planPrompt: generatedBlueprint,
+                    createGitBranch: true
                 )
                 NSSound.beep()
                 NSWorkspace.shared.selectFile(result.directory.path, inFileViewerRootedAtPath: "")

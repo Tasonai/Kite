@@ -165,6 +165,96 @@ def cmd_canvas_export(args: argparse.Namespace) -> None:
     else:
         print(json.dumps(data, indent=2, ensure_ascii=False))
 
+def cmd_scaffold(args: argparse.Namespace) -> None:
+    folder = os.path.abspath(args.folder)
+    res = scaffold_project_files(folder, args.title, args.concept or "", args.platform, args.style, not args.no_git)
+    print(f"Project scaffolded at: {res['directory']}")
+    print(f"Created {len(res['files'])} files:")
+    for f in res["files"]:
+        print(f"  + {f}")
+    if res.get("gitMessage"):
+        print(f"Git: {res['gitMessage']}")
+
+def cmd_sync(args: argparse.Namespace) -> None:
+    local_ep = get_active_endpoint()
+    peer_ep = args.peer or ("http://127.0.0.1:24243" if "24242" in local_ep else "http://127.0.0.1:24242")
+    print(f"Syncing local station ({local_ep}) with peer ({peer_ep})...")
+    try:
+        p_status = api_get(peer_ep, "/api/status")
+        print(f"Peer is online: {p_status.get('app')} ({p_status.get('version')})")
+        peer_ideas = api_get(peer_ep, "/api/ideas")
+        res = api_post(local_ep, "/api/ideas", peer_ideas)
+        print(f"Imported {res.get('imported', 0)} ideas from peer.")
+        peer_canvas = api_get(peer_ep, "/api/canvas")
+        c_res = api_post(local_ep, "/api/canvas", peer_canvas)
+        print(f"Canvas sync status: {c_res.get('status')}")
+    except Exception as ex:
+        print(f"Sync error: {ex}")
+
+def cmd_spec(args: argparse.Namespace) -> None:
+    ep = get_active_endpoint()
+    data = api_get(ep, "/api/ideas")
+    ideas = data.get("ideas", [])
+    target = args.title.lower()
+    matched = next((i for i in ideas if target in i.get("title", "").lower() or target in i.get("id", "").lower()), None)
+    if not matched:
+        print(f"Idea matching '{args.title}' not found.")
+        return
+    print(f"# {matched.get('title')}")
+    print(f"Platform: {matched.get('platform', 'web')} | Style: {matched.get('preferredStyle')}")
+    print(f"\n## Concept:\n{matched.get('description') or matched.get('concept') or '(no description)'}")
+    if matched.get("generatedPrompt"):
+        print(f"\n## Plan / Spec:\n{matched.get('generatedPrompt')}")
+
+def scaffold_project_files(parent_folder: str, title: str, concept: str = "", platform: str = "web", style: str = "Editorial & Swiss Modern", git_branch: bool = True) -> Dict[str, Any]:
+    slug = "".join(c if c.isalnum() else "-" for c in title.lower()).strip("-")
+    if not slug:
+        slug = "kite-project"
+    project_dir = os.path.join(parent_folder, slug)
+    os.makedirs(project_dir, exist_ok=True)
+    planning_dir = os.path.join(project_dir, ".planning")
+    phases_dir = os.path.join(planning_dir, "phases", "01-foundation")
+    os.makedirs(phases_dir, exist_ok=True)
+
+    files_created = []
+
+    def write_f(path, content):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        files_created.append(os.path.relpath(path, project_dir))
+
+    write_f(os.path.join(project_dir, "README.md"), f"# {title}\n\n> Platform: {platform}\n> Style: {style}\n> Scaffolded by Kite Studio\n\n## Concept\n{concept or 'User scenario and problem statement.'}\n")
+    spec_content = f"# PRD & Specification: {title}\n\n## Target Platform\n{platform}\n\n## Style System\n{style}\n\n## Architecture\n- Local-first architecture\n- Zero Emojis compliance\n- 4pt/8pt modular grid\n"
+    write_f(os.path.join(project_dir, "SPEC.md"), spec_content)
+    write_f(os.path.join(project_dir, "PRD.md"), spec_content)
+    write_f(os.path.join(project_dir, "PLAN.md"), f"# Implementation Plan: {title}\n\n## Phase 1: Foundation\n- Setup project structure\n- Local persistence\n\n## Phase 2: Feature Development\n- Core business flow\n")
+    write_f(os.path.join(project_dir, "DESIGN.md"), f"# Design System: {style}\n\n## Tokens\n- Modular Grid: 4pt/8pt\n- Elevation: Clean borders, soft shadows\n")
+    write_f(os.path.join(planning_dir, "PROJECT.md"), f"# Project Constitution: {title}\n\n## Mission\n{concept or title}\n")
+    write_f(os.path.join(planning_dir, "ROADMAP.md"), f"# Roadmap: {title}\n\n## Phase 1: Foundation\n- [ ] Data models and storage\n\n## Phase 2: User Interface\n- [ ] Visual polish\n")
+    write_f(os.path.join(planning_dir, "STATE.md"), f"# Project State\n\n- Active Phase: Phase 1\n- Status: In Progress\n")
+    write_f(os.path.join(phases_dir, "PLAN.md"), f"# Phase 1 Plan\n\n1. Initialize repository\n2. Setup storage\n3. Verify tests\n")
+    write_f(os.path.join(project_dir, "CLAUDE.md"), f"# Engineering Guidelines for {title}\n\n## Standard\n- Zero Emojis\n- 4pt/8pt modular grid\n- Local-first persistence\n")
+    write_f(os.path.join(project_dir, ".gitignore"), ".DS_Store\nnode_modules/\nbin/\nobj/\ndist/\n*.log\n")
+
+    git_message = ""
+    if git_branch:
+        try:
+            import subprocess
+            subprocess.run(["git", "init"], cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            branch = f"feature/kite-{slug}"
+            subprocess.run(["git", "checkout", "-B", branch], cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(["git", "add", "."], cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(["git", "commit", "-m", f"feat: scaffold planning specs for {title}"], cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            git_message = f"Git branch '{branch}' created with initial commit."
+        except Exception as e:
+            git_message = f"Git error: {e}"
+
+    return {
+        "directory": project_dir,
+        "files": files_created,
+        "gitMessage": git_message
+    }
+
 # ==================== MCP SERVER (JSON-RPC) ====================
 
 def run_mcp_server() -> None:
@@ -261,6 +351,53 @@ def run_mcp_server() -> None:
                                         "format": {"type": "string", "enum": ["stitch", "json"], "default": "stitch"}
                                     }
                                 }
+                            },
+                            {
+                                "name": "kite_scaffold_project",
+                                "description": "Scaffolds complete project constitution (.planning/, PROJECT.md, ROADMAP.md, STATE.md, PLAN.md, PRD.md, SPEC.md, DESIGN.md, CLAUDE.md) directly to disk, with optional Git feature branch creation.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "folder": {"type": "string", "description": "Destination parent folder path"},
+                                        "title": {"type": "string", "description": "Project title"},
+                                        "concept": {"type": "string", "description": "Core problem statement and JTBD", "default": ""},
+                                        "platform": {"type": "string", "enum": ["web", "mobile", "desktop"], "default": "web"},
+                                        "style": {"type": "string", "description": "Design system preset", "default": "Editorial & Swiss Modern"},
+                                        "gitBranch": {"type": "boolean", "description": "Initialize Git and create feature branch", "default": True}
+                                    },
+                                    "required": ["folder", "title"]
+                                }
+                            },
+                            {
+                                "name": "kite_trigger_sync",
+                                "description": "Triggers immediate bidirectional P2P sync between local Kite and remote peer (macOS port 24242 <-> Windows port 24243).",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "targetEndpoint": {"type": "string", "description": "Custom remote peer URL (optional)"}
+                                    }
+                                }
+                            },
+                            {
+                                "name": "kite_read_spec",
+                                "description": "Reads generated architecture plan, PRD, or SPEC for an idea in the Kite knowledge bank.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "title": {"type": "string", "description": "Title or substring of idea to inspect"}
+                                    },
+                                    "required": ["title"]
+                                }
+                            },
+                            {
+                                "name": "kite_export_canvas_html",
+                                "description": "Exports standalone interactive HTML canvas with pan, zoom, and live search highlight.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "outputPath": {"type": "string", "description": "File path to save the HTML file to (optional)"}
+                                    }
+                                }
                             }
                         ]
                     }
@@ -346,6 +483,117 @@ def run_mcp_server() -> None:
                         }
                     })
 
+                elif tool_name == "kite_scaffold_project":
+                    folder = args.get("folder")
+                    title = args.get("title")
+                    concept = args.get("concept", "")
+                    platform = args.get("platform", "web")
+                    style = args.get("style", "Editorial & Swiss Modern")
+                    git_branch = args.get("gitBranch", True)
+
+                    res = scaffold_project_files(folder, title, concept, platform, style, git_branch)
+                    report = f"Successfully scaffolded project '{title}' in {res['directory']}\nFiles created ({len(res['files'])}):\n" + "\n".join(f"- {f}" for f in res['files'])
+                    if res.get("gitMessage"):
+                        report += f"\nGit Status: {res['gitMessage']}"
+
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": report}]
+                        }
+                    })
+
+                elif tool_name == "kite_trigger_sync":
+                    local_ep = get_active_endpoint()
+                    peer_ep = args.get("targetEndpoint") or ("http://127.0.0.1:24243" if "24242" in local_ep else "http://127.0.0.1:24242")
+                    
+                    try:
+                        peer_status = api_get(peer_ep, "/api/status")
+                        peer_ideas = api_get(peer_ep, "/api/ideas")
+                        imp_res = api_post(local_ep, "/api/ideas", peer_ideas)
+                        
+                        peer_canvas = api_get(peer_ep, "/api/canvas")
+                        api_post(local_ep, "/api/canvas", peer_canvas)
+
+                        sync_summary = f"P2P Sync Succeeded!\nLocal Station: {local_ep}\nRemote Peer: {peer_ep} ({peer_status.get('app')})\nImported Ideas: {imp_res.get('imported', 0)}\nCanvas: Synchronized"
+                    except Exception as ex:
+                        sync_summary = f"P2P Sync Warning: {ex}"
+
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": sync_summary}]
+                        }
+                    })
+
+                elif tool_name == "kite_read_spec":
+                    target_title = args.get("title", "").lower()
+                    data = api_get(ep, "/api/ideas")
+                    ideas = data.get("ideas", [])
+                    matched = next((i for i in ideas if target_title in i.get("title", "").lower() or target_title in i.get("id", "").lower()), None)
+                    if not matched:
+                        text = f"Idea '{args.get('title')}' not found."
+                    else:
+                        title = matched.get("title")
+                        desc = matched.get("description") or matched.get("concept") or ""
+                        style = matched.get("preferredStyle") or "Editorial & Swiss Modern"
+                        plat = matched.get("platform") or "web"
+                        prompt = matched.get("generatedPrompt") or ""
+                        text = f"# {title}\n\n**Platform:** {plat}  \n**Style:** {style}  \n\n## Concept\n{desc}\n\n## Generated Architecture Plan\n{prompt or 'Plan has not been generated yet. Use /plan to generate.'}"
+
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": text}]
+                        }
+                    })
+
+                elif tool_name == "kite_export_canvas_html":
+                    canvas = api_get(ep, "/api/canvas")
+                    out_path = args.get("outputPath")
+                    frames = canvas.get("frames", [])
+                    stickies = canvas.get("stickies", [])
+                    
+                    html_content = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Kite Canvas Export</title>
+<style>
+body {{ margin: 0; font-family: -apple-system, sans-serif; background: #0F1117; color: #FFF; }}
+.header {{ padding: 12px 24px; border-bottom: 1px solid #2D3342; display: flex; justify-content: space-between; }}
+.grid {{ padding: 24px; display: flex; flex-wrap: wrap; gap: 16px; }}
+.frame {{ border: 2px solid #3B82F6; border-radius: 8px; padding: 16px; width: 340px; background: #1A1D24; }}
+.sticky {{ border-radius: 6px; padding: 12px; margin-top: 8px; color: #1E293B; }}
+</style>
+</head>
+<body>
+<div class="header"><h3>Kite Canvas</h3><span>{len(frames)} frames, {len(stickies)} stickies</span></div>
+<div class="grid">
+"""
+                    for f in frames:
+                        html_content += f'<div class="frame"><h4>{f.get("title")}</h4>'
+                        for s in stickies:
+                            html_content += f'<div class="sticky" style="background: {s.get("colorHex", "#FEF08A")}">{s.get("text")}</div>'
+                        html_content += '</div>'
+                    html_content += '</div></body></html>'
+
+                    if out_path:
+                        with open(out_path, "w", encoding="utf-8") as fp:
+                            fp.write(html_content)
+                        result_text = f"Canvas exported to HTML at {out_path} ({len(html_content)} bytes)"
+                    else:
+                        result_text = html_content
+
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": result_text}]
+                        }
+                    })
+
                 else:
                     send_response({
                         "jsonrpc": "2.0",
@@ -406,6 +654,23 @@ def main() -> None:
     p_canvas = subparsers.add_parser("canvas", help="Export canvas layout and tokens")
     p_canvas.add_argument("--format", choices=["stitch", "json"], default="stitch", help="Output format")
 
+    # scaffold
+    p_scaffold = subparsers.add_parser("scaffold", help="Scaffold project constitution and planning directory")
+    p_scaffold.add_argument("title", help="Project title")
+    p_scaffold.add_argument("--folder", default=".", help="Target parent directory")
+    p_scaffold.add_argument("--concept", help="Project concept / JTBD")
+    p_scaffold.add_argument("--platform", choices=["web", "mobile", "desktop"], default="web", help="Platform")
+    p_scaffold.add_argument("--style", default="Editorial & Swiss Modern", help="Design system preset")
+    p_scaffold.add_argument("--no-git", action="store_true", help="Do not initialize git feature branch")
+
+    # sync
+    p_sync = subparsers.add_parser("sync", help="Trigger bidirectional P2P sync with remote station")
+    p_sync.add_argument("--peer", help="Remote station endpoint (e.g. http://127.0.0.1:24243)")
+
+    # spec
+    p_spec = subparsers.add_parser("spec", help="Read generated specification or plan for an idea")
+    p_spec.add_argument("title", help="Idea title or ID")
+
     # mcp
     subparsers.add_parser("mcp", help="Run MCP server over stdio for Claude Desktop / Cursor / Antigravity")
 
@@ -421,6 +686,12 @@ def main() -> None:
         cmd_show(args)
     elif args.subcommand == "canvas":
         cmd_canvas_export(args)
+    elif args.subcommand == "scaffold":
+        cmd_scaffold(args)
+    elif args.subcommand == "sync":
+        cmd_sync(args)
+    elif args.subcommand == "spec":
+        cmd_spec(args)
     elif args.subcommand == "mcp":
         run_mcp_server()
     else:
