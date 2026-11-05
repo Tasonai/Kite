@@ -83,6 +83,7 @@ enum SelfTest {
         check("at most three interview questions are kept", AIPrompts.parseInterview(#"[{"question":"a","options":[]},{"question":"b","options":[]},{"question":"c","options":[]},{"question":"d","options":[]}]"#).count == 3)
         let enriched = AIPrompts.enrich(idea: "Трекер", answers: [(question: "Где данные?", answer: "Только на Mac"), (question: "Кто?", answer: "  ")])
         check("answers are appended to the idea and blank ones are dropped", enriched.contains("Где данные? Только на Mac") && !enriched.contains("Кто?"))
+        check("answers come with an order to restate them as decisions", enriched.contains("Принятые решения автора"))
         check("an idea without answers stays unchanged", AIPrompts.enrich(idea: "Трекер", answers: []) == "Трекер")
         let historyURL = FileManager.default.temporaryDirectory.appending(path: "kite-selftest-chat-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: historyURL) }

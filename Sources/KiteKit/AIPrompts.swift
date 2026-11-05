@@ -140,6 +140,7 @@ public enum AIPrompts {
         guard !given.isEmpty else { return idea }
         let lines = given.map { "- \($0.question) \($0.answer.trimmingCharacters(in: .whitespacesAndNewlines))" }
         return idea + "\n\nУточнения автора (считай их фактами, не допущениями):\n" + lines.joined(separator: "\n")
+            + "\n\nОбязательно: добавь раздел «Принятые решения автора». В нём по одному пункту на каждое уточнение: что решено и что из-за этого исключено из состава работ. Не включай в план ничего, что противоречит этим решениям (поля, экраны, интеграции)."
     }
 
     /// Facts about the user's workspace that the chat model can use.
