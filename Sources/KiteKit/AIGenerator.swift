@@ -23,6 +23,9 @@ public struct ChatMessageItem: Sendable, Identifiable {
 }
 
 public enum AIGenerator {
+    /// Shown whenever an answer comes from a fixed offline template instead of a model.
+    public static let offlineNotice = "Офлайн-режим: ключ Gemini не задан, поэтому это шаблонный ответ без ИИ. Добавьте ключ в Настройки, раздел ИИ."
+
     /// Sampling for Gemini: warm enough to avoid the same stock answer every time.
     private static var generationConfig: [String: Any] { ["temperature": 0.8, "topP": 0.95] }
 
@@ -103,8 +106,8 @@ public enum AIGenerator {
                 modelName: modelName.isEmpty ? "llama3" : modelName
             )
         } else {
-            // Intelligent local architectural assistant
-            return localArchitectReply(to: messages.last?.content ?? "")
+            // No model behind this answer: say so, so a template is never mistaken for AI.
+            return "**\(offlineNotice)**\n\n" + localArchitectReply(to: messages.last?.content ?? "")
         }
     }
 

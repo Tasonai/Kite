@@ -380,6 +380,7 @@ struct PromptTranslatorView: View {
         do {
             if aiProvider == "Local Blueprint (Offline)" || (aiProvider == "Gemini API" && geminiApiKey.isEmpty) {
                 generatedBlueprint = compileLocally()
+                if aiProvider == "Gemini API" { errorMessage = AIGenerator.offlineNotice }
             } else {
                 generatedBlueprint = try await AIGenerator.generateSpecification(
                     title: cleanTitle,
