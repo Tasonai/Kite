@@ -6,6 +6,7 @@ import KiteKit
 struct AIChatView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
+    @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
 
     @AppStorage("gemini_api_key") private var apiKey: String = ""
     @AppStorage("ai_provider") private var providerRaw: String = AIProvider.gemini.rawValue
@@ -330,6 +331,11 @@ struct AIChatView: View {
         let model = modelName
         let endpoint = ollamaEndpoint
         let history = messages
+        let workspace = AIPrompts.ChatContext(ideas: items.prefix(12).map { item in
+            let concept = item.concept.trimmingCharacters(in: .whitespacesAndNewlines)
+            let brief = concept.isEmpty ? "" : ": " + String(concept.prefix(120))
+            return "\(item.title) (\(item.platform), \(item.style))\(brief)"
+        })
 
         Task {
             do {
@@ -338,7 +344,8 @@ struct AIChatView: View {
                     apiKey: key,
                     provider: currentProvider,
                     modelName: model,
-                    ollamaEndpoint: endpoint
+                    ollamaEndpoint: endpoint,
+                    context: workspace
                 )
                 await MainActor.run {
                     messages.append(ChatMessageItem(role: "assistant", content: reply))

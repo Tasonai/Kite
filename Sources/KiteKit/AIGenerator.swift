@@ -23,6 +23,9 @@ public struct ChatMessageItem: Sendable, Identifiable {
 }
 
 public enum AIGenerator {
+    /// Sampling for Gemini: warm enough to avoid the same stock answer every time.
+    private static var generationConfig: [String: Any] { ["temperature": 0.8, "topP": 0.95] }
+
     public static func generateSpecification(
         title: String,
         concept: String,
@@ -31,8 +34,17 @@ public enum AIGenerator {
         apiKey: String,
         provider: AIProvider = .gemini,
         modelName: String = "gemini-2.5-flash",
-        ollamaEndpoint: String = "http://localhost:11434/api/generate"
+        ollamaEndpoint: String = "http://localhost:11434/api/generate",
+        mode: String = "full",
+        skills: [String] = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     ) async throws -> String {
+        let promptText = AIPrompts.translator(
+            mode: mode,
+            rawPrompt: ideaText(title: title, concept: concept),
+            platform: platform,
+            style: style,
+            skills: skills
+        )
         switch provider {
         case .gemini:
             if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -44,19 +56,13 @@ public enum AIGenerator {
                 )
             }
             return try await callGeminiAPI(
-                title: title,
-                concept: concept,
-                platform: platform,
-                style: style,
+                promptText: promptText,
                 apiKey: apiKey,
                 modelName: modelName
             )
         case .localOllama:
             return try await callOllama(
-                title: title,
-                concept: concept,
-                platform: platform,
-                style: style,
+                promptText: promptText,
                 endpoint: ollamaEndpoint,
                 modelName: modelName.isEmpty ? "llama3" : modelName
             )
@@ -75,18 +81,10 @@ public enum AIGenerator {
         apiKey: String,
         provider: AIProvider = .gemini,
         modelName: String = "gemini-2.5-flash",
-        ollamaEndpoint: String = "http://localhost:11434/api/chat"
+        ollamaEndpoint: String = "http://localhost:11434/api/chat",
+        context: AIPrompts.ChatContext = .init(ideas: [])
     ) async throws -> String {
-        let systemPrompt = """
-        Ты — Kite AI-Архитектор и Principal Software Engineer экосистемы Antigravity на macOS.
-        Твоя специализация:
-        1. Проектирование современных архитектур (React 19, Vite, Next.js, SwiftUI, Flutter, Tailwind CSS, SwiftData).
-        2. Подбор и рекомендация системных навыков Antigravity (/site-md, /design-md, /taste-design, /impeccable, /emil-design-eng, /a11y-debugging, /gsd-execute-phase, /superpowers, /vercel-plugin, /figma, /bama).
-        3. Дизайн-системы, точные токены и экспорт в Google Stitch (DESIGN.md) и Figma.
-        4. Практические советы по устранению AI-слопа (Zero AI Slop), соблюдению 4pt-сетки Apple HIG и оптимизации UX.
-
-        Отвечай строго по существу, профессионально, на русском языке, используя структурированный Markdown с кодовыми блоками.
-        """
+        let systemPrompt = AIPrompts.chatSystem(context: context)
 
         let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -181,7 +179,8 @@ public enum AIGenerator {
             "system_instruction": [
                 "parts": [["text": systemInstruction]]
             ],
-            "contents": contentsJson
+            "contents": contentsJson,
+            "generationConfig": generationConfig
         ]
 
         var request = URLRequest(url: url)
@@ -250,36 +249,17 @@ public enum AIGenerator {
         return text
     }
 
-    private static func buildPrompt(title: String, concept: String, platform: String, style: String) -> String {
-        """
-        Ты — ведущий AI-архитектор и Principal Software Engineer, специализирующийся на методологии Antigravity.
-        Составь исчерпывающий, профессиональный инженерный план и спецификацию (/plan) для следующего проекта:
-
-        ПРОЕКТ: \(title)
-        КОНЦЕПЦИЯ: \(concept.isEmpty ? "Инновационный продукт с высокой отзывчивостью и чистой архитектурой." : concept)
-        ЦЕЛЕВАЯ ПЛАТФОРМА: \(platform)
-        ДИЗАЙН-СИСТЕМА: \(style)
-
-        ТРЕБОВАНИЯ К ОТВЕТУ:
-        1. В первой строке ОБЯЗАТЕЛЬНО укажи команду Antigravity с релевантными скиллами:
-           /plan /site-md /design-md /taste-design /impeccable /emil-design-eng
-        2. Формат: Строгий Markdown, профессиональный технический тон, Zero AI Slop.
-        3. Разделы плана:
-           # ПОЛНЫЙ АРХИТЕКТУРНЫЙ ПЛАН: \(title)
-           ## 1. JTBD И КЛЮЧЕВЫЕ ПОЛЬЗОВАТЕЛЬСКИЕ СЦЕНАРИИ
-           ## 2. АРХИТЕКТУРА ДАННЫХ И КОМПОНЕНТОВ
-           ## 3. ДИЗАЙН-СИСТЕМА, ТОКЕНЫ И A11Y (доступность, 4pt/8pt сетка)
-           ## 4. КРАЕВЫЕ СЛУЧАИ И ОТКАЗОУСТОЙЧИВОСТЬ
-           ## 5. ПОШАГОВЫЙ ПЛАН РЕАЛИЗАЦИИ (WAVE 1, WAVE 2, WAVE 3)
-           ## 6. КРИТЕРИИ ПРИЁМКИ И ТЕСТЫ (UAT)
-        """
+    /// The author's idea as one text: the title plus the concept, without repeating the title.
+    static func ideaText(title: String, concept: String) -> String {
+        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanConcept = concept.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleanConcept.isEmpty { return cleanTitle }
+        if cleanTitle.isEmpty || cleanConcept.lowercased().hasPrefix(cleanTitle.lowercased()) { return cleanConcept }
+        return "\(cleanTitle). \(cleanConcept)"
     }
 
     private static func callGeminiAPI(
-        title: String,
-        concept: String,
-        platform: String,
-        style: String,
+        promptText: String,
         apiKey: String,
         modelName: String
     ) async throws -> String {
@@ -291,7 +271,6 @@ public enum AIGenerator {
             throw URLError(.badURL)
         }
 
-        let promptText = buildPrompt(title: title, concept: concept, platform: platform, style: style)
         let payload: [String: Any] = [
             "contents": [
                 [
@@ -299,7 +278,8 @@ public enum AIGenerator {
                         ["text": promptText]
                     ]
                 ]
-            ]
+            ],
+            "generationConfig": generationConfig
         ]
 
         var request = URLRequest(url: url)
@@ -332,10 +312,7 @@ public enum AIGenerator {
     }
 
     private static func callOllama(
-        title: String,
-        concept: String,
-        platform: String,
-        style: String,
+        promptText: String,
         endpoint: String,
         modelName: String
     ) async throws -> String {
@@ -343,11 +320,11 @@ public enum AIGenerator {
             throw URLError(.badURL)
         }
 
-        let promptText = buildPrompt(title: title, concept: concept, platform: platform, style: style)
         let payload: [String: Any] = [
             "model": modelName,
             "prompt": promptText,
-            "stream": false
+            "stream": false,
+            "options": ["temperature": 0.8]
         ]
 
         var request = URLRequest(url: url)

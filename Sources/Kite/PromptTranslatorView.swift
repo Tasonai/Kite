@@ -389,12 +389,15 @@ struct PromptTranslatorView: View {
                     apiKey: geminiApiKey,
                     provider: provider,
                     modelName: aiProvider == "Local Ollama" ? ollamaModel : geminiModel,
-                    ollamaEndpoint: ollamaEndpoint
+                    ollamaEndpoint: ollamaEndpoint,
+                    mode: selectedMode,
+                    skills: skillsArray.sorted()
                 )
             }
             NSSound.beep()
         } catch {
-            errorMessage = error.localizedDescription
+            // The model failed, so what follows is the fixed offline template, not an AI answer. Say so.
+            errorMessage = "Модель не ответила, показан офлайн-шаблон, а не ответ ИИ. Причина: \(error.localizedDescription)"
             generatedBlueprint = compileLocally()
         }
     }

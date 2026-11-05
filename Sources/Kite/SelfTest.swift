@@ -53,6 +53,20 @@ enum SelfTest {
         }
         check("skills search ranks emil-design-eng first", skillIndex.max { $0.1 < $1.1 }?.0 == "emil-design-eng")
 
+        let idea = "Трекер подписок с напоминанием за три дня до списания"
+        func translator(_ mode: String) -> String {
+            AIPrompts.translator(mode: mode, rawPrompt: idea, platform: "Desktop", style: "Claude Parchment", skills: ["/site-md", "/design-md"])
+        }
+        let modes = ["full", "stitch", "edit", "concise", "action"]
+        check("every translator mode asks the model for a different artifact", Set(modes.map(translator)).count == modes.count)
+        check("the translator prompt carries the idea verbatim", modes.allSatisfy { translator($0).contains(idea) })
+        check("the translator prompt carries the style tokens", translator("full").contains(DesignSystemTokens.resolve(for: "Claude Parchment").accent))
+        check("the translator prompt bans filler words", translator("full").contains("интуитивный интерфейс"))
+        check("the translator prompt lists the chosen skills", translator("full").contains("/plan /site-md /design-md"))
+        let chat = AIPrompts.chatSystem(context: .init(ideas: ["Трекер подписок (Desktop)"]))
+        check("the chat prompt knows the user's ideas", chat.contains("Трекер подписок"))
+        check("the chat prompt tells the model to commit to one recommendation", chat.contains("Выбирай один вариант"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
