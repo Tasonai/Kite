@@ -337,25 +337,32 @@ struct AIChatView: View {
             return "\(item.title) (\(item.platform), \(item.style))\(brief)"
         })
 
-        Task {
+        Task { @MainActor in
+            let reply = ChatMessageItem(role: "assistant", content: "")
             do {
-                let reply = try await AIGenerator.chat(
+                var started = false
+                for try await piece in AIGenerator.chatStream(
                     messages: history,
                     apiKey: key,
                     provider: currentProvider,
                     modelName: model,
                     ollamaEndpoint: endpoint,
                     context: workspace
-                )
-                await MainActor.run {
-                    messages.append(ChatMessageItem(role: "assistant", content: reply))
-                    isThinking = false
+                ) {
+                    if !started {
+                        started = true
+                        messages.append(reply)
+                        isThinking = false
+                    }
+                    if let index = messages.firstIndex(where: { $0.id == reply.id }) {
+                        messages[index].content += piece
+                    }
                 }
+                isThinking = false
             } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isThinking = false
-                }
+                isThinking = false
+                let partial = messages.contains { $0.id == reply.id }
+                errorMessage = partial ? "Ответ оборван: \(error.localizedDescription)" : error.localizedDescription
             }
         }
     }

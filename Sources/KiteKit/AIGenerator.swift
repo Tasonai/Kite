@@ -11,7 +11,7 @@ public enum AIProvider: String, CaseIterable, Identifiable, Sendable {
 public struct ChatMessageItem: Sendable, Identifiable {
     public let id: UUID
     public let role: String // "user" or "assistant" / "model"
-    public let content: String
+    public var content: String
     public let timestamp: Date
 
     public init(id: UUID = UUID(), role: String, content: String, timestamp: Date = Date()) {
@@ -27,7 +27,22 @@ public enum AIGenerator {
     public static let offlineNotice = "Офлайн-режим: ключ Gemini не задан, поэтому это шаблонный ответ без ИИ. Добавьте ключ: меню Kite, Настройки (⌘,), вкладка «AI & Models»."
 
     /// Sampling for Gemini: warm enough to avoid the same stock answer every time.
-    private static var generationConfig: [String: Any] { ["temperature": 0.8, "topP": 0.95] }
+    private static var generationConfig: [String: Any] { generationConfig(thinking: nil) }
+
+    /// `thinking` is "low", "medium" or "high": how long the model deliberates before answering.
+    private static func generationConfig(thinking: String?) -> [String: Any] {
+        var config: [String: Any] = ["temperature": 0.8, "topP": 0.95]
+        if let thinking { config["thinkingConfig"] = ["thinkingLevel": thinking] }
+        return config
+    }
+
+    /// Short modes and chat answer fast; the plan and Stitch modes keep the full deliberation.
+    public static func thinkingLevel(forMode mode: String) -> String? {
+        switch mode {
+        case "concise", "action", "edit": return "low"
+        default: return nil
+        }
+    }
 
     public static func generateSpecification(
         title: String,
@@ -76,6 +91,87 @@ public enum AIGenerator {
                 platform: platform,
                 style: style
             )
+        }
+    }
+
+    /// Same as `generateSpecification`, but delivers the text piece by piece.
+    /// Providers without streaming deliver the whole answer as one piece.
+    public static func generateSpecificationStream(
+        title: String,
+        concept: String,
+        platform: String,
+        style: String,
+        apiKey: String,
+        provider: AIProvider = .gemini,
+        modelName: String = GeminiClient.defaultModel,
+        ollamaEndpoint: String = "http://localhost:11434/api/generate",
+        mode: String = "full",
+        skills: [String] = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
+    ) -> AsyncThrowingStream<String, Error> {
+        let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if provider == .gemini && !cleanKey.isEmpty {
+            let promptText = AIPrompts.translator(
+                mode: mode,
+                rawPrompt: ideaText(title: title, concept: concept),
+                platform: platform,
+                style: style,
+                skills: skills
+            )
+            let payload: [String: Any] = [
+                "contents": [["parts": [["text": promptText]]]],
+                "generationConfig": generationConfig(thinking: thinkingLevel(forMode: mode))
+            ]
+            return GeminiClient.stream(payload: payload, apiKey: cleanKey, model: modelName)
+        }
+        return singleShot {
+            try await generateSpecification(
+                title: title, concept: concept, platform: platform, style: style,
+                apiKey: apiKey, provider: provider, modelName: modelName,
+                ollamaEndpoint: ollamaEndpoint, mode: mode, skills: skills
+            )
+        }
+    }
+
+    /// Same as `chat`, but delivers the reply piece by piece.
+    public static func chatStream(
+        messages: [ChatMessageItem],
+        apiKey: String,
+        provider: AIProvider = .gemini,
+        modelName: String = GeminiClient.defaultModel,
+        ollamaEndpoint: String = "http://localhost:11434/api/chat",
+        context: AIPrompts.ChatContext = .init(ideas: [])
+    ) -> AsyncThrowingStream<String, Error> {
+        let cleanKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if provider == .gemini && !cleanKey.isEmpty {
+            let contents: [[String: Any]] = messages.map { msg in
+                ["role": msg.role == "user" ? "user" : "model", "parts": [["text": msg.content]]]
+            }
+            let payload: [String: Any] = [
+                "system_instruction": ["parts": [["text": AIPrompts.chatSystem(context: context)]]],
+                "contents": contents,
+                "generationConfig": generationConfig(thinking: "low")
+            ]
+            return GeminiClient.stream(payload: payload, apiKey: cleanKey, model: modelName)
+        }
+        return singleShot {
+            try await chat(
+                messages: messages, apiKey: apiKey, provider: provider, modelName: modelName,
+                ollamaEndpoint: ollamaEndpoint, context: context
+            )
+        }
+    }
+
+    private static func singleShot(_ operation: @escaping @Sendable () async throws -> String) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    continuation.yield(try await operation())
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 

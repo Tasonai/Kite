@@ -67,6 +67,14 @@ enum SelfTest {
         check("a chosen model is tried first", GeminiClient.modelChain(requested: "gemini-3.1-pro-preview").first == "gemini-3.1-pro-preview")
         let chain = GeminiClient.modelChain(requested: "gemini-3.5-flash")
         check("the model chain has fallbacks and no repeats", chain.count > 1 && Set(chain).count == chain.count)
+        let sseLine = #"data: {"candidates":[{"content":{"parts":[{"text":"Привет"},{"thought":true,"text":"скрыто"},{"text":", мир"}]}}]}"#
+        check("a streamed line yields its text and skips thoughts", GeminiClient.streamedText(fromLine: sseLine) == "Привет, мир")
+        check("lines that carry no data yield nothing", GeminiClient.streamedText(fromLine: "") == nil && GeminiClient.streamedText(fromLine: ": keep-alive") == nil)
+        let withThinking: [String: Any] = ["generationConfig": ["temperature": 0.8, "thinkingConfig": ["thinkingLevel": "low"]]]
+        let stripped = GeminiClient.withoutThinking(withThinking)?["generationConfig"] as? [String: Any]
+        check("the thinking setting can be removed for models that reject it", stripped != nil && stripped?["thinkingConfig"] == nil && stripped?["temperature"] != nil)
+        check("a payload without a thinking setting has nothing to strip", GeminiClient.withoutThinking(["generationConfig": ["temperature": 0.8]]) == nil)
+        check("short translator modes think briefly, the plan mode does not", AIGenerator.thinkingLevel(forMode: "action") == "low" && AIGenerator.thinkingLevel(forMode: "full") == nil)
         let chat = AIPrompts.chatSystem(context: .init(ideas: ["Трекер подписок (Desktop)"]))
         check("the chat prompt knows the user's ideas", chat.contains("Трекер подписок"))
         check("the chat prompt states how Kite sync works", chat.contains("24242") && chat.contains("без сервера"))

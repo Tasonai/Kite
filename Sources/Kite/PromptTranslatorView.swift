@@ -382,7 +382,8 @@ struct PromptTranslatorView: View {
                 generatedBlueprint = compileLocally()
                 if aiProvider == "Gemini API" { errorMessage = AIGenerator.offlineNotice }
             } else {
-                generatedBlueprint = try await AIGenerator.generateSpecification(
+                generatedBlueprint = ""
+                for try await piece in AIGenerator.generateSpecificationStream(
                     title: cleanTitle,
                     concept: rawPrompt,
                     platform: selectedPlatform,
@@ -393,13 +394,19 @@ struct PromptTranslatorView: View {
                     ollamaEndpoint: ollamaEndpoint,
                     mode: selectedMode,
                     skills: skillsArray.sorted()
-                )
+                ) {
+                    generatedBlueprint += piece
+                }
             }
             NSSound.beep()
         } catch {
             // The model failed, so what follows is the fixed offline template, not an AI answer. Say so.
-            errorMessage = "Модель не ответила, показан офлайн-шаблон, а не ответ ИИ. Причина: \(error.localizedDescription)"
-            generatedBlueprint = compileLocally()
+            if generatedBlueprint.isEmpty {
+                errorMessage = "Модель не ответила, показан офлайн-шаблон, а не ответ ИИ. Причина: \(error.localizedDescription)"
+                generatedBlueprint = compileLocally()
+            } else {
+                errorMessage = "Ответ оборван, ниже то, что успело прийти. Причина: \(error.localizedDescription)"
+            }
         }
     }
 
