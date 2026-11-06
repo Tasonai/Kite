@@ -10,6 +10,8 @@ struct TranslatorOutputView: View {
     let pitfalls: [PitfallWarning]
     let onCopy: () -> Void
     let onCopyStarterPrompt: () -> Void
+    let onOpenMockup: () -> Void
+    let onOpenEditor: (EditorLauncher.Editor) -> Void
 
     @State private var showPitfalls = true
 
@@ -46,8 +48,20 @@ struct TranslatorOutputView: View {
                 }
                 Spacer()
 
-                if !generatedBlueprint.isEmpty {
-                    HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Button {
+                        onOpenMockup()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "safari")
+                            Text("Эскиз")
+                        }
+                        .font(.caption.weight(.medium))
+                    }
+                    .buttonStyle(.bordered)
+                    .help("Открыть интерактивный прототип прямо в Kite (WebStudio)")
+
+                    if !generatedBlueprint.isEmpty {
                         Button {
                             onCopyStarterPrompt()
                         } label: {
@@ -61,10 +75,37 @@ struct TranslatorOutputView: View {
                         .tint(Color.accentColor)
                         .help("Скопировать стартовый диалоговый гайд для Cursor / Claude / Antigravity")
 
+                        Menu {
+                            Button {
+                                onOpenEditor(.cursor)
+                            } label: {
+                                Label("Открыть в Cursor", systemImage: "chevron.left.forwardslash.chevron.right")
+                            }
+
+                            Button {
+                                onOpenEditor(.vsCode)
+                            } label: {
+                                Label("Открыть в VS Code", systemImage: "curlybraces")
+                            }
+
+                            Button {
+                                onOpenEditor(.terminal)
+                            } label: {
+                                Label("Открыть в Терминале", systemImage: "terminal")
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up.forward.app")
+                                Text("В редактор")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+
                         Button {
                             onCopy()
                         } label: {
-                            Label(isCopied ? "Скопировано" : "Копировать план", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                            Label(isCopied ? "Скопировано" : "Копировать", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                                 .font(.caption.weight(.medium))
                         }
                         .buttonStyle(.bordered)

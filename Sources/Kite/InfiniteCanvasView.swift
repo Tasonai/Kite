@@ -74,6 +74,7 @@ struct InfiniteCanvasView: View {
 
     // Live Data Flow Simulation
     @State private var isSimulationActive: Bool = false
+    @State private var isMockupPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -212,6 +213,7 @@ struct InfiniteCanvasView: View {
                 onAddSticky: { addSticky() },
                 onAddNewIdea: { addNewIdea() },
                 onOpenReferencePicker: { isReferencePickerOpen = true },
+                onDeployBlueprintPack: { pack in deployBlueprintPack(pack) },
                 onGroupSelected: { groupSelectedElements() },
                 onDeleteSelected: { deleteSelectedElements() },
                 onSyncPeer: { peer in pullFromPeer(peer) },
@@ -221,6 +223,7 @@ struct InfiniteCanvasView: View {
                 onExportHTML: { exportAsHTML() },
                 onExportMermaid: { exportAsMermaid() },
                 onCopyPNG: { copyPNGToClipboard() },
+                onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
                     withAnimation(.easeOut(duration: 0.2)) {
                         zoomScale = 1.0
@@ -231,6 +234,17 @@ struct InfiniteCanvasView: View {
                     isConnectingMode = false
                     connectingSourceId = nil
                 }
+            )
+        }
+        .sheet(isPresented: $isMockupPresented) {
+            let title = frames.first?.title ?? "Архитектура на холсте"
+            let concept = stickies.map(\.text).joined(separator: ". ")
+            InteractiveMockupSheet(
+                title: title,
+                concept: concept.isEmpty ? "Интерактивный черновик холста" : concept,
+                platform: "Web",
+                style: "Editorial & Swiss Modern",
+                onDismiss: { isMockupPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {
@@ -852,6 +866,15 @@ struct InfiniteCanvasView: View {
             connections = rConnections
         }
         showToast("Дорожная карта: волны выполнения и статус задач отображены")
+    }
+
+    private func deployBlueprintPack(_ pack: CanvasBlueprintPack) {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            frames = pack.frames
+            stickies = pack.stickies
+            connections = pack.connections
+        }
+        showToast("Развернут шаблон: \(pack.title)")
     }
 
     private func initializePositionsIfNeeded() {

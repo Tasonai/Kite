@@ -22,6 +22,8 @@ struct PromptTranslatorView: View {
     @State private var activeSkills: Set<String> = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     @State private var isCopied: Bool = false
     @State private var isStarterCopied: Bool = false
+    @State private var isMockupPresented: Bool = false
+    @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
     @State private var errorMessage: String?
@@ -110,10 +112,20 @@ struct PromptTranslatorView: View {
 
                     // Raw Input
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Text(inputExperience == .wizard ? "Опишите вашу идею своими словами" : "Ваша идея или черновик")
                                 .font(.headline)
+
                             Spacer()
+
+                            VoiceRecordButton { speech in
+                                if rawPrompt.isEmpty {
+                                    rawPrompt = speech
+                                } else {
+                                    rawPrompt += " " + speech
+                                }
+                            }
+
                             Text("\(rawPrompt.count) символов")
                                 .font(.caption2.monospaced())
                                 .foregroundStyle(.secondary)
@@ -352,7 +364,20 @@ struct PromptTranslatorView: View {
                 isStarterCopied: isStarterCopied,
                 pitfalls: pitfalls,
                 onCopy: { copyBlueprint() },
-                onCopyStarterPrompt: { copyStarterPrompt() }
+                onCopyStarterPrompt: { copyStarterPrompt() },
+                onOpenMockup: { isMockupPresented = true },
+                onOpenEditor: { editor in openProjectInEditor(editor) }
+            )
+        }
+        .sheet(isPresented: $isMockupPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Интерактивный черновик" : String(effectiveTitle)
+            InteractiveMockupSheet(
+                title: title,
+                concept: rawPrompt,
+                platform: selectedPlatform,
+                style: selectedStyle,
+                onDismiss: { isMockupPresented = false }
             )
         }
     }
@@ -584,10 +609,34 @@ struct PromptTranslatorView: View {
                     planPrompt: generatedBlueprint,
                     createGitBranch: true
                 )
+                lastScaffoldedDirectory = result.directory
                 NSSound.beep()
                 NSWorkspace.shared.selectFile(result.directory.path, inFileViewerRootedAtPath: "")
             } catch {
                 errorMessage = "Ошибка экспорта: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func openProjectInEditor(_ editor: EditorLauncher.Editor) {
+        if let dir = lastScaffoldedDirectory, FileManager.default.fileExists(atPath: dir.path) {
+            _ = EditorLauncher.open(directory: dir, in: editor)
+        } else {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            let devDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Developer", isDirectory: true)
+            let targetURL = FileManager.default.fileExists(atPath: devDir.path) ? devDir : FileManager.default.temporaryDirectory
+            if let result = try? ProjectScaffolder.scaffold(
+                at: targetURL,
+                title: title,
+                concept: rawPrompt,
+                platform: selectedPlatform,
+                style: selectedStyle,
+                planPrompt: generatedBlueprint,
+                createGitBranch: true
+            ) {
+                lastScaffoldedDirectory = result.directory
+                _ = EditorLauncher.open(directory: result.directory, in: editor)
             }
         }
     }

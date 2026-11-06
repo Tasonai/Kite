@@ -22,6 +22,7 @@ struct CanvasToolbarView: View {
     let onAddSticky: () -> Void
     let onAddNewIdea: () -> Void
     let onOpenReferencePicker: () -> Void
+    let onDeployBlueprintPack: (CanvasBlueprintPack) -> Void
 
     let onGroupSelected: () -> Void
     let onDeleteSelected: () -> Void
@@ -34,6 +35,7 @@ struct CanvasToolbarView: View {
     let onExportHTML: () -> Void
     let onExportMermaid: () -> Void
     let onCopyPNG: () -> Void
+    let onOpenMockup: () -> Void
 
     let onResetZoom: () -> Void
     let onCancelConnecting: () -> Void
@@ -131,6 +133,18 @@ struct CanvasToolbarView: View {
                     } label: {
                         Label("Референс (Mobbin / Figma)", systemImage: "photo.on.rectangle.angled")
                     }
+
+                    Divider()
+
+                    Menu("Шаблоны архитектуры") {
+                        ForEach(CanvasBlueprintPacks.all) { pack in
+                            Button {
+                                onDeployBlueprintPack(pack)
+                            } label: {
+                                Label(pack.title, systemImage: pack.icon)
+                            }
+                        }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
@@ -209,6 +223,20 @@ struct CanvasToolbarView: View {
                     .buttonStyle(.plain)
                     .fixedSize()
                 }
+
+                // Interactive WebStudio Mockup Button
+                Button {
+                    onOpenMockup()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "safari")
+                        Text("Эскиз")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .help("Открыть живой интерактивный макет в WebStudio")
 
                 // LAN Peers Discovery Popover Button
                 Button {

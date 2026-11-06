@@ -133,6 +133,13 @@ enum SelfTest {
         let starterPrompt = PromptCompiler.compileStarterPrompt(title: "Habit Tracker", concept: "Track habits", platform: "Web", style: "Minimal")
         check("PromptCompiler creates step-by-step starter prompt", starterPrompt.contains("ШАГ 1") && starterPrompt.contains("Habit Tracker"))
 
+        check("EditorLauncher provides terminal and checks editor availability", EditorLauncher.isAvailable(.terminal))
+
+        let mockupHTML = WebMockupGenerator.generateInteractiveHTML(title: "Test Mockup", concept: "Live test", platform: "Web", style: "Minimal")
+        check("WebMockupGenerator generates valid interactive HTML", mockupHTML.contains("<!DOCTYPE html>") && mockupHTML.contains("Test Mockup"))
+
+        check("CanvasBlueprintPacks provides pre-configured architecture templates", CanvasBlueprintPacks.all.count >= 4 && CanvasBlueprintPacks.microSaaS.frames.count == 2)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
