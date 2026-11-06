@@ -72,7 +72,11 @@ Sources/Kite/
 ├── APIContractSheet.swift         Visual API route builder and local mock server inspector
 ├── StateFlowSheet.swift           Interactive state machine simulator and XState / Swift store generator
 ├── SitemapRouterSheet.swift       Application screen hierarchy and Next.js / SwiftUI router generator
-└── GitStorytellerSheet.swift      Conventional Commits sequence and GitHub Pull Request description generator
+├── GitStorytellerSheet.swift      Conventional Commits sequence and GitHub Pull Request description generator
+├── SeedDataSheet.swift            Realistic database seed and mock JSON fixture generator sheet
+├── SecretShieldSheet.swift        API key leak scanner, sanitizer, and .env.example generator sheet
+├── DependencyGuardSheet.swift     NPM bloat auditor and lightweight native replacement catalog sheet
+└── DeployBlueprintSheet.swift     Production deployment blueprints (Vercel, Cloudflare, Docker, Actions)
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -85,7 +89,11 @@ Sources/KiteKit/
 ├── APIContractBuilder.swift       API route definitions, TypeScript client, and OpenAPI generator
 ├── StateFlowSimulator.swift       State flow and transition definition model
 ├── SitemapRouterBuilder.swift     Route tree and screen presentation router generator
-└── GitStoryteller.swift           Conventional Commits and Pull Request story compiler
+├── GitStoryteller.swift           Conventional Commits and Pull Request story compiler
+├── SeedDataGenerator.swift        Realistic dummy data generator (SQL INSERT, Prisma, JSON fixtures)
+├── SecretShield.swift             API token detector, process.env sanitizer, and .env template builder
+├── DependencyGuard.swift          Knowledge base of bloated npm packages and native zero-bloat directives
+└── DeployBlueprintGenerator.swift Multi-platform deployment config generator (Vercel, Cloudflare, Docker, CI/CD)
 ```
 
 ### Quality and Craftsmanship Standards
@@ -93,4 +101,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 63/63 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, and git storyteller.
+- **Automated Self-Test**: 67/67 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, and deploy blueprint generator.

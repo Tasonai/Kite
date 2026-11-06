@@ -43,6 +43,10 @@ struct CanvasToolbarView: View {
     let onOpenSitemap: () -> Void
     let onOpenGitStory: () -> Void
     let onOpenCodebaseAuditor: () -> Void
+    let onOpenSeedData: () -> Void
+    let onOpenSecretShield: () -> Void
+    let onOpenBloatGuard: () -> Void
+    let onOpenDeployBlueprint: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -142,6 +146,32 @@ struct CanvasToolbarView: View {
                         onOpenGitStory()
                     } label: {
                         Label("Генератор Git PR и коммитов", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
+                    }
+
+                    Divider()
+
+                    Button {
+                        onOpenSeedData()
+                    } label: {
+                        Label("Генератор реалистичных данных (Seed/Fixtures)", systemImage: "tray.full")
+                    }
+
+                    Button {
+                        onOpenSecretShield()
+                    } label: {
+                        Label("Secret Shield (защита API-ключей и .env)", systemImage: "lock.shield")
+                    }
+
+                    Button {
+                        onOpenBloatGuard()
+                    } label: {
+                        Label("Bloat Guard (контроль зависимостей)", systemImage: "scalemass")
+                    }
+
+                    Button {
+                        onOpenDeployBlueprint()
+                    } label: {
+                        Label("Чертежи деплоя (Vercel / Cloudflare / Docker)", systemImage: "cloud")
                     }
 
                     Divider()

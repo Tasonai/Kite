@@ -83,6 +83,10 @@ struct InfiniteCanvasView: View {
     @State private var isStateFlowPresented: Bool = false
     @State private var isSitemapPresented: Bool = false
     @State private var isGitStoryPresented: Bool = false
+    @State private var isSeedDataPresented: Bool = false
+    @State private var isSecretShieldPresented: Bool = false
+    @State private var isBloatGuardPresented: Bool = false
+    @State private var isDeployBlueprintPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -239,6 +243,10 @@ struct InfiniteCanvasView: View {
                 onOpenSitemap: { isSitemapPresented = true },
                 onOpenGitStory: { isGitStoryPresented = true },
                 onOpenCodebaseAuditor: { isCodebaseAuditorPresented = true },
+                onOpenSeedData: { isSeedDataPresented = true },
+                onOpenSecretShield: { isSecretShieldPresented = true },
+                onOpenBloatGuard: { isBloatGuardPresented = true },
+                onOpenDeployBlueprint: { isDeployBlueprintPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -309,6 +317,23 @@ struct InfiniteCanvasView: View {
                 platform: "Web",
                 style: "Editorial & Swiss Modern",
                 onDismiss: { isGitStoryPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSeedDataPresented) {
+            SeedDataSheet(onDismiss: { isSeedDataPresented = false })
+        }
+        .sheet(isPresented: $isSecretShieldPresented) {
+            SecretShieldSheet(onDismiss: { isSecretShieldPresented = false })
+        }
+        .sheet(isPresented: $isBloatGuardPresented) {
+            DependencyGuardSheet(onDismiss: { isBloatGuardPresented = false })
+        }
+        .sheet(isPresented: $isDeployBlueprintPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Архитектура на холсте")
+            DeployBlueprintSheet(
+                title: title,
+                platform: "Web",
+                onDismiss: { isDeployBlueprintPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

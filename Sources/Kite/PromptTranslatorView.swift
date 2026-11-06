@@ -32,6 +32,10 @@ struct PromptTranslatorView: View {
     @State private var isStateFlowPresented: Bool = false
     @State private var isSitemapPresented: Bool = false
     @State private var isGitStoryPresented: Bool = false
+    @State private var isSeedDataPresented: Bool = false
+    @State private var isSecretShieldPresented: Bool = false
+    @State private var isBloatGuardPresented: Bool = false
+    @State private var isDeployBlueprintPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -217,6 +221,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Генерация Conventional Commits и описания Pull Request для GitHub")
+
+                            Button {
+                                isSeedDataPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "tray.full")
+                                    Text("Сид-данные")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Генерация реалистичных тестовых данных и JSON-фикстур")
+
+                            Button {
+                                isSecretShieldPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "lock.shield")
+                                    Text("Защита ключей")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Сканирование текста на утечки API-ключей и генератор .env.example")
+
+                            Button {
+                                isBloatGuardPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "scalemass")
+                                    Text("Bloat Guard")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Инспектор легковесности зависимостей и директива чистоты бандла")
+
+                            Button {
+                                isDeployBlueprintPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cloud")
+                                    Text("Деплой")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Конфигурации деплоя для Vercel, Cloudflare, Docker и GitHub Actions")
                         }
                         .padding(.vertical, 2)
                     }
@@ -534,6 +586,24 @@ struct PromptTranslatorView: View {
                 platform: selectedPlatform,
                 style: selectedStyle,
                 onDismiss: { isGitStoryPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSeedDataPresented) {
+            SeedDataSheet(onDismiss: { isSeedDataPresented = false })
+        }
+        .sheet(isPresented: $isSecretShieldPresented) {
+            SecretShieldSheet(onDismiss: { isSecretShieldPresented = false })
+        }
+        .sheet(isPresented: $isBloatGuardPresented) {
+            DependencyGuardSheet(onDismiss: { isBloatGuardPresented = false })
+        }
+        .sheet(isPresented: $isDeployBlueprintPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            DeployBlueprintSheet(
+                title: title,
+                platform: selectedPlatform,
+                onDismiss: { isDeployBlueprintPresented = false }
             )
         }
     }

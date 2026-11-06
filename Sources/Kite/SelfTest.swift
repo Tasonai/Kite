@@ -186,6 +186,23 @@ enum SelfTest {
         let story = GitStoryteller.craftStory(title: "Task App", concept: "Task management", platform: "Web", style: "Minimal")
         check("GitStoryteller crafts Conventional Commits and complete PR description", story.suggestedCommits.count == 4 && story.prTitle.contains("feat:") && story.prBodyMarkdown.contains("Architectural Waves"))
 
+        let seedSQL = SeedDataGenerator.generateSQL(entities: DataSchemaDesigner.starterPack, count: 3)
+        let seedJSON = SeedDataGenerator.generateJSON(entities: DataSchemaDesigner.starterPack, count: 3)
+        check("SeedDataGenerator generates valid SQL insert statements and JSON fixtures", seedSQL.contains("INSERT INTO") && seedJSON.contains("\"users\""))
+
+        let leakedText = "Here is my key sk-proj-12345678901234567890123456789012 and token ghp_123456789012345678901234567890123456"
+        let findings = SecretShield.scan(text: leakedText)
+        let sanitized = SecretShield.sanitize(text: leakedText)
+        check("SecretShield detects API keys and sanitizes safely", findings.count >= 2 && sanitized.contains("process.env.OPENAI_API_KEY"))
+
+        let catalog = DependencyGuard.knownReplacements
+        let directive = DependencyGuard.generateAntigravityBloatDirective()
+        check("DependencyGuard catalogs heavy packages and generates Antigravity Zero-Bloat directive", catalog.contains(where: { $0.heavyPackage == "moment" }) && directive.contains("ANTIGRAVITY ZERO-BLOAT"))
+
+        let vercelCfg = DeployBlueprintGenerator.generateVercelConfig(title: "Task App", platform: "Web")
+        let dockerCfg = DeployBlueprintGenerator.generateDockerfile(platform: "Web")
+        check("DeployBlueprintGenerator generates valid Vercel and Docker production blueprints", vercelCfg.contains("\"framework\": \"vite\"") && dockerCfg.contains("FROM node:20-alpine"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
