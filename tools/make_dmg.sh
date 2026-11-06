@@ -6,7 +6,7 @@ here=${0:A:h}
 root=${here:h}
 name="Kite"
 app="$HOME/Applications/$name.app"
-version="${1:-1.2.0}"
+version="${1:-1.3.0}"
 
 if [[ ! -d "$app" ]]; then
     echo "App not found at $app. Running build.sh first..."

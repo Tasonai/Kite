@@ -63,6 +63,8 @@ struct InfiniteCanvasView: View {
     @State private var isConnectingMode: Bool = false
     @State private var connectingSourceId: String? = nil
     @State private var selectedConnectionId: UUID? = nil
+    @State private var editingConnectionId: UUID? = nil
+    @State private var editingConnectionText: String = ""
 
     // Export notification toast
     @State private var exportToast: String? = nil
@@ -121,6 +123,13 @@ struct InfiniteCanvasView: View {
             }
             .scaleEffect(zoomScale, anchor: .center)
             .offset(totalOffset) // grid: ok canvas pan offset
+            .onDeleteCommand {
+                if let sel = selectedConnectionId {
+                    connections.removeAll(where: { $0.id == sel })
+                    selectedConnectionId = nil
+                    showToast("Связь удалена")
+                }
+            }
 
             // Top Floating Canvas Controls & HUD
             VStack(spacing: 8) {
@@ -831,37 +840,116 @@ struct InfiniteCanvasView: View {
                     .fill(isSelected ? Color.orange : Color(hex: conn.colorHex))
 
                 // Connection Label / Interaction Badge
-                HStack(spacing: 4) {
-                    if !conn.label.isEmpty {
-                        Text(conn.label)
+                if editingConnectionId == conn.id {
+                    HStack(spacing: 4) {
+                        TextField("Подпись", text: $editingConnectionText)
+                            .textFieldStyle(.plain)
                             .font(.system(size: 10, weight: .semibold, design: .monospaced)) // grid: ok font
-                            .foregroundStyle(Color.primary)
-                    }
+                            .frame(width: 80)
+                            .onSubmit {
+                                if let idx = connections.firstIndex(where: { $0.id == conn.id }) {
+                                    connections[idx].label = editingConnectionText
+                                }
+                                editingConnectionId = nil
+                            }
 
-                    if isSelected {
                         Button {
-                            connections.removeAll(where: { $0.id == conn.id })
-                            selectedConnectionId = nil
+                            if let idx = connections.firstIndex(where: { $0.id == conn.id }) {
+                                connections[idx].label = editingConnectionText
+                            }
+                            editingConnectionId = nil
                         } label: {
-                            Image(systemName: "trash.fill")
-                                .font(.system(size: 9)) // grid: ok font
-                                .foregroundStyle(Color.red)
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 10)) // grid: ok font
+                                .foregroundStyle(Color.green)
                         }
                         .buttonStyle(.plain)
                     }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(isSelected ? Color.orange : Color(hex: conn.colorHex).opacity(0.4), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                .position(midPt) // grid: ok connection mid badge position
-                .onTapGesture {
-                    selectedConnectionId = (selectedConnectionId == conn.id ? nil : conn.id)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.accentColor, lineWidth: 2)
+                    )
+                    .position(midPt) // grid: ok connection mid badge position
+                } else {
+                    HStack(spacing: 4) {
+                        if !conn.label.isEmpty {
+                            Text(conn.label)
+                                .font(.system(size: 10, weight: .semibold, design: .monospaced)) // grid: ok font
+                                .foregroundStyle(Color.primary)
+                        }
+
+                        if isSelected {
+                            Button {
+                                editingConnectionId = conn.id
+                                editingConnectionText = conn.label
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 9)) // grid: ok font
+                                    .foregroundStyle(Color.secondary)
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                connections.removeAll(where: { $0.id == conn.id })
+                                selectedConnectionId = nil
+                                showToast("Связь удалена")
+                            } label: {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 9)) // grid: ok font
+                                    .foregroundStyle(Color.red)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(isSelected ? Color.orange : Color(hex: conn.colorHex).opacity(0.4), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                    .position(midPt) // grid: ok connection mid badge position
+                    .onTapGesture(count: 2) {
+                        editingConnectionId = conn.id
+                        editingConnectionText = conn.label
+                    }
+                    .onTapGesture {
+                        selectedConnectionId = (selectedConnectionId == conn.id ? nil : conn.id)
+                    }
+                    .contextMenu {
+                        Button {
+                            editingConnectionId = conn.id
+                            editingConnectionText = conn.label
+                        } label: {
+                            Label("Изменить подпись", systemImage: "pencil")
+                        }
+
+                        Menu("Изменить протокол") {
+                            ForEach(["Calls", "HTTP / REST", "SSE Stream", "gRPC", "WAL Query", "Depends On", "Audits"], id: \.self) { proto in
+                                Button(proto) {
+                                    if let idx = connections.firstIndex(where: { $0.id == conn.id }) {
+                                        connections[idx].label = proto
+                                    }
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            connections.removeAll(where: { $0.id == conn.id })
+                            selectedConnectionId = nil
+                            showToast("Связь удалена")
+                        } label: {
+                            Label("Удалить связь", systemImage: "trash")
+                        }
+                    }
                 }
             }
         )

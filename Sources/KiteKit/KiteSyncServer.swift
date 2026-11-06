@@ -179,7 +179,7 @@ public final class KiteSyncServer: @unchecked Sendable {
 
         case ("GET", "/api/status"):
             let json = """
-            {"status":"online","app":"Kite macOS","version":"1.2.0","port":\(boundPort)}
+            {"status":"online","app":"Kite macOS","version":"1.3.0","port":\(boundPort)}
             """
             sendResponse(connection: connection, body: Data(json.utf8))
 
