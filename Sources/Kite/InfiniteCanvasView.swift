@@ -103,6 +103,10 @@ struct InfiniteCanvasView: View {
     @State private var isMigrationStrategistPresented: Bool = false
     @State private var isLocalizationPresented: Bool = false
     @State private var isWebhookPresented: Bool = false
+    @State private var isAccessibilityPresented: Bool = false
+    @State private var isMonorepoPresented: Bool = false
+    @State private var isSEOPresented: Bool = false
+    @State private var isSkillPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -279,6 +283,10 @@ struct InfiniteCanvasView: View {
                 onOpenMigrationStrategist: { isMigrationStrategistPresented = true },
                 onOpenLocalizationSpecifier: { isLocalizationPresented = true },
                 onOpenWebhookSimulator: { isWebhookPresented = true },
+                onOpenAccessibilityAuditor: { isAccessibilityPresented = true },
+                onOpenMonorepoArchitect: { isMonorepoPresented = true },
+                onOpenSEOStudio: { isSEOPresented = true },
+                onOpenSkillSynthesizer: { isSkillPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -472,6 +480,34 @@ struct InfiniteCanvasView: View {
             WebhookSheet(
                 title: title,
                 onDismiss: { isWebhookPresented = false }
+            )
+        }
+        .sheet(isPresented: $isAccessibilityPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            AccessibilitySheet(
+                title: title,
+                onDismiss: { isAccessibilityPresented = false }
+            )
+        }
+        .sheet(isPresented: $isMonorepoPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            MonorepoSheet(
+                title: title,
+                onDismiss: { isMonorepoPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSEOPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            SEOSheet(
+                title: title,
+                onDismiss: { isSEOPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSkillPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            SkillSheet(
+                title: title,
+                onDismiss: { isSkillPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

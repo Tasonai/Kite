@@ -92,7 +92,11 @@ Sources/Kite/
 ├── ThreatModelerSheet.swift       OWASP threat model, RLS policies, and SECURITY.md sheet
 ├── MigrationStrategistSheet.swift Zero-downtime expand-and-contract migrations and MIGRATIONS.md sheet
 ├── LocalizationSheet.swift        I18n interface strings, namespace catalogs, and LOCALIZATION.md sheet
-└── WebhookSheet.swift             Webhook signature verification bench and WEBHOOKS.md sheet
+├── WebhookSheet.swift             Webhook signature verification bench and WEBHOOKS.md sheet
+├── AccessibilitySheet.swift       WCAG 2.2 AA audit, focus management, and Playwright Axe suite sheet
+├── MonorepoSheet.swift            Workspace package boundaries, turbo.json, and MONOREPO.md sheet
+├── SEOSheet.swift                 Next.js 15 metadata, OpenGraph cards, and SEO.md sheet
+└── SkillSheet.swift               Custom Antigravity SKILL.md and MCP tool schema generator sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -125,7 +129,11 @@ Sources/KiteKit/
 ├── ThreatModeler.swift            OWASP threat modeling, RLS policies, and security directive compiler
 ├── MigrationStrategist.swift      Safe two-phase database migration planner and Expand/Contract directive
 ├── LocalizationSpecifier.swift    I18n string dictionary generator and catalog specifier
-└── WebhookSimulator.swift         Webhook cryptographic signature verifier and test dispatcher
+├── WebhookSimulator.swift         Webhook cryptographic signature verifier and test dispatcher
+├── AccessibilityAuditor.swift     WCAG 2.2 AA accessibility requirements and Playwright Axe suite builder
+├── MonorepoArchitect.swift        Workspace package boundary compiler and Turborepo configuration
+├── SEOStudio.swift                Next.js 15 metadata synthesizer and OpenGraph card generator
+└── SkillSynthesizer.swift         Custom Antigravity SKILL.md compiler and MCP schema builder
 ```
 
 ### Quality and Craftsmanship Standards
@@ -133,4 +141,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 83/83 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, and webhook simulator.
+- **Automated Self-Test**: 87/87 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, and skill synthesizer.

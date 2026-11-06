@@ -52,6 +52,10 @@ struct PromptTranslatorView: View {
     @State private var isMigrationStrategistPresented: Bool = false
     @State private var isLocalizationPresented: Bool = false
     @State private var isWebhookPresented: Bool = false
+    @State private var isAccessibilityPresented: Bool = false
+    @State private var isMonorepoPresented: Bool = false
+    @State private var isSEOPresented: Bool = false
+    @State private var isSkillPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -477,6 +481,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Стенд валидации подписей вебхуков (Stripe, Clerk, GitHub)")
+
+                            Button {
+                                isAccessibilityPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "figure.roll")
+                                    Text("WCAG 2.2 a11y")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Аудитор доступности и тесты axe-core")
+
+                            Button {
+                                isMonorepoPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "square.split.diagonal.2x2")
+                                    Text("Монорепо")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Архитектор монорепозиториев Turborepo / pnpm")
+
+                            Button {
+                                isSEOPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "globe.desk")
+                                    Text("SEO / OpenGraph")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Студия поисковой оптимизации и карточек шеринга")
+
+                            Button {
+                                isSkillPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "puzzlepiece.extension")
+                                    Text("Навыки ИИ")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Синтезатор пользовательских навыков SKILL.md и MCP схем")
                         }
                         .padding(.vertical, 2)
                     }
@@ -933,6 +985,38 @@ struct PromptTranslatorView: View {
             WebhookSheet(
                 title: title,
                 onDismiss: { isWebhookPresented = false }
+            )
+        }
+        .sheet(isPresented: $isAccessibilityPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            AccessibilitySheet(
+                title: title,
+                onDismiss: { isAccessibilityPresented = false }
+            )
+        }
+        .sheet(isPresented: $isMonorepoPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            MonorepoSheet(
+                title: title,
+                onDismiss: { isMonorepoPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSEOPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            SEOSheet(
+                title: title,
+                onDismiss: { isSEOPresented = false }
+            )
+        }
+        .sheet(isPresented: $isSkillPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            SkillSheet(
+                title: title,
+                onDismiss: { isSkillPresented = false }
             )
         }
     }

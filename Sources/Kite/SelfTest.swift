@@ -285,6 +285,22 @@ enum SelfTest {
         let whHandler = WebhookSimulator.generateVerificationHandlerSnippet(webhooks: WebhookSimulator.starterWebhooks)
         check("WebhookSimulator generates webhook verification spec and signature handler", whMd.contains("Stripe-Signature") && whHandler.contains("stripeSig"))
 
+        let a11yMd = AccessibilityAuditor.generateAccessibilityMarkdown(title: "Task Studio", requirements: AccessibilityAuditor.starterRequirements)
+        let a11ySuite = AccessibilityAuditor.generatePlaywrightA11ySuite(title: "Task Studio")
+        check("AccessibilityAuditor generates WCAG 2.2 spec and Playwright Axe suite", a11yMd.contains("WCAG 2.2 AA") && a11ySuite.contains("AxeBuilder"))
+
+        let turboJson = MonorepoArchitect.generateTurboJson()
+        let monorepoMd = MonorepoArchitect.generateMonorepoMarkdown(title: "Task Studio", packages: MonorepoArchitect.starterPackages)
+        check("MonorepoArchitect generates turbo.json and package boundary spec", turboJson.contains("turbo.build") && monorepoMd.contains("MONOREPO & WORKSPACE"))
+
+        let seoMeta = SEOStudio.generateNextMetadataSnippet(title: "Task Studio", description: "Test description")
+        let seoMd = SEOStudio.generateSEOMarkdown(title: "Task Studio", configs: SEOStudio.starterConfigs)
+        check("SEOStudio generates Next.js metadata snippet and OpenGraph spec", seoMeta.contains("openGraph") && seoMd.contains("SEO & OPEN GRAPH SPECIFICATION"))
+
+        let skillMd = SkillSynthesizer.generateSkillMarkdown(skill: SkillSynthesizer.starterSkills[0])
+        let mcpSchema = SkillSynthesizer.generateMcpToolSchema(skill: SkillSynthesizer.starterSkills[0])
+        check("SkillSynthesizer generates SKILL.md with frontmatter and MCP schema", skillMd.contains("bama-swiftui-refactor") && mcpSchema.contains("inputSchema"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

@@ -63,6 +63,10 @@ struct CanvasToolbarView: View {
     let onOpenMigrationStrategist: () -> Void
     let onOpenLocalizationSpecifier: () -> Void
     let onOpenWebhookSimulator: () -> Void
+    let onOpenAccessibilityAuditor: () -> Void
+    let onOpenMonorepoArchitect: () -> Void
+    let onOpenSEOStudio: () -> Void
+    let onOpenSkillSynthesizer: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -286,6 +290,30 @@ struct CanvasToolbarView: View {
                         onOpenWebhookSimulator()
                     } label: {
                         Label("Стенд вебхуков (Webhooks)", systemImage: "arrow.triangle.pull")
+                    }
+
+                    Button {
+                        onOpenAccessibilityAuditor()
+                    } label: {
+                        Label("Аудитор доступности (WCAG 2.2)", systemImage: "figure.roll")
+                    }
+
+                    Button {
+                        onOpenMonorepoArchitect()
+                    } label: {
+                        Label("Архитектор монорепо (Workspaces)", systemImage: "square.split.diagonal.2x2")
+                    }
+
+                    Button {
+                        onOpenSEOStudio()
+                    } label: {
+                        Label("Студия SEO и OpenGraph", systemImage: "globe.desk")
+                    }
+
+                    Button {
+                        onOpenSkillSynthesizer()
+                    } label: {
+                        Label("Синтезатор навыков и MCP (Skills)", systemImage: "puzzlepiece.extension")
                     }
 
                     Divider()
