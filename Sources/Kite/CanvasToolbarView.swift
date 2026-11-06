@@ -51,6 +51,10 @@ struct CanvasToolbarView: View {
     let onOpenComponentMatrix: () -> Void
     let onOpenAcceptanceCriteria: () -> Void
     let onOpenScopeGuard: () -> Void
+    let onOpenWorkstreamSplitter: () -> Void
+    let onOpenPatchInspector: () -> Void
+    let onOpenFallbackPlanner: () -> Void
+    let onOpenRunbook: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -202,6 +206,30 @@ struct CanvasToolbarView: View {
                         onOpenScopeGuard()
                     } label: {
                         Label("Барьер от оверинжиниринга (Scope Guard)", systemImage: "shield.slash")
+                    }
+
+                    Button {
+                        onOpenWorkstreamSplitter()
+                    } label: {
+                        Label("Матрица параллельных потоков", systemImage: "arrow.triangle.pull")
+                    }
+
+                    Button {
+                        onOpenPatchInspector()
+                    } label: {
+                        Label("Инспектор патчей Antigravity", systemImage: "shield.lefthalf.filled")
+                    }
+
+                    Button {
+                        onOpenFallbackPlanner()
+                    } label: {
+                        Label("План отказоустойчивости (Fallbacks)", systemImage: "lifepreserver")
+                    }
+
+                    Button {
+                        onOpenRunbook()
+                    } label: {
+                        Label("Инженерный ранбук (Dev Runbook)", systemImage: "terminal")
                     }
 
                     Divider()

@@ -80,7 +80,11 @@ Sources/Kite/
 ├── ContextOptimizerSheet.swift    Ultra-dense token spec and CONTEXT.md digest sheet
 ├── ComponentContractSheet.swift   UI component interface and props matrix sheet
 ├── AcceptanceCriteriaSheet.swift  Given/When/Then scenarios and Playwright test spec sheet
-└── NegativeScopeSheet.swift       Negative boundaries and OUT_OF_SCOPE.md firewall sheet
+├── NegativeScopeSheet.swift       Negative boundaries and OUT_OF_SCOPE.md firewall sheet
+├── WorkstreamSplitterSheet.swift  Parallel AI subagent workstream isolation and WORKSTREAMS.md sheet
+├── PatchInspectorSheet.swift      Real-time diff analyzer, regression risk assessor, and fix generator sheet
+├── FallbackPlannerSheet.swift     Offline resilience, degradation matrix, and FALLBACKS.md sheet
+└── RunbookSheet.swift             Developer runbook, package.json scripts, and Makefile sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -101,7 +105,11 @@ Sources/KiteKit/
 ├── ContextOptimizer.swift         Token-compressed architecture digest compiler (CONTEXT.md)
 ├── ComponentContractMatrix.swift  Component interfaces, variant states, and ARIA roles
 ├── AcceptanceCriteriaBuilder.swift Gherkin feature scenarios and automated Playwright suites
-└── NegativeScopeFirewall.swift    Strict out-of-scope constraints and anti-overengineering firewalls
+├── NegativeScopeFirewall.swift    Strict out-of-scope constraints and anti-overengineering firewalls
+├── WorkstreamSplitter.swift       Multi-agent parallel workstream decomposer and collision preventer
+├── PatchInspector.swift           Code diff regression linter and surgical fix prompt synthesizer
+├── FallbackPlanner.swift          Graceful degradation matrix and offline resilience directive compiler
+└── RunbookBuilder.swift           Lifecycle command generator, RUNBOOK.md compiler, and Makefile builder
 ```
 
 ### Quality and Craftsmanship Standards
@@ -109,4 +117,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 71/71 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, and negative scope firewall.
+- **Automated Self-Test**: 75/75 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, and developer runbook builder.

@@ -231,6 +231,28 @@ enum SelfTest {
         let firewallPrompt = NegativeScopeFirewall.generateFirewallPrompt(constraints: NegativeScopeFirewall.defaultConstraints)
         check("NegativeScopeFirewall generates out-of-scope boundary manifest and prompt firewall", outOfScope.contains("OUT OF SCOPE MANIFEST") && firewallPrompt.contains("ANTIGRAVITY SCOPE FIREWALL"))
 
+        let workstreams = WorkstreamSplitter.defaultWorkstreams(title: "Task Studio")
+        let wsMd = WorkstreamSplitter.generateWorkstreamsMarkdown(title: "Task Studio", workstreams: workstreams)
+        let wsPrompt = WorkstreamSplitter.generateAntigravityPrompt(workstreams: workstreams)
+        check("WorkstreamSplitter generates isolated workstreams markdown and parallel dispatch prompt", workstreams.count == 4 && wsMd.contains("PARALLEL WORKSTREAMS") && wsPrompt.contains("ANTIGRAVITY PARALLEL SUBAGENT"))
+
+        let sampleDiff = """
+        --- a/src/types.ts
+        +++ b/src/types.ts
+        -export interface UserProfile {
+        +console.log('leaked key', 'sk-proj-12345678901234567890123456789012');
+        """
+        let patchReport = PatchInspector.inspect(patchText: sampleDiff)
+        check("PatchInspector detects removed interfaces and leaked keys in git diffs", patchReport.riskLevel == .critical && patchReport.findings.count >= 2 && patchReport.fixPrompt.contains("ANTIGRAVITY SURGICAL PATCH FIX"))
+
+        let fallbacksMd = FallbackPlanner.generateFallbacksMarkdown(title: "Task Studio", strategies: FallbackPlanner.starterStrategies)
+        let fallbackPrompt = FallbackPlanner.generatePromptDirective(strategies: FallbackPlanner.starterStrategies)
+        check("FallbackPlanner generates degradation strategies and Antigravity fallback directives", fallbacksMd.contains("GRACEFUL DEGRADATION") && fallbackPrompt.contains("ANTIGRAVITY GRACEFUL DEGRADATION DIRECTIVE"))
+
+        let runbookMd = RunbookBuilder.generateRunbookMarkdown(title: "Task Studio", commands: RunbookBuilder.starterCommands)
+        let pkgScripts = RunbookBuilder.generatePackageJsonScripts(commands: RunbookBuilder.starterCommands)
+        check("RunbookBuilder generates dev runbook markdown and package.json scripts", runbookMd.contains("DEVELOPER RUNBOOK") && pkgScripts.contains("\"dev\": \"vite\""))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

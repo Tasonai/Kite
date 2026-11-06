@@ -91,6 +91,10 @@ struct InfiniteCanvasView: View {
     @State private var isComponentMatrixPresented: Bool = false
     @State private var isAcceptanceCriteriaPresented: Bool = false
     @State private var isScopeGuardPresented: Bool = false
+    @State private var isWorkstreamSplitterPresented: Bool = false
+    @State private var isPatchInspectorPresented: Bool = false
+    @State private var isFallbackPlannerPresented: Bool = false
+    @State private var isRunbookPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -255,6 +259,10 @@ struct InfiniteCanvasView: View {
                 onOpenComponentMatrix: { isComponentMatrixPresented = true },
                 onOpenAcceptanceCriteria: { isAcceptanceCriteriaPresented = true },
                 onOpenScopeGuard: { isScopeGuardPresented = true },
+                onOpenWorkstreamSplitter: { isWorkstreamSplitterPresented = true },
+                onOpenPatchInspector: { isPatchInspectorPresented = true },
+                onOpenFallbackPlanner: { isFallbackPlannerPresented = true },
+                onOpenRunbook: { isRunbookPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -368,6 +376,30 @@ struct InfiniteCanvasView: View {
             NegativeScopeSheet(
                 title: title,
                 onDismiss: { isScopeGuardPresented = false }
+            )
+        }
+        .sheet(isPresented: $isWorkstreamSplitterPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            WorkstreamSplitterSheet(
+                title: title,
+                onDismiss: { isWorkstreamSplitterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isPatchInspectorPresented) {
+            PatchInspectorSheet(onDismiss: { isPatchInspectorPresented = false })
+        }
+        .sheet(isPresented: $isFallbackPlannerPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            FallbackPlannerSheet(
+                title: title,
+                onDismiss: { isFallbackPlannerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRunbookPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            RunbookSheet(
+                title: title,
+                onDismiss: { isRunbookPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

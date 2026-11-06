@@ -40,6 +40,10 @@ struct PromptTranslatorView: View {
     @State private var isComponentMatrixPresented: Bool = false
     @State private var isAcceptanceCriteriaPresented: Bool = false
     @State private var isScopeGuardPresented: Bool = false
+    @State private var isWorkstreamSplitterPresented: Bool = false
+    @State private var isPatchInspectorPresented: Bool = false
+    @State private var isFallbackPlannerPresented: Bool = false
+    @State private var isRunbookPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -321,6 +325,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Барьер от оверинжиниринга: жесткий список запретов для ИИ")
+
+                            Button {
+                                isWorkstreamSplitterPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.pull")
+                                    Text("Воркстримы")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Разбиение задачи на параллельные независимые потоки субагентов")
+
+                            Button {
+                                isPatchInspectorPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "shield.lefthalf.filled")
+                                    Text("Патч-инспектор")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Аудит diff-изменений: поиск удаленных типов, утечек и логов")
+
+                            Button {
+                                isFallbackPlannerPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "lifepreserver")
+                                    Text("Отказоустойчивость")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Стратегии деградации: оффлайн-кэш, 429 backoff, Error Boundaries")
+
+                            Button {
+                                isRunbookPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "terminal")
+                                    Text("Ранбук")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Инженерный ранбук и команды терминала для Antigravity")
                         }
                         .padding(.vertical, 2)
                     }
@@ -686,6 +738,33 @@ struct PromptTranslatorView: View {
             NegativeScopeSheet(
                 title: title,
                 onDismiss: { isScopeGuardPresented = false }
+            )
+        }
+        .sheet(isPresented: $isWorkstreamSplitterPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            WorkstreamSplitterSheet(
+                title: title,
+                onDismiss: { isWorkstreamSplitterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isPatchInspectorPresented) {
+            PatchInspectorSheet(onDismiss: { isPatchInspectorPresented = false })
+        }
+        .sheet(isPresented: $isFallbackPlannerPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            FallbackPlannerSheet(
+                title: title,
+                onDismiss: { isFallbackPlannerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRunbookPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            RunbookSheet(
+                title: title,
+                onDismiss: { isRunbookPresented = false }
             )
         }
     }
