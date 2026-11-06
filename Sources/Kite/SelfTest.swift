@@ -203,6 +203,34 @@ enum SelfTest {
         let dockerCfg = DeployBlueprintGenerator.generateDockerfile(platform: "Web")
         check("DeployBlueprintGenerator generates valid Vercel and Docker production blueprints", vercelCfg.contains("\"framework\": \"vite\"") && dockerCfg.contains("FROM node:20-alpine"))
 
+        let digest = ContextOptimizer.compileDigest(
+            title: "Task Studio",
+            concept: "Task management app",
+            platform: "Web",
+            style: "Minimal",
+            entities: DataSchemaDesigner.starterPack,
+            routes: APIContractBuilder.starterPack
+        )
+        let metrics = ContextOptimizer.estimateMetrics(
+            title: "Task Studio",
+            concept: "Task management app",
+            entities: DataSchemaDesigner.starterPack,
+            routes: APIContractBuilder.starterPack
+        )
+        check("ContextOptimizer compiles token-compressed digest with high savings", digest.contains("ANTIGRAVITY CONTEXT DIGEST") && metrics.savedPercentage >= 80)
+
+        let dts = ComponentContractMatrix.generateTypeScriptDefinitions(components: ComponentContractMatrix.starterPack)
+        let compDirective = ComponentContractMatrix.generatePromptDirective(components: ComponentContractMatrix.starterPack)
+        check("ComponentContractMatrix generates TypeScript prop contracts and prompt directives", dts.contains("interface HeaderBarProps") && compDirective.contains("ANTIGRAVITY COMPONENT CONTRACT"))
+
+        let gherkin = AcceptanceCriteriaBuilder.generateGherkin(title: "Task Studio", scenarios: AcceptanceCriteriaBuilder.starterScenarios)
+        let playwright = AcceptanceCriteriaBuilder.generatePlaywrightSpec(title: "Task Studio", scenarios: AcceptanceCriteriaBuilder.starterScenarios)
+        check("AcceptanceCriteriaBuilder generates Gherkin feature scenarios and Playwright test suite", gherkin.contains("Feature: Task Studio Core Verification") && playwright.contains("test.describe"))
+
+        let outOfScope = NegativeScopeFirewall.generateManifest(title: "Task Studio", constraints: NegativeScopeFirewall.defaultConstraints)
+        let firewallPrompt = NegativeScopeFirewall.generateFirewallPrompt(constraints: NegativeScopeFirewall.defaultConstraints)
+        check("NegativeScopeFirewall generates out-of-scope boundary manifest and prompt firewall", outOfScope.contains("OUT OF SCOPE MANIFEST") && firewallPrompt.contains("ANTIGRAVITY SCOPE FIREWALL"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

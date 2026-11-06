@@ -87,6 +87,10 @@ struct InfiniteCanvasView: View {
     @State private var isSecretShieldPresented: Bool = false
     @State private var isBloatGuardPresented: Bool = false
     @State private var isDeployBlueprintPresented: Bool = false
+    @State private var isContextOptimizerPresented: Bool = false
+    @State private var isComponentMatrixPresented: Bool = false
+    @State private var isAcceptanceCriteriaPresented: Bool = false
+    @State private var isScopeGuardPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -247,6 +251,10 @@ struct InfiniteCanvasView: View {
                 onOpenSecretShield: { isSecretShieldPresented = true },
                 onOpenBloatGuard: { isBloatGuardPresented = true },
                 onOpenDeployBlueprint: { isDeployBlueprintPresented = true },
+                onOpenContextOptimizer: { isContextOptimizerPresented = true },
+                onOpenComponentMatrix: { isComponentMatrixPresented = true },
+                onOpenAcceptanceCriteria: { isAcceptanceCriteriaPresented = true },
+                onOpenScopeGuard: { isScopeGuardPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -334,6 +342,32 @@ struct InfiniteCanvasView: View {
                 title: title,
                 platform: "Web",
                 onDismiss: { isDeployBlueprintPresented = false }
+            )
+        }
+        .sheet(isPresented: $isContextOptimizerPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            let concept = stickies.map(\.text).joined(separator: ". ")
+            ContextOptimizerSheet(
+                title: title,
+                concept: concept.isEmpty ? "Архитектура на холсте Kite" : concept,
+                onDismiss: { isContextOptimizerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isComponentMatrixPresented) {
+            ComponentContractSheet(onDismiss: { isComponentMatrixPresented = false })
+        }
+        .sheet(isPresented: $isAcceptanceCriteriaPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            AcceptanceCriteriaSheet(
+                title: title,
+                onDismiss: { isAcceptanceCriteriaPresented = false }
+            )
+        }
+        .sheet(isPresented: $isScopeGuardPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            NegativeScopeSheet(
+                title: title,
+                onDismiss: { isScopeGuardPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

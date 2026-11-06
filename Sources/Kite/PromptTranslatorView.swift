@@ -36,6 +36,10 @@ struct PromptTranslatorView: View {
     @State private var isSecretShieldPresented: Bool = false
     @State private var isBloatGuardPresented: Bool = false
     @State private var isDeployBlueprintPresented: Bool = false
+    @State private var isContextOptimizerPresented: Bool = false
+    @State private var isComponentMatrixPresented: Bool = false
+    @State private var isAcceptanceCriteriaPresented: Bool = false
+    @State private var isScopeGuardPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -269,6 +273,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Конфигурации деплоя для Vercel, Cloudflare, Docker и GitHub Actions")
+
+                            Button {
+                                isContextOptimizerPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "gauge.with.needle")
+                                    Text("Сжатие токенов")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Сверхплотный дайджест архитектуры: экономия до 95% токенов")
+
+                            Button {
+                                isComponentMatrixPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "square.split.2x2")
+                                    Text("UI-компоненты")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Матрица интерфейсов компонентов, состояний и доступности")
+
+                            Button {
+                                isAcceptanceCriteriaPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checklist.checked")
+                                    Text("Критерии приемки")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Сценарии Given/When/Then и готовые тесты Playwright")
+
+                            Button {
+                                isScopeGuardPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "shield.slash")
+                                    Text("Scope Guard")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Барьер от оверинжиниринга: жесткий список запретов для ИИ")
                         }
                         .padding(.vertical, 2)
                     }
@@ -604,6 +656,36 @@ struct PromptTranslatorView: View {
                 title: title,
                 platform: selectedPlatform,
                 onDismiss: { isDeployBlueprintPresented = false }
+            )
+        }
+        .sheet(isPresented: $isContextOptimizerPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            ContextOptimizerSheet(
+                title: title,
+                concept: rawPrompt,
+                platform: selectedPlatform,
+                style: selectedStyle,
+                onDismiss: { isContextOptimizerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isComponentMatrixPresented) {
+            ComponentContractSheet(onDismiss: { isComponentMatrixPresented = false })
+        }
+        .sheet(isPresented: $isAcceptanceCriteriaPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            AcceptanceCriteriaSheet(
+                title: title,
+                onDismiss: { isAcceptanceCriteriaPresented = false }
+            )
+        }
+        .sheet(isPresented: $isScopeGuardPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            NegativeScopeSheet(
+                title: title,
+                onDismiss: { isScopeGuardPresented = false }
             )
         }
     }

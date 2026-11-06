@@ -47,6 +47,10 @@ struct CanvasToolbarView: View {
     let onOpenSecretShield: () -> Void
     let onOpenBloatGuard: () -> Void
     let onOpenDeployBlueprint: () -> Void
+    let onOpenContextOptimizer: () -> Void
+    let onOpenComponentMatrix: () -> Void
+    let onOpenAcceptanceCriteria: () -> Void
+    let onOpenScopeGuard: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -172,6 +176,32 @@ struct CanvasToolbarView: View {
                         onOpenDeployBlueprint()
                     } label: {
                         Label("Чертежи деплоя (Vercel / Cloudflare / Docker)", systemImage: "cloud")
+                    }
+
+                    Divider()
+
+                    Button {
+                        onOpenContextOptimizer()
+                    } label: {
+                        Label("Оптимизатор контекста (сжатие токенов)", systemImage: "gauge.with.needle")
+                    }
+
+                    Button {
+                        onOpenComponentMatrix()
+                    } label: {
+                        Label("Матрица UI-компонентов и пропсов", systemImage: "square.split.2x2")
+                    }
+
+                    Button {
+                        onOpenAcceptanceCriteria()
+                    } label: {
+                        Label("Критерии приемки и E2E тесты", systemImage: "checklist.checked")
+                    }
+
+                    Button {
+                        onOpenScopeGuard()
+                    } label: {
+                        Label("Барьер от оверинжиниринга (Scope Guard)", systemImage: "shield.slash")
                     }
 
                     Divider()
