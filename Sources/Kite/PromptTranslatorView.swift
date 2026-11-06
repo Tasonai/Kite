@@ -44,6 +44,10 @@ struct PromptTranslatorView: View {
     @State private var isPatchInspectorPresented: Bool = false
     @State private var isFallbackPlannerPresented: Bool = false
     @State private var isRunbookPresented: Bool = false
+    @State private var isEvalHarnessPresented: Bool = false
+    @State private var isFeatureFlagPresented: Bool = false
+    @State private var isTelemetryPresented: Bool = false
+    @State private var isPerformanceBudgetPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -373,6 +377,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Инженерный ранбук и команды терминала для Antigravity")
+
+                            Button {
+                                isEvalHarnessPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.shield")
+                                    Text("AI Эвалы")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("AI Eval Harness: регрессионный стенд тестирования промптов")
+
+                            Button {
+                                isFeatureFlagPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "flag")
+                                    Text("Флаги")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Матрица фиче-флагов и контролируемый rollout")
+
+                            Button {
+                                isTelemetryPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "antenna.radiowaves.left.and.right")
+                                    Text("Телеметрия")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Спецификатор событий аналитики без PII")
+
+                            Button {
+                                isPerformanceBudgetPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "gauge.with.needle")
+                                    Text("Бюджет Vitals")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Бюджет Core Web Vitals и оптимизация бандла")
                         }
                         .padding(.vertical, 2)
                     }
@@ -765,6 +817,38 @@ struct PromptTranslatorView: View {
             RunbookSheet(
                 title: title,
                 onDismiss: { isRunbookPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEvalHarnessPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            EvalHarnessSheet(
+                title: title,
+                onDismiss: { isEvalHarnessPresented = false }
+            )
+        }
+        .sheet(isPresented: $isFeatureFlagPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            FeatureFlagSheet(
+                title: title,
+                onDismiss: { isFeatureFlagPresented = false }
+            )
+        }
+        .sheet(isPresented: $isTelemetryPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            TelemetrySheet(
+                title: title,
+                onDismiss: { isTelemetryPresented = false }
+            )
+        }
+        .sheet(isPresented: $isPerformanceBudgetPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            PerformanceBudgetSheet(
+                title: title,
+                onDismiss: { isPerformanceBudgetPresented = false }
             )
         }
     }

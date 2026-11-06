@@ -55,6 +55,10 @@ struct CanvasToolbarView: View {
     let onOpenPatchInspector: () -> Void
     let onOpenFallbackPlanner: () -> Void
     let onOpenRunbook: () -> Void
+    let onOpenEvalHarness: () -> Void
+    let onOpenFeatureFlagMatrix: () -> Void
+    let onOpenTelemetrySpecifier: () -> Void
+    let onOpenPerformanceBudget: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -230,6 +234,30 @@ struct CanvasToolbarView: View {
                         onOpenRunbook()
                     } label: {
                         Label("Инженерный ранбук (Dev Runbook)", systemImage: "terminal")
+                    }
+
+                    Button {
+                        onOpenEvalHarness()
+                    } label: {
+                        Label("AI Eval Harness (Тест-бенч)", systemImage: "checkmark.shield")
+                    }
+
+                    Button {
+                        onOpenFeatureFlagMatrix()
+                    } label: {
+                        Label("Матрица фиче-флагов (Rollout)", systemImage: "flag")
+                    }
+
+                    Button {
+                        onOpenTelemetrySpecifier()
+                    } label: {
+                        Label("Спецификатор телеметрии (Events)", systemImage: "antenna.radiowaves.left.and.right")
+                    }
+
+                    Button {
+                        onOpenPerformanceBudget()
+                    } label: {
+                        Label("Бюджет производительности (Vitals)", systemImage: "gauge.with.needle")
                     }
 
                     Divider()

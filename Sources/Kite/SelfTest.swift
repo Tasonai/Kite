@@ -253,6 +253,22 @@ enum SelfTest {
         let pkgScripts = RunbookBuilder.generatePackageJsonScripts(commands: RunbookBuilder.starterCommands)
         check("RunbookBuilder generates dev runbook markdown and package.json scripts", runbookMd.contains("DEVELOPER RUNBOOK") && pkgScripts.contains("\"dev\": \"vite\""))
 
+        let evalsMd = EvalHarness.generateEvalsMarkdown(title: "Task Studio", testCases: EvalHarness.starterCases)
+        let evalRunner = EvalHarness.generateTypeScriptRunner(testCases: EvalHarness.starterCases)
+        check("EvalHarness generates regression eval markdown and TypeScript test runner", evalsMd.contains("AI EVALUATION HARNESS SPEC") && evalRunner.contains("runEvals"))
+
+        let flagsMd = FeatureFlagMatrix.generateFeatureFlagsMarkdown(title: "Task Studio", flags: FeatureFlagMatrix.starterFlags)
+        let flagClient = FeatureFlagMatrix.generateTypeScriptClient(flags: FeatureFlagMatrix.starterFlags)
+        check("FeatureFlagMatrix generates rollout markdown and TypeScript flag resolver", flagsMd.contains("FEATURE FLAG & ROLLOUT SPEC") && flagClient.contains("isFeatureEnabled"))
+
+        let teleMd = TelemetrySpecifier.generateTelemetryMarkdown(title: "Task Studio", events: TelemetrySpecifier.starterEvents)
+        let teleClient = TelemetrySpecifier.generateTypeScriptClient(events: TelemetrySpecifier.starterEvents)
+        check("TelemetrySpecifier generates analytics event spec and PII-free client", teleMd.contains("TELEMETRY & PRODUCT ANALYTICS SPEC") && teleClient.contains("export function track"))
+
+        let perfMd = PerformanceBudget.generatePerformanceMarkdown(title: "Task Studio", budgets: PerformanceBudget.starterBudgets)
+        let nextCfg = PerformanceBudget.generateNextConfigSnippet(budgets: PerformanceBudget.starterBudgets)
+        check("PerformanceBudget generates Web Vitals limits and Next.js config", perfMd.contains("PERFORMANCE & WEB VITALS BUDGET") && nextCfg.contains("optimizePackageImports"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

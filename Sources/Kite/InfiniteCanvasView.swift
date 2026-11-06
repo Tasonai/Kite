@@ -95,6 +95,10 @@ struct InfiniteCanvasView: View {
     @State private var isPatchInspectorPresented: Bool = false
     @State private var isFallbackPlannerPresented: Bool = false
     @State private var isRunbookPresented: Bool = false
+    @State private var isEvalHarnessPresented: Bool = false
+    @State private var isFeatureFlagPresented: Bool = false
+    @State private var isTelemetryPresented: Bool = false
+    @State private var isPerformanceBudgetPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -263,6 +267,10 @@ struct InfiniteCanvasView: View {
                 onOpenPatchInspector: { isPatchInspectorPresented = true },
                 onOpenFallbackPlanner: { isFallbackPlannerPresented = true },
                 onOpenRunbook: { isRunbookPresented = true },
+                onOpenEvalHarness: { isEvalHarnessPresented = true },
+                onOpenFeatureFlagMatrix: { isFeatureFlagPresented = true },
+                onOpenTelemetrySpecifier: { isTelemetryPresented = true },
+                onOpenPerformanceBudget: { isPerformanceBudgetPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -400,6 +408,34 @@ struct InfiniteCanvasView: View {
             RunbookSheet(
                 title: title,
                 onDismiss: { isRunbookPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEvalHarnessPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            EvalHarnessSheet(
+                title: title,
+                onDismiss: { isEvalHarnessPresented = false }
+            )
+        }
+        .sheet(isPresented: $isFeatureFlagPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            FeatureFlagSheet(
+                title: title,
+                onDismiss: { isFeatureFlagPresented = false }
+            )
+        }
+        .sheet(isPresented: $isTelemetryPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            TelemetrySheet(
+                title: title,
+                onDismiss: { isTelemetryPresented = false }
+            )
+        }
+        .sheet(isPresented: $isPerformanceBudgetPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            PerformanceBudgetSheet(
+                title: title,
+                onDismiss: { isPerformanceBudgetPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {
