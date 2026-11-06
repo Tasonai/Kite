@@ -7,7 +7,7 @@ cask "kite" do
   desc "Studio for ideas, architecture and Antigravity skills"
   homepage "https://github.com/Tasonai/Kite"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sequoia
 
   app "Kite.app"
 
