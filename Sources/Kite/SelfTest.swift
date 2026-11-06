@@ -103,6 +103,18 @@ enum SelfTest {
         check("the chat prompt forbids contradicting the recommendation", chat.contains("не должны спорить"))
         check("the chat prompt tells the model to commit to one recommendation", chat.contains("Выбирай один вариант"))
 
+        let testPeer = KitePeer(id: "test-peer-1", app: "Kite", platform: "macOS", hostname: "MacBook", ip: "127.0.0.1", port: 24242)
+        let peerData = (try? JSONEncoder().encode(testPeer)) ?? Data()
+        let decodedPeer = try? JSONDecoder().decode(KitePeer.self, from: peerData)
+        check("LAN peer serialization preserves fields", decodedPeer?.id == testPeer.id && decodedPeer?.hostname == "MacBook")
+
+        let exportJson = #"{"version":1,"exportedAt":"2026-11-06T12:00:00Z","frames":[],"stickies":[]}"#
+        let decodedDoc = try? JSONDecoder().decode(CanvasExportModel.self, from: Data(exportJson.utf8))
+        check("CanvasExportModel handles empty frames and connections", decodedDoc?.connections.isEmpty == true && decodedDoc?.frames.isEmpty == true)
+
+        let testFrame = CanvasFrame(title: "Subsystem", x: 100, y: 100, width: 200, height: 200)
+        check("CanvasFrame computes bounding box correctly", testFrame.rect.contains(CGPoint(x: 150, y: 150)) && !testFrame.rect.contains(CGPoint(x: 50, y: 50)))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

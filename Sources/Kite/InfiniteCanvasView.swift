@@ -3,6 +3,12 @@ import SwiftData
 import SwiftUI
 import KiteKit
 
+enum CanvasTool: String, CaseIterable, Identifiable {
+    case select = "Выбор"
+    case pan = "Рука"
+    var id: String { rawValue }
+}
+
 struct InfiniteCanvasView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
@@ -69,25 +75,77 @@ struct InfiniteCanvasView: View {
     // Export notification toast
     @State private var exportToast: String? = nil
 
+    // Canvas interaction mode & multi-selection
+    @State private var canvasTool: CanvasTool = .select
+    @State private var selectedElementIds: Set<String> = []
+    @State private var marqueeStart: CGPoint? = nil
+    @State private var marqueeCurrent: CGPoint? = nil
+    @State private var isMarqueeActive: Bool = false
+    @State private var groupDragOffset: CGSize = .zero
+    @State private var isDraggingSelection: Bool = false
+
+    // LAN P2P collaboration
+    @State private var lanPeers: [KitePeer] = []
+    @State private var showPeersPopover: Bool = false
+
     var body: some View {
         ZStack {
             // Background Dot Grid
             CanvasGridBackground(offset: totalOffset, scale: zoomScale)
                 .ignoresSafeArea()
-                .gesture(
-                    DragGesture()
-                        .onChanged { val in
-                            currentDragTranslation = val.translation
-                        }
-                        .onEnded { val in
-                            offset.width += val.translation.width
-                            offset.height += val.translation.height
-                            currentDragTranslation = .zero
-                        }
-                )
 
             // Zoomed and Panned World
             ZStack(alignment: .topLeading) {
+                // 0. World Backdrop (Marquee drag & click to deselect)
+                Color.clear
+                    .contentShape(Rectangle())
+                    .frame(width: 8000, height: 8000)
+                    .position(x: 4000, y: 4000) // grid: ok canvas world backdrop
+                    .gesture(
+                        DragGesture(minimumDistance: 2)
+                            .onChanged { val in
+                                if canvasTool == .select {
+                                    isMarqueeActive = true
+                                    if marqueeStart == nil {
+                                        marqueeStart = val.startLocation
+                                    }
+                                    marqueeCurrent = val.location
+                                    updateMarqueeSelection()
+                                } else {
+                                    currentDragTranslation = val.translation
+                                }
+                            }
+                            .onEnded { val in
+                                if canvasTool == .select {
+                                    isMarqueeActive = false
+                                    marqueeStart = nil
+                                    marqueeCurrent = nil
+                                } else {
+                                    offset.width += val.translation.width
+                                    offset.height += val.translation.height
+                                    currentDragTranslation = .zero
+                                }
+                            }
+                    )
+                    .onTapGesture {
+                        selectedElementIds.removeAll()
+                        selectedConnectionId = nil
+                    }
+
+                // Visual Marquee Selection Rectangle
+                if isMarqueeActive, let start = marqueeStart, let cur = marqueeCurrent {
+                    let minX = min(start.x, cur.x)
+                    let minY = min(start.y, cur.y)
+                    let w = max(2, abs(cur.x - start.x))
+                    let h = max(2, abs(cur.y - start.y))
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                        .background(Color.accentColor.opacity(0.12))
+                        .frame(width: w, height: h)
+                        .position(x: minX + w / 2, y: minY + h / 2) // grid: ok marquee rect position
+                }
+
                 // 1. Frames rendered in the back layer
                 ForEach(frames) { frame in
                     frameView(frame)
@@ -124,7 +182,9 @@ struct InfiniteCanvasView: View {
             .scaleEffect(zoomScale, anchor: .center)
             .offset(totalOffset) // grid: ok canvas pan offset
             .onDeleteCommand {
-                if let sel = selectedConnectionId {
+                if !selectedElementIds.isEmpty {
+                    deleteSelectedElements()
+                } else if let sel = selectedConnectionId {
                     connections.removeAll(where: { $0.id == sel })
                     selectedConnectionId = nil
                     showToast("Связь удалена")
@@ -242,6 +302,57 @@ struct InfiniteCanvasView: View {
                     }
                     .buttonStyle(.plain)
                     .fixedSize()
+
+                    // Canvas Tool Mode (Select vs Pan)
+                    Picker("", selection: $canvasTool) {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right").tag(CanvasTool.select)
+                        Image(systemName: "hand.raised").tag(CanvasTool.pan)
+                    }
+                    .pickerStyle(.segmented)
+                    .fixedSize()
+
+                    if !selectedElementIds.isEmpty {
+                        Button {
+                            groupSelectedElements()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "rectangle.3.group")
+                                Text("В подсистему")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .fixedSize()
+
+                        Button {
+                            deleteSelectedElements()
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                                .foregroundStyle(Color.red)
+                        }
+                        .buttonStyle(.plain)
+                        .fixedSize()
+                    }
+
+                    // LAN Peers Discovery Popover Button
+                    Button {
+                        showPeersPopover = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(lanPeers.isEmpty ? Color.secondary.opacity(0.4) : Color.green)
+                                .frame(width: 8, height: 8)
+                            Image(systemName: lanPeers.isEmpty ? "network.slash" : "network")
+                            Text(lanPeers.isEmpty ? "LAN" : "Пиры: \(lanPeers.count)")
+                        }
+                        .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+                    .popover(isPresented: $showPeersPopover) {
+                        lanPeersPopoverView
+                    }
                     // Export Menu
                     Menu {
                         Button {
@@ -399,6 +510,12 @@ struct InfiniteCanvasView: View {
         .onAppear {
             initializePositionsIfNeeded()
             setupInitialConnectionsIfNeeded()
+            KiteLANBeacon.shared.onPeersChanged = { peers in
+                Task { @MainActor in
+                    self.lanPeers = peers
+                }
+            }
+            self.lanPeers = KiteLANBeacon.shared.activePeers
         }
     }
 
@@ -411,9 +528,12 @@ struct InfiniteCanvasView: View {
 
     // MARK: - Frame View
     private func frameView(_ frame: CanvasFrame) -> some View {
+        let nodeId = "frame-\(frame.id.uuidString)"
+        let isSelected = selectedElementIds.contains(nodeId)
         let isDragged = draggedFrameId == frame.id
-        let curX = frame.x + (isDragged ? frameDragOffset.width : 0)
-        let curY = frame.y + (isDragged ? frameDragOffset.height : 0)
+        let isElementInGroup = isDraggingSelection && isSelected
+        let curX = frame.x + (isElementInGroup ? groupDragOffset.width : (isDragged ? frameDragOffset.width : 0))
+        let curY = frame.y + (isElementInGroup ? groupDragOffset.height : (isDragged ? frameDragOffset.height : 0))
 
         return VStack(alignment: .leading, spacing: 0) {
             // Frame Header Tab (Drag Handle)
@@ -428,6 +548,7 @@ struct InfiniteCanvasView: View {
 
                 Button {
                     frames.removeAll(where: { $0.id == frame.id })
+                    selectedElementIds.remove(nodeId)
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 8, weight: .bold)) // grid: ok icon font
@@ -440,35 +561,49 @@ struct InfiniteCanvasView: View {
             .padding(.vertical, 4)
             .background(Color(hex: frame.colorHex))
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 0, bottomTrailingRadius: 8, topTrailingRadius: 8))
+            .onTapGesture {
+                handleNodeTap(nodeId: nodeId)
+            }
             .gesture(
                 DragGesture()
                     .onChanged { val in
-                        draggedFrameId = frame.id
-                        frameDragOffset = val.translation
+                        if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                            isDraggingSelection = true
+                            groupDragOffset = val.translation
+                        } else {
+                            draggedFrameId = frame.id
+                            frameDragOffset = val.translation
+                        }
                     }
                     .onEnded { val in
-                        if let idx = frames.firstIndex(where: { $0.id == frame.id }) {
-                            let dx = val.translation.width
-                            let dy = val.translation.height
+                        if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                            applyGroupDragDelta(dx: val.translation.width, dy: val.translation.height)
+                            isDraggingSelection = false
+                            groupDragOffset = .zero
+                        } else {
+                            if let idx = frames.firstIndex(where: { $0.id == frame.id }) {
+                                let dx = val.translation.width
+                                let dy = val.translation.height
 
-                            // Move frame
-                            frames[idx].x += dx
-                            frames[idx].y += dy
+                                // Move frame
+                                frames[idx].x += dx
+                                frames[idx].y += dy
 
-                            // Move enclosed items
-                            let box = frame.rect
-                            for (itemId, pos) in itemPositions where box.contains(pos) {
-                                itemPositions[itemId] = CGPoint(x: pos.x + dx, y: pos.y + dy)
+                                // Move enclosed items
+                                let box = frame.rect
+                                for (itemId, pos) in itemPositions where box.contains(pos) {
+                                    itemPositions[itemId] = CGPoint(x: pos.x + dx, y: pos.y + dy)
+                                }
+                                for sIdx in stickies.indices where box.contains(stickies[sIdx].position) {
+                                    stickies[sIdx].position = CGPoint(x: stickies[sIdx].position.x + dx, y: stickies[sIdx].position.y + dy)
+                                }
+                                for rIdx in referenceCards.indices where box.contains(referenceCards[rIdx].position) {
+                                    referenceCards[rIdx].position = CGPoint(x: referenceCards[rIdx].position.x + dx, y: referenceCards[rIdx].position.y + dy)
+                                }
                             }
-                            for sIdx in stickies.indices where box.contains(stickies[sIdx].position) {
-                                stickies[sIdx].position = CGPoint(x: stickies[sIdx].position.x + dx, y: stickies[sIdx].position.y + dy)
-                            }
-                            for rIdx in referenceCards.indices where box.contains(referenceCards[rIdx].position) {
-                                referenceCards[rIdx].position = CGPoint(x: referenceCards[rIdx].position.x + dx, y: referenceCards[rIdx].position.y + dy)
-                            }
+                            draggedFrameId = nil
+                            frameDragOffset = .zero
                         }
-                        draggedFrameId = nil
-                        frameDragOffset = .zero
                     }
             )
 
@@ -477,7 +612,7 @@ struct InfiniteCanvasView: View {
                 .fill(Color(hex: frame.colorHex).opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(hex: frame.colorHex).opacity(isDragged ? 0.6 : 0.35), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                        .stroke(isSelected ? Color.accentColor : Color(hex: frame.colorHex).opacity(isDragged ? 0.6 : 0.35), style: StrokeStyle(lineWidth: isSelected ? 2 : (isDragged ? 2 : 1), dash: isSelected ? [] : [6, 4]))
                 )
                 .frame(width: frame.width, height: frame.height)
         }
@@ -489,12 +624,14 @@ struct InfiniteCanvasView: View {
 
     // MARK: - Reference Card View
     private func referenceCardView(_ ref: CanvasReferenceCard) -> some View {
-        let isDragged = draggedRefCardId == ref.id
-        let pos = CGPoint(
-            x: ref.position.x + (isDragged ? refCardDragOffset.width : 0),
-            y: ref.position.y + (isDragged ? refCardDragOffset.height : 0)
-        )
         let nodeId = "ref-\(ref.id.uuidString)"
+        let isSelected = selectedElementIds.contains(nodeId)
+        let isDragged = draggedRefCardId == ref.id
+        let isElementInGroup = isDraggingSelection && isSelected
+        let pos = CGPoint(
+            x: ref.position.x + (isElementInGroup ? groupDragOffset.width : (isDragged ? refCardDragOffset.width : 0)),
+            y: ref.position.y + (isElementInGroup ? groupDragOffset.height : (isDragged ? refCardDragOffset.height : 0))
+        )
         let isConnectingSource = connectingSourceId == nodeId
 
         return VStack(alignment: .leading, spacing: 8) {
@@ -524,6 +661,7 @@ struct InfiniteCanvasView: View {
 
                 Button {
                     referenceCards.removeAll(where: { $0.id == ref.id })
+                    selectedElementIds.remove(nodeId)
                     connections.removeAll(where: { $0.fromId == nodeId || $0.toId == nodeId })
                 } label: {
                     Image(systemName: "xmark.circle")
@@ -576,7 +714,7 @@ struct InfiniteCanvasView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isConnectingSource ? Color.orange : Color.secondary.opacity(0.2), lineWidth: isConnectingSource ? 2 : 1)
+                .stroke(isSelected ? Color.accentColor : (isConnectingSource ? Color.orange : Color.secondary.opacity(0.2)), lineWidth: (isSelected || isConnectingSource) ? 2 : 1)
         )
         .scaleEffect(isDragged ? 1.04 : 1.0)
         .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.08), radius: isDragged ? 16 : 6, y: isDragged ? 12 : 3)
@@ -590,39 +728,58 @@ struct InfiniteCanvasView: View {
             DragGesture()
                 .onChanged { val in
                     guard !isConnectingMode else { return }
-                    draggedRefCardId = ref.id
-                    refCardDragOffset = val.translation
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        isDraggingSelection = true
+                        groupDragOffset = val.translation
+                    } else {
+                        draggedRefCardId = ref.id
+                        refCardDragOffset = val.translation
+                    }
                 }
                 .onEnded { val in
                     guard !isConnectingMode else { return }
-                    if let idx = referenceCards.firstIndex(where: { $0.id == ref.id }) {
-                        referenceCards[idx].position = CGPoint(
-                            x: ref.position.x + val.translation.width,
-                            y: ref.position.y + val.translation.height
-                        )
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        applyGroupDragDelta(dx: val.translation.width, dy: val.translation.height)
+                        isDraggingSelection = false
+                        groupDragOffset = .zero
+                    } else {
+                        if let idx = referenceCards.firstIndex(where: { $0.id == ref.id }) {
+                            referenceCards[idx].position = CGPoint(
+                                x: referenceCards[idx].position.x + val.translation.width,
+                                y: referenceCards[idx].position.y + val.translation.height
+                            )
+                        }
+                        draggedRefCardId = nil
+                        refCardDragOffset = .zero
                     }
-                    draggedRefCardId = nil
-                    refCardDragOffset = .zero
                 }
         )
     }
 
     private func positionFor(item: Item, index: Int) -> CGPoint {
+        let base: CGPoint
         if let pos = itemPositions[item.uuid] {
-            if draggedItemId == item.uuid {
-                return CGPoint(x: pos.x + itemDragOffset.width, y: pos.y + itemDragOffset.height)
-            }
-            return pos
+            base = pos
+        } else {
+            let col = index % 3
+            let row = index / 3
+            base = CGPoint(x: 160 + col * 320, y: 160 + row * 240)
         }
-        let col = index % 3
-        let row = index / 3
-        return CGPoint(x: 160 + col * 320, y: 160 + row * 240)
+        let nodeId = "item-\(item.uuid.uuidString)"
+        if isDraggingSelection && selectedElementIds.contains(nodeId) {
+            return CGPoint(x: base.x + groupDragOffset.width, y: base.y + groupDragOffset.height)
+        }
+        if draggedItemId == item.uuid {
+            return CGPoint(x: base.x + itemDragOffset.width, y: base.y + itemDragOffset.height)
+        }
+        return base
     }
 
     private func ideaCard(_ item: Item) -> some View {
         let index = items.firstIndex(where: { $0.uuid == item.uuid }) ?? 0
         let pos = positionFor(item: item, index: index)
         let nodeId = "item-\(item.uuid.uuidString)"
+        let isSelected = selectedElementIds.contains(nodeId)
         let isConnectingSource = connectingSourceId == nodeId
         let isDragged = draggedItemId == item.uuid
 
@@ -683,7 +840,7 @@ struct InfiniteCanvasView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isConnectingSource ? Color.orange : Color.secondary.opacity(0.2), lineWidth: isConnectingSource ? 2 : 1)
+                .stroke(isSelected ? Color.accentColor : (isConnectingSource ? Color.orange : Color.secondary.opacity(0.2)), lineWidth: (isSelected || isConnectingSource) ? 2 : 1)
         )
         .scaleEffect(isDragged ? 1.04 : 1.0)
         .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.08), radius: isDragged ? 16 : 6, y: isDragged ? 12 : 3)
@@ -697,26 +854,39 @@ struct InfiniteCanvasView: View {
             DragGesture()
                 .onChanged { val in
                     guard !isConnectingMode else { return }
-                    draggedItemId = item.uuid
-                    itemDragOffset = val.translation
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        isDraggingSelection = true
+                        groupDragOffset = val.translation
+                    } else {
+                        draggedItemId = item.uuid
+                        itemDragOffset = val.translation
+                    }
                 }
                 .onEnded { val in
                     guard !isConnectingMode else { return }
-                    let cur = itemPositions[item.uuid] ?? pos
-                    itemPositions[item.uuid] = CGPoint(x: cur.x + val.translation.width, y: cur.y + val.translation.height)
-                    draggedItemId = nil
-                    itemDragOffset = .zero
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        applyGroupDragDelta(dx: val.translation.width, dy: val.translation.height)
+                        isDraggingSelection = false
+                        groupDragOffset = .zero
+                    } else {
+                        let cur = itemPositions[item.uuid] ?? pos
+                        itemPositions[item.uuid] = CGPoint(x: cur.x + val.translation.width, y: cur.y + val.translation.height)
+                        draggedItemId = nil
+                        itemDragOffset = .zero
+                    }
                 }
         )
     }
 
     private func stickyView(_ sticky: CanvasSticky) -> some View {
-        let isDragged = draggedStickyId == sticky.id
-        let pos = CGPoint(
-            x: sticky.position.x + (isDragged ? stickyDragOffset.width : 0),
-            y: sticky.position.y + (isDragged ? stickyDragOffset.height : 0)
-        )
         let nodeId = "sticky-\(sticky.id.uuidString)"
+        let isSelected = selectedElementIds.contains(nodeId)
+        let isDragged = draggedStickyId == sticky.id
+        let isElementInGroup = isDraggingSelection && isSelected
+        let pos = CGPoint(
+            x: sticky.position.x + (isElementInGroup ? groupDragOffset.width : (isDragged ? stickyDragOffset.width : 0)),
+            y: sticky.position.y + (isElementInGroup ? groupDragOffset.height : (isDragged ? stickyDragOffset.height : 0))
+        )
         let isConnectingSource = connectingSourceId == nodeId
 
         return VStack(alignment: .leading, spacing: 4) {
@@ -724,6 +894,7 @@ struct InfiniteCanvasView: View {
                 Spacer()
                 Button {
                     stickies.removeAll(where: { $0.id == sticky.id })
+                    selectedElementIds.remove(nodeId)
                     connections.removeAll(where: { $0.fromId == nodeId || $0.toId == nodeId })
                 } label: {
                     Image(systemName: "xmark.circle")
@@ -744,7 +915,7 @@ struct InfiniteCanvasView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(isConnectingSource ? Color.orange : Color.clear, lineWidth: 2)
+                .stroke(isSelected ? Color.accentColor : (isConnectingSource ? Color.orange : Color.clear), lineWidth: 2)
         )
         .scaleEffect(isDragged ? 1.05 : 1.0)
         .shadow(color: isDragged ? Color.black.opacity(0.24) : Color.black.opacity(0.1), radius: isDragged ? 16 : 4, y: isDragged ? 12 : 2)
@@ -758,38 +929,61 @@ struct InfiniteCanvasView: View {
             DragGesture()
                 .onChanged { val in
                     guard !isConnectingMode else { return }
-                    draggedStickyId = sticky.id
-                    stickyDragOffset = val.translation
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        isDraggingSelection = true
+                        groupDragOffset = val.translation
+                    } else {
+                        draggedStickyId = sticky.id
+                        stickyDragOffset = val.translation
+                    }
                 }
                 .onEnded { val in
                     guard !isConnectingMode else { return }
-                    if let idx = stickies.firstIndex(where: { $0.id == sticky.id }) {
-                        stickies[idx].position = CGPoint(
-                            x: sticky.position.x + val.translation.width,
-                            y: sticky.position.y + val.translation.height
-                        )
+                    if selectedElementIds.contains(nodeId) && selectedElementIds.count > 1 {
+                        applyGroupDragDelta(dx: val.translation.width, dy: val.translation.height)
+                        isDraggingSelection = false
+                        groupDragOffset = .zero
+                    } else {
+                        if let idx = stickies.firstIndex(where: { $0.id == sticky.id }) {
+                            stickies[idx].position = CGPoint(
+                                x: stickies[idx].position.x + val.translation.width,
+                                y: stickies[idx].position.y + val.translation.height
+                            )
+                        }
+                        draggedStickyId = nil
+                        stickyDragOffset = .zero
                     }
-                    draggedStickyId = nil
-                    stickyDragOffset = .zero
                 }
         )
     }
 
     private func handleNodeTap(nodeId: String) {
-        guard isConnectingMode else { return }
-        if connectingSourceId == nil {
-            connectingSourceId = nodeId
-        } else if let source = connectingSourceId, source != nodeId {
-            let newConn = CanvasConnection(
-                fromId: source,
-                toId: nodeId,
-                label: "связь",
-                colorHex: "#D97757"
-            )
-            connections.append(newConn)
-            connectingSourceId = nil
-            isConnectingMode = false
-            showToast("Связь успешно создана")
+        if isConnectingMode {
+            if connectingSourceId == nil {
+                connectingSourceId = nodeId
+            } else if let source = connectingSourceId, source != nodeId {
+                let newConn = CanvasConnection(
+                    fromId: source,
+                    toId: nodeId,
+                    label: "связь",
+                    colorHex: "#D97757"
+                )
+                connections.append(newConn)
+                connectingSourceId = nil
+                isConnectingMode = false
+                showToast("Связь успешно создана")
+            }
+        } else {
+            let isShift = NSEvent.modifierFlags.contains(.shift) || NSEvent.modifierFlags.contains(.command)
+            if isShift {
+                if selectedElementIds.contains(nodeId) {
+                    selectedElementIds.remove(nodeId)
+                } else {
+                    selectedElementIds.insert(nodeId)
+                }
+            } else {
+                selectedElementIds = [nodeId]
+            }
         }
     }
 
@@ -980,8 +1174,222 @@ struct InfiniteCanvasView: View {
                   let item = items.first(where: { $0.uuid == uuid }) else { return nil }
             let index = items.firstIndex(where: { $0.uuid == item.uuid }) ?? 0
             return positionFor(item: item, index: index)
+        } else if nodeId.hasPrefix("frame-") {
+            let raw = String(nodeId.dropFirst("frame-".count))
+            guard let uuid = UUID(uuidString: raw),
+                  let frame = frames.first(where: { $0.id == uuid }) else { return nil }
+            return CGPoint(x: frame.x + frame.width / 2, y: frame.y + frame.height / 2)
         }
         return nil
+    }
+
+    // MARK: - Multi-Selection & Group Operations
+    private func updateMarqueeSelection() {
+        guard let start = marqueeStart, let cur = marqueeCurrent else { return }
+        let box = CGRect(
+            x: min(start.x, cur.x),
+            y: min(start.y, cur.y),
+            width: abs(cur.x - start.x),
+            height: abs(cur.y - start.y)
+        )
+
+        var newSel = Set<String>()
+        for sticky in stickies {
+            let r = CGRect(x: sticky.position.x - 100, y: sticky.position.y - 80, width: 200, height: 160)
+            if box.intersects(r) { newSel.insert("sticky-\(sticky.id.uuidString)") }
+        }
+        for item in items {
+            let pt = itemPositions[item.uuid] ?? CGPoint(x: 560, y: 200)
+            let r = CGRect(x: pt.x - 140, y: pt.y - 80, width: 280, height: 160)
+            if box.intersects(r) { newSel.insert("item-\(item.uuid.uuidString)") }
+        }
+        for ref in referenceCards {
+            let r = CGRect(x: ref.position.x - 130, y: ref.position.y - 80, width: 260, height: 160)
+            if box.intersects(r) { newSel.insert("ref-\(ref.id.uuidString)") }
+        }
+        for frame in frames {
+            let r = CGRect(x: frame.x, y: frame.y, width: frame.width, height: frame.height)
+            if box.intersects(r) { newSel.insert("frame-\(frame.id.uuidString)") }
+        }
+        selectedElementIds = newSel
+    }
+
+    private func applyGroupDragDelta(dx: CGFloat, dy: CGFloat) {
+        for id in selectedElementIds {
+            if id.starts(with: "sticky-") {
+                let raw = String(id.dropFirst("sticky-".count))
+                if let idx = stickies.firstIndex(where: { $0.id.uuidString == raw }) {
+                    stickies[idx].position = CGPoint(x: stickies[idx].position.x + dx, y: stickies[idx].position.y + dy)
+                }
+            } else if id.starts(with: "item-") {
+                let raw = String(id.dropFirst("item-".count))
+                if let uuid = UUID(uuidString: raw) {
+                    let cur = itemPositions[uuid] ?? CGPoint(x: 560, y: 200)
+                    itemPositions[uuid] = CGPoint(x: cur.x + dx, y: cur.y + dy)
+                }
+            } else if id.starts(with: "ref-") {
+                let raw = String(id.dropFirst("ref-".count))
+                if let idx = referenceCards.firstIndex(where: { $0.id.uuidString == raw }) {
+                    referenceCards[idx].position = CGPoint(x: referenceCards[idx].position.x + dx, y: referenceCards[idx].position.y + dy)
+                }
+            } else if id.starts(with: "frame-") {
+                let raw = String(id.dropFirst("frame-".count))
+                if let idx = frames.firstIndex(where: { $0.id.uuidString == raw }) {
+                    frames[idx].x += dx
+                    frames[idx].y += dy
+                }
+            }
+        }
+    }
+
+    private func deleteSelectedElements() {
+        let count = selectedElementIds.count
+        guard count > 0 else { return }
+
+        for id in selectedElementIds {
+            if id.starts(with: "sticky-") {
+                let raw = String(id.dropFirst("sticky-".count))
+                stickies.removeAll(where: { $0.id.uuidString == raw })
+                connections.removeAll(where: { $0.fromId == id || $0.toId == id })
+            } else if id.starts(with: "ref-") {
+                let raw = String(id.dropFirst("ref-".count))
+                referenceCards.removeAll(where: { $0.id.uuidString == raw })
+                connections.removeAll(where: { $0.fromId == id || $0.toId == id })
+            } else if id.starts(with: "frame-") {
+                let raw = String(id.dropFirst("frame-".count))
+                frames.removeAll(where: { $0.id.uuidString == raw })
+            } else if id.starts(with: "item-") {
+                let raw = String(id.dropFirst("item-".count))
+                if let uuid = UUID(uuidString: raw) {
+                    itemPositions.removeValue(forKey: uuid)
+                }
+                connections.removeAll(where: { $0.fromId == id || $0.toId == id })
+            }
+        }
+        selectedElementIds.removeAll()
+        showToast("Удалено объектов: \(count)")
+    }
+
+    private func groupSelectedElements() {
+        guard !selectedElementIds.isEmpty else { return }
+
+        var minX = CGFloat.infinity
+        var minY = CGFloat.infinity
+        var maxX = -CGFloat.infinity
+        var maxY = -CGFloat.infinity
+
+        for id in selectedElementIds {
+            if let pt = centerForNode(id) {
+                minX = min(minX, pt.x - 130)
+                minY = min(minY, pt.y - 90)
+                maxX = max(maxX, pt.x + 130)
+                maxY = max(maxY, pt.y + 90)
+            }
+        }
+
+        guard minX < CGFloat.infinity else { return }
+
+        let newFrame = CanvasFrame(
+            title: "Подсистема",
+            colorHex: "#3B82F6",
+            x: max(20, minX - 24),
+            y: max(20, minY - 32),
+            width: max(240, maxX - minX + 48),
+            height: max(180, maxY - minY + 56)
+        )
+        frames.append(newFrame)
+        showToast("Объекты объединены в подсистему")
+    }
+
+    // MARK: - LAN P2P Collaboration Popover View
+    private var lanPeersPopoverView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "network")
+                    .foregroundStyle(Color.accentColor)
+                Text("Устройства в локальной сети")
+                    .font(.headline)
+                Spacer()
+                Text("\(lanPeers.count)")
+                    .font(.system(size: 10, design: .monospaced)) // grid: ok font
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.12))
+                    .clipShape(Capsule())
+            }
+
+            Divider()
+
+            if lanPeers.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.largeTitle)
+                        .foregroundStyle(.secondary)
+                    Text("Поиск инстансов Kite в сети...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("Запустите Kite на Windows или другом Mac для авто-обнаружения")
+                        .font(.system(size: 10)) // grid: ok font
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(lanPeers) { peer in
+                        HStack(spacing: 8) {
+                            Image(systemName: peer.platform.contains("Windows") ? "laptopcomputer" : "desktopcomputer")
+                                .font(.title3)
+                                .foregroundStyle(Color.accentColor)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(peer.hostname)
+                                    .font(.subheadline.bold())
+                                Text("\(peer.platform) - \(peer.ip):\(peer.port)")
+                                    .font(.system(size: 10, design: .monospaced)) // grid: ok font
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Button("Синхронизировать") {
+                                pullFromPeer(peer)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                        }
+                        .padding(8)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(width: 380)
+    }
+
+    private func pullFromPeer(_ peer: KitePeer) {
+        guard let url = URL(string: "http://\(peer.ip):\(peer.port)/api/canvas") else { return }
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let doc = try JSONDecoder().decode(CanvasExportModel.self, from: data)
+                await MainActor.run {
+                    self.frames = doc.frames
+                    self.stickies = doc.stickies
+                    self.referenceCards = doc.referenceCards
+                    self.connections = doc.connections
+                    showToast("Холст синхронизирован с \(peer.hostname)")
+                    showPeersPopover = false
+                }
+            } catch {
+                await MainActor.run {
+                    showToast("Ошибка соединения с \(peer.hostname)")
+                }
+            }
+        }
     }
 
     // MARK: - AI Auto-Layout

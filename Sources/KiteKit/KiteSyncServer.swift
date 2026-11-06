@@ -39,12 +39,14 @@ public final class KiteSyncServer: @unchecked Sendable {
                 switch state {
                 case .ready:
                     self?.isRunning = true
+                    KiteLANBeacon.shared.start(appPort: Int(port))
                     KiteLog.sync.info("KiteSyncServer listening on port \(port)")
                 case .failed(let err):
                     KiteLog.sync.error("KiteSyncServer failed: \(err.localizedDescription)")
                     self?.stop()
                 case .cancelled:
                     self?.isRunning = false
+                    KiteLANBeacon.shared.stop()
                     KiteLog.sync.info("KiteSyncServer stopped")
                 default:
                     break
@@ -68,6 +70,7 @@ public final class KiteSyncServer: @unchecked Sendable {
         listener?.cancel()
         listener = nil
         isRunning = false
+        KiteLANBeacon.shared.stop()
     }
 
     public func broadcast(event: String, payload: [String: Any] = [:]) {
@@ -182,6 +185,14 @@ public final class KiteSyncServer: @unchecked Sendable {
             {"status":"online","app":"Kite macOS","version":"1.3.0","port":\(boundPort)}
             """
             sendResponse(connection: connection, body: Data(json.utf8))
+
+        case ("GET", "/api/peers"):
+            let peers = KiteLANBeacon.shared.activePeers
+            if let data = try? JSONEncoder().encode(peers) {
+                sendResponse(connection: connection, contentType: "application/json", body: data)
+            } else {
+                sendResponse(connection: connection, contentType: "application/json", body: Data("[]".utf8))
+            }
 
         case ("GET", "/api/ideas"):
             let responseData = await exportIdeasProvider?() ?? Data("{\"ideas\":[]}".utf8)
