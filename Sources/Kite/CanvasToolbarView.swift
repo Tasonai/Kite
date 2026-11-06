@@ -1,0 +1,342 @@
+import SwiftUI
+import KiteKit
+
+struct CanvasToolbarView: View {
+    let totalElementCount: Int
+    @Binding var canvasTool: CanvasTool
+    @Binding var isConnectingMode: Bool
+    let connectingSourceId: String?
+    let selectedElementCount: Int
+    let lanPeers: [KitePeer]
+    @Binding var zoomScale: CGFloat
+    let toastMessage: String?
+
+    // Action callbacks
+    let onAIAutoLayout: () -> Void
+    let onCoArchitect: () -> Void
+    let onRepoIngestion: () -> Void
+    let onRoadmapHUD: () -> Void
+
+    let onAddFrame: () -> Void
+    let onAddSticky: () -> Void
+    let onAddNewIdea: () -> Void
+    let onOpenReferencePicker: () -> Void
+
+    let onGroupSelected: () -> Void
+    let onDeleteSelected: () -> Void
+
+    let onSyncPeer: (KitePeer) -> Void
+
+    let onExportSVG: () -> Void
+    let onExportPNG: () -> Void
+    let onExportPDF: () -> Void
+    let onExportHTML: () -> Void
+    let onExportMermaid: () -> Void
+    let onCopyPNG: () -> Void
+
+    let onResetZoom: () -> Void
+    let onCancelConnecting: () -> Void
+
+    @State private var showPeersPopover = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "rectangle.split.3x3")
+                        .foregroundStyle(Color.accentColor)
+                    Text("Холст")
+                        .font(.headline)
+                        .fixedSize()
+                    Text("\(totalElementCount)")
+                        .font(.system(size: 10, design: .monospaced)) // grid: ok font
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.secondary.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .fixedSize()
+
+                Spacer(minLength: 8)
+
+                // AI Architecture Tools Menu
+                Menu {
+                    Button {
+                        onAIAutoLayout()
+                    } label: {
+                        Label("AI-Раскладка секций", systemImage: "wand.and.stars")
+                    }
+
+                    Button {
+                        onCoArchitect()
+                    } label: {
+                        Label("AI Ко-Архитектор (пробелы и защита)", systemImage: "cpu")
+                    }
+
+                    Button {
+                        onRepoIngestion()
+                    } label: {
+                        Label("Импорт структуры репозитория", systemImage: "square.stack.3d.down.right")
+                    }
+
+                    Button {
+                        onRoadmapHUD()
+                    } label: {
+                        Label("Дорожная карта (волны выполнения)", systemImage: "chart.bar.xaxis")
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "wand.and.stars")
+                        Text("AI Архитектор")
+                    }
+                    .font(.caption.bold())
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.indigo)
+                .fixedSize()
+                .help("Инструменты AI-проектирования: авто-раскладка, аудит пробелов, дорожная карта")
+
+                // Add Elements Menu
+                Menu {
+                    Button {
+                        onAddFrame()
+                    } label: {
+                        Label("Фрейм", systemImage: "squareshape.dashed.squareshape")
+                    }
+
+                    Button {
+                        onAddSticky()
+                    } label: {
+                        Label("Стикер", systemImage: "note.text.badge.plus")
+                    }
+
+                    Button {
+                        onAddNewIdea()
+                    } label: {
+                        Label("Идея", systemImage: "plus")
+                    }
+
+                    Button {
+                        onOpenReferencePicker()
+                    } label: {
+                        Label("Референс (Mobbin / Figma)", systemImage: "photo.on.rectangle.angled")
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                        Text("Добавить")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+
+                // Connect Mode Toggle Button
+                Button {
+                    isConnectingMode.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isConnectingMode ? "xmark.circle.fill" : "link.badge.plus")
+                        Text(isConnectingMode ? "Отмена связи" : "Связать")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(isConnectingMode ? Color.white : Color.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(isConnectingMode ? Color.orange : Color.secondary.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .fixedSize()
+
+                // Canvas Tool Mode (Select vs Pan)
+                Picker("", selection: $canvasTool) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right").tag(CanvasTool.select)
+                    Image(systemName: "hand.raised").tag(CanvasTool.pan)
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+
+                if selectedElementCount > 0 {
+                    Button {
+                        onGroupSelected()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "rectangle.3.group")
+                            Text("В подсистему")
+                        }
+                        .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+
+                    Button {
+                        onDeleteSelected()
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.caption)
+                            .foregroundStyle(Color.red)
+                    }
+                    .buttonStyle(.plain)
+                    .fixedSize()
+                }
+
+                // LAN Peers Discovery Popover Button
+                Button {
+                    showPeersPopover = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(lanPeers.isEmpty ? Color.secondary.opacity(0.4) : Color.green)
+                            .frame(width: 8, height: 8)
+                        Image(systemName: lanPeers.isEmpty ? "network.slash" : "network")
+                        Text(lanPeers.isEmpty ? "LAN" : "Пиры: \(lanPeers.count)")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .popover(isPresented: $showPeersPopover) {
+                    CanvasLANPeersPopover(peers: lanPeers, onSync: onSyncPeer)
+                }
+
+                // Export Menu
+                Menu {
+                    Button {
+                        onExportSVG()
+                    } label: {
+                        Label("Векторный SVG (.svg)", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
+
+                    Button {
+                        onExportPNG()
+                    } label: {
+                        Label("Изображение PNG (.png)", systemImage: "photo")
+                    }
+
+                    Button {
+                        onExportPDF()
+                    } label: {
+                        Label("Векторный PDF (.pdf)", systemImage: "doc.richtext")
+                    }
+
+                    Button {
+                        onExportHTML()
+                    } label: {
+                        Label("Интерактивный HTML (.html)", systemImage: "safari")
+                    }
+
+                    Button {
+                        onExportMermaid()
+                    } label: {
+                        Label("Диаграмма Mermaid (.mmd)", systemImage: "arrow.triangle.branch")
+                    }
+
+                    Divider()
+
+                    Button {
+                        onCopyPNG()
+                    } label: {
+                        Label("Скопировать в буфер (PNG)", systemImage: "doc.on.doc")
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Экспорт")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+
+                // Zoom Controls
+                HStack(spacing: 4) {
+                    Button {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            zoomScale = max(0.4, zoomScale - 0.15)
+                        }
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.caption2)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Text("\(Int(zoomScale * 100))%")
+                        .font(.system(size: 11, design: .monospaced)) // grid: ok font
+                        .frame(width: 44)
+
+                    Button {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            zoomScale = min(2.0, zoomScale + 0.15)
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.caption2)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button("100%") {
+                        onResetZoom()
+                    }
+                    .font(.caption2)
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+
+            // Connecting Helper Banner
+            if isConnectingMode {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(.orange)
+                    Text(connectingSourceId == nil ? "Кликните на первую карточку, стикер или референс" : "Теперь выберите целевой узел для соединения стрелкой")
+                        .font(.caption.bold())
+                        .foregroundStyle(.primary)
+
+                    Spacer()
+
+                    Button("Отмена") {
+                        onCancelConnecting()
+                    }
+                    .font(.caption2)
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.orange.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.4), lineWidth: 1))
+                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            // Toast Notification
+            if let toast = toastMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text(toast)
+                        .font(.caption.bold())
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color(nsColor: .windowBackgroundColor))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.green.opacity(0.4), lineWidth: 1))
+                .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            Spacer()
+        }
+        .padding(16)
+    }
+}
