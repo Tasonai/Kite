@@ -140,6 +140,20 @@ enum SelfTest {
 
         check("CanvasBlueprintPacks provides pre-configured architecture templates", CanvasBlueprintPacks.all.count >= 4 && CanvasBlueprintPacks.microSaaS.frames.count == 2)
 
+        let antigravityMD = AntigravityPackGenerator.generateAntigravityMD(title: "Habit Tracker", concept: "Track daily habits", platform: "Mobile", style: "Minimal")
+        check("AntigravityPackGenerator compiles valid ANTIGRAVITY.md with token rules and negative scope", antigravityMD.contains("ANTIGRAVITY PROJECT SPECIFICATION") && antigravityMD.contains("Правила Экономии Токенов"))
+
+        let waves = AntigravityPackGenerator.buildWaves(title: "Task App", concept: "Task management", platform: "Web", style: "Swiss")
+        check("AntigravityPackGenerator builds 4 progressive execution waves", waves.count == 4 && waves.first?.id == 1 && waves.first?.negativeScope.isEmpty == false)
+
+        let report = AntigravityReadinessLinter.evaluate(title: "Portfolio", concept: "Personal portfolio website with interactive projects", platform: "Web", style: "Editorial")
+        check("AntigravityReadinessLinter accurately evaluates readiness and flight status", report.score >= 80 && report.isFlightReady && report.items.count == 5)
+
+        let sampleFrame = CanvasFrame(id: UUID(), title: "Frontend Subsystem", colorHex: "#3B82F6", x: 0, y: 0, width: 400, height: 400)
+        let sampleConn = CanvasConnection(fromId: "node_a", toId: "node_b", label: "HTTP/REST")
+        let mmdExport = CanvasExporter.exportMermaid(items: [], connections: [sampleConn], frames: [sampleFrame], itemPositions: [:])
+        check("CanvasExporter includes subgraphs and connection protocol badges in Mermaid", mmdExport.contains("subgraph") && mmdExport.contains("-->|HTTP/REST|"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

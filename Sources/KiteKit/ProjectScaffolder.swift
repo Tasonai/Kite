@@ -256,6 +256,35 @@ public enum ProjectScaffolder {
         try phase1Plan.write(to: phasesDir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
         createdFiles.append(".planning/phases/01-foundation/PLAN.md")
 
+        // Phase 2, 3, 4 plans
+        let phase2Dir = planningDir.appendingPathComponent("phases/02-domain-logic", isDirectory: true)
+        try fm.createDirectory(at: phase2Dir, withIntermediateDirectories: true)
+        let phase2Plan = "# Phase 2 Plan: Core Domain Logic & State Management\n\n## Goal\nImplement core business services, reactive state, and input validation without UI bindings."
+        try phase2Plan.write(to: phase2Dir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/phases/02-domain-logic/PLAN.md")
+
+        let phase3Dir = planningDir.appendingPathComponent("phases/03-ui-screens", isDirectory: true)
+        try fm.createDirectory(at: phase3Dir, withIntermediateDirectories: true)
+        let phase3Plan = "# Phase 3 Plan: High-Fidelity UI & Token Alignment\n\n## Goal\nImplement screens according to DESIGN.md 4pt/8pt grid and bind to domain state."
+        try phase3Plan.write(to: phase3Dir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/phases/03-ui-screens/PLAN.md")
+
+        let phase4Dir = planningDir.appendingPathComponent("phases/04-verification", isDirectory: true)
+        try fm.createDirectory(at: phase4Dir, withIntermediateDirectories: true)
+        let phase4Plan = "# Phase 4 Plan: Verification, A11y & Packaging\n\n## Goal\nRun automated tests, verify WCAG AA accessibility, remove unused imports and build release."
+        try phase4Plan.write(to: phase4Dir.appendingPathComponent("PLAN.md"), atomically: true, encoding: .utf8)
+        createdFiles.append(".planning/phases/04-verification/PLAN.md")
+
+        // 5.1 ANTIGRAVITY.md (Pre-flight Cockpit Specification)
+        let antigravityMd = AntigravityPackGenerator.generateAntigravityMD(
+            title: title,
+            concept: concept,
+            platform: platform,
+            style: style
+        )
+        try antigravityMd.write(to: projectDir.appendingPathComponent("ANTIGRAVITY.md"), atomically: true, encoding: .utf8)
+        createdFiles.append("ANTIGRAVITY.md")
+
         // 6. CLAUDE.md (Agent Guidelines)
         let claudeMd = """
         # Engineering Constitution for \(title)

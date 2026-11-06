@@ -11,6 +11,7 @@ struct TranslatorOutputView: View {
     let onCopy: () -> Void
     let onCopyStarterPrompt: () -> Void
     let onOpenMockup: () -> Void
+    let onOpenAntigravityPack: () -> Void
     let onOpenEditor: (EditorLauncher.Editor) -> Void
 
     @State private var showPitfalls = true
@@ -61,18 +62,30 @@ struct TranslatorOutputView: View {
                     .buttonStyle(.bordered)
                     .help("Открыть интерактивный прототип прямо в Kite (WebStudio)")
 
+                    Button {
+                        onOpenAntigravityPack()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bolt.shield.fill")
+                            Text("Пакет Antigravity")
+                        }
+                        .font(.caption.bold())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.accentColor)
+                    .help("Собрать токено-эффективный пакет волн (Waves) и спецификацию для Antigravity")
+
                     if !generatedBlueprint.isEmpty {
                         Button {
                             onCopyStarterPrompt()
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: isStarterCopied ? "checkmark" : "play.circle.fill")
+                                Image(systemName: isStarterCopied ? "checkmark" : "play.circle")
                                 Text(isStarterCopied ? "Скопировано" : "Промпт 1-го шага")
                             }
-                            .font(.caption.bold())
+                            .font(.caption)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color.accentColor)
+                        .buttonStyle(.bordered)
                         .help("Скопировать стартовый диалоговый гайд для Cursor / Claude / Antigravity")
 
                         Menu {

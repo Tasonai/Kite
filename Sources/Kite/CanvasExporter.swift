@@ -409,19 +409,80 @@ enum CanvasExporter {
         """
     }
 
-    static func exportMermaid(items: [Item], connections: [CanvasConnection]) -> String {
+    static func exportMermaid(
+        items: [Item],
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        itemPositions: [UUID: CGPoint] = [:]
+    ) -> String {
         var out = "flowchart TD\n"
+        var renderedNodeIds = Set<String>()
+
+        func sanitizeId(_ id: String) -> String {
+            let clean = id.replacingOccurrences(of: "item-", with: "node_")
+                .replacingOccurrences(of: "-", with: "_")
+            return clean.isEmpty ? "node_anon" : clean
+        }
+
+        func sanitizeText(_ text: String) -> String {
+            text.replacingOccurrences(of: "\"", with: "'")
+                .replacingOccurrences(of: "\n", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // 1. Render frames as subgraphs
+        for frame in frames {
+            let safeFrameTitle = sanitizeText(frame.title)
+            let safeFrameId = "subgraph_" + frame.id.uuidString.replacingOccurrences(of: "-", with: "_")
+            out += "    subgraph \(safeFrameId) [\"\(safeFrameTitle)\"]\n"
+            
+            // Find items enclosed in this frame
+            for item in items {
+                let pos = itemPositions[item.uuid] ?? .zero
+                if frame.rect.contains(pos) {
+                    let nodeId = sanitizeId(item.uuid.uuidString)
+                    let title = sanitizeText(item.title)
+                    out += "        \(nodeId)[\"\(title)\"]\n"
+                    renderedNodeIds.insert(nodeId)
+                }
+            }
+            out += "    end\n"
+        }
+
+        // 2. Render remaining standalone items
         for item in items {
-            let safeTitle = item.title.replacingOccurrences(of: "\"", with: "'")
-            let safeId = "node_" + item.uuid.uuidString.replacingOccurrences(of: "-", with: "_")
-            out += "    \(safeId)[\"\(safeTitle)\"]\n"
+            let nodeId = sanitizeId(item.uuid.uuidString)
+            if !renderedNodeIds.contains(nodeId) {
+                let title = sanitizeText(item.title)
+                out += "    \(nodeId)[\"\(title)\"]\n"
+            }
         }
+
+        // 3. Render connections with protocol labels
         for conn in connections {
-            let fromId = conn.fromId.replacingOccurrences(of: "item-", with: "node_").replacingOccurrences(of: "-", with: "_")
-            let toId = conn.toId.replacingOccurrences(of: "item-", with: "node_").replacingOccurrences(of: "-", with: "_")
-            out += "    \(fromId) --> \(toId)\n"
+            let fromId = sanitizeId(conn.fromId)
+            let toId = sanitizeId(conn.toId)
+            let label = sanitizeText(conn.label)
+            if !label.isEmpty {
+                out += "    \(fromId) -->|\(label)| \(toId)\n"
+            } else {
+                out += "    \(fromId) --> \(toId)\n"
+            }
         }
+
         return out
+    }
+
+    static func copyMermaidToClipboard(
+        items: [Item],
+        connections: [CanvasConnection],
+        frames: [CanvasFrame] = [],
+        itemPositions: [UUID: CGPoint] = [:]
+    ) {
+        let mmd = exportMermaid(items: items, connections: connections, frames: frames, itemPositions: itemPositions)
+        let formatted = "```mermaid\n\(mmd)```"
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(formatted, forType: .string)
     }
 
     private static func escapeXml(_ str: String) -> String {

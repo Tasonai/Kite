@@ -23,6 +23,7 @@ struct PromptTranslatorView: View {
     @State private var isCopied: Bool = false
     @State private var isStarterCopied: Bool = false
     @State private var isMockupPresented: Bool = false
+    @State private var isAntigravityPackPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -366,7 +367,20 @@ struct PromptTranslatorView: View {
                 onCopy: { copyBlueprint() },
                 onCopyStarterPrompt: { copyStarterPrompt() },
                 onOpenMockup: { isMockupPresented = true },
+                onOpenAntigravityPack: { isAntigravityPackPresented = true },
                 onOpenEditor: { editor in openProjectInEditor(editor) }
+            )
+        }
+        .sheet(isPresented: $isAntigravityPackPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            AntigravityPackSheet(
+                title: title,
+                concept: rawPrompt,
+                platform: selectedPlatform,
+                style: selectedStyle,
+                architectureMermaid: nil,
+                onDismiss: { isAntigravityPackPresented = false }
             )
         }
         .sheet(isPresented: $isMockupPresented) {

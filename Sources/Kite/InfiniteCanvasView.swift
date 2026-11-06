@@ -75,6 +75,7 @@ struct InfiniteCanvasView: View {
     // Live Data Flow Simulation
     @State private var isSimulationActive: Bool = false
     @State private var isMockupPresented: Bool = false
+    @State private var isAntigravityPackPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -222,6 +223,8 @@ struct InfiniteCanvasView: View {
                 onExportPDF: { exportAsPDF() },
                 onExportHTML: { exportAsHTML() },
                 onExportMermaid: { exportAsMermaid() },
+                onCopyMermaid: { copyMermaidToClipboard() },
+                onOpenAntigravityPack: { isAntigravityPackPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -245,6 +248,24 @@ struct InfiniteCanvasView: View {
                 platform: "Web",
                 style: "Editorial & Swiss Modern",
                 onDismiss: { isMockupPresented = false }
+            )
+        }
+        .sheet(isPresented: $isAntigravityPackPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Архитектура на холсте")
+            let concept = stickies.map(\.text).joined(separator: ". ")
+            let mmd = CanvasExporter.exportMermaid(
+                items: items,
+                connections: connections,
+                frames: frames,
+                itemPositions: itemPositions
+            )
+            AntigravityPackSheet(
+                title: title,
+                concept: concept.isEmpty ? "Архитектура из холста Kite" : concept,
+                platform: "Web",
+                style: "Editorial & Swiss Modern",
+                architectureMermaid: mmd,
+                onDismiss: { isAntigravityPackPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {
@@ -1009,11 +1030,26 @@ struct InfiniteCanvasView: View {
     }
 
     private func exportAsMermaid() {
-        let mmd = CanvasExporter.exportMermaid(items: items, connections: connections)
+        let mmd = CanvasExporter.exportMermaid(
+            items: items,
+            connections: connections,
+            frames: frames,
+            itemPositions: itemPositions
+        )
         if let data = mmd.data(using: .utf8) {
             CanvasExporter.saveWithPanel(data: data, defaultFilename: "kite-canvas-flowchart.mmd", fileExtension: "mmd")
             showToast("Экспорт в Mermaid выполнен")
         }
+    }
+
+    private func copyMermaidToClipboard() {
+        CanvasExporter.copyMermaidToClipboard(
+            items: items,
+            connections: connections,
+            frames: frames,
+            itemPositions: itemPositions
+        )
+        showToast("Mermaid граф скопирован в буфер")
     }
 
     private func copyPNGToClipboard() {

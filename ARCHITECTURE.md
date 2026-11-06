@@ -13,12 +13,14 @@ Sources/Kite/
 ├── CanvasConnectionView.swift    Curved Bezier connectors, arrowheads, protocol badges, and traffic simulation
 ├── CanvasNodeViews.swift         Node renderers (Frames, References, Stickies, Ideas)
 ├── CanvasLANPeersPopover.swift   LAN peer discovery popover and synchronization triggers
-├── CanvasExporter.swift          Multi-format exporters (SVG, PNG, PDF, HTML, Mermaid)
+├── CanvasExporter.swift          Multi-format exporters (SVG, PNG, PDF, HTML, Mermaid with subgraphs)
 ├── InteractiveMockupSheet.swift  Native interactive HTML/Tailwind web mockup preview sheet
+├── AntigravityPackSheet.swift    Pre-flight cockpit sheet with 4 execution waves and ANTIGRAVITY.md
 └── Canvas/
     ├── CanvasComponents.swift    Geometry primitives (ArrowHead, CanvasGridBackground)
     └── CanvasReferencePicker.swift Reference catalog sheet (Mobbin / Figma)
 Sources/KiteKit/
+├── AntigravityPack.swift         Antigravity wave generator, ANTIGRAVITY.md compiler, and readiness linter
 ├── CanvasBlueprintPacks.swift    Pre-wired architecture starter packs (Micro-SaaS, AI Agent, Offline Tool, Mobile)
 └── CanvasConflictResolver.swift  Three-way lossless union merge algorithm
 ```
@@ -75,4 +77,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 51/51 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, and blueprint packs.
+- **Automated Self-Test**: 55/55 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, and enhanced Mermaid export.

@@ -34,6 +34,8 @@ struct CanvasToolbarView: View {
     let onExportPDF: () -> Void
     let onExportHTML: () -> Void
     let onExportMermaid: () -> Void
+    let onCopyMermaid: () -> Void
+    let onOpenAntigravityPack: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -238,6 +240,20 @@ struct CanvasToolbarView: View {
                 .fixedSize()
                 .help("Открыть живой интерактивный макет в WebStudio")
 
+                // Antigravity Cockpit Button
+                Button {
+                    onOpenAntigravityPack()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.shield.fill")
+                        Text("Antigravity")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .help("Собрать токено-эффективный пакет волн (Waves) и спецификацию для Antigravity")
+
                 // LAN Peers Discovery Popover Button
                 Button {
                     showPeersPopover = true
@@ -287,6 +303,18 @@ struct CanvasToolbarView: View {
                         onExportMermaid()
                     } label: {
                         Label("Диаграмма Mermaid (.mmd)", systemImage: "arrow.triangle.branch")
+                    }
+
+                    Button {
+                        onCopyMermaid()
+                    } label: {
+                        Label("Скопировать Mermaid для Antigravity", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
+                    }
+
+                    Button {
+                        onOpenAntigravityPack()
+                    } label: {
+                        Label("Пакет для Antigravity (волны)", systemImage: "bolt.shield.fill")
                     }
 
                     Divider()
