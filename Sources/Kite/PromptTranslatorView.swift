@@ -28,6 +28,10 @@ struct PromptTranslatorView: View {
     @State private var isDataDesignerPresented: Bool = false
     @State private var isTokenSandboxPresented: Bool = false
     @State private var isAuditorPresented: Bool = false
+    @State private var isAPIContractPresented: Bool = false
+    @State private var isStateFlowPresented: Bool = false
+    @State private var isSitemapPresented: Bool = false
+    @State private var isGitStoryPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -116,56 +120,105 @@ struct PromptTranslatorView: View {
                     }
 
                     // Quick Vibe Tools Bar
-                    HStack(spacing: 8) {
-                        Button {
-                            isErrorDoctorPresented = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "cross.case")
-                                Text("Доктор ошибок")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            Button {
+                                isErrorDoctorPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cross.case")
+                                    Text("Доктор ошибок")
+                                }
+                                .font(.caption)
                             }
-                            .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                        .help("Диагностика сбоев терминала и генерация точечного Fix-промпта")
+                            .buttonStyle(.bordered)
+                            .help("Диагностика сбоев терминала и генерация точечного Fix-промпта")
 
-                        Button {
-                            isDataDesignerPresented = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "cylinder.split.1x2")
-                                Text("Схема данных")
+                            Button {
+                                isDataDesignerPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cylinder.split.1x2")
+                                    Text("Схема данных")
+                                }
+                                .font(.caption)
                             }
-                            .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                        .help("Визуальное проектирование таблиц и генерация SQL/Prisma/SwiftData")
+                            .buttonStyle(.bordered)
+                            .help("Визуальное проектирование таблиц и генерация SQL/Prisma/SwiftData")
 
-                        Button {
-                            isTokenSandboxPresented = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "paintpalette")
-                                Text("Песочница токенов")
+                            Button {
+                                isAPIContractPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.swap")
+                                    Text("API-контракты")
+                                }
+                                .font(.caption)
                             }
-                            .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                        .help("Интерактивная проверка стилей, кнопок и карточек")
+                            .buttonStyle(.bordered)
+                            .help("Спецификация эндпоинтов и локальный Mock-сервер (порт 49495)")
 
-                        Button {
-                            isAuditorPresented = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.seal")
-                                Text("Аудит кода")
+                            Button {
+                                isStateFlowPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.branch")
+                                    Text("Стейт-машина")
+                                }
+                                .font(.caption)
                             }
-                            .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                        .help("Проверка готового проекта на чистоту кода, логи и эмодзи")
+                            .buttonStyle(.bordered)
+                            .help("Моделирование состояний интерфейса (Idle/Loading/Success/Error)")
 
-                        Spacer()
+                            Button {
+                                isSitemapPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "map")
+                                    Text("Карта экранов")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Иерархия страниц и генерация Next.js / SwiftUI роутера")
+
+                            Button {
+                                isTokenSandboxPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "paintpalette")
+                                    Text("Песочница токенов")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Интерактивная проверка стилей, кнопок и карточек")
+
+                            Button {
+                                isAuditorPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.seal")
+                                    Text("Аудит кода")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Проверка готового проекта на чистоту кода, логи и эмодзи")
+
+                            Button {
+                                isGitStoryPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                                    Text("Git PR")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Генерация Conventional Commits и описания Pull Request для GitHub")
+                        }
+                        .padding(.vertical, 2)
                     }
 
                     // Raw Input
@@ -462,6 +515,26 @@ struct PromptTranslatorView: View {
         }
         .sheet(isPresented: $isAuditorPresented) {
             CodebaseAuditorSheet(onDismiss: { isAuditorPresented = false })
+        }
+        .sheet(isPresented: $isAPIContractPresented) {
+            APIContractSheet(onDismiss: { isAPIContractPresented = false })
+        }
+        .sheet(isPresented: $isStateFlowPresented) {
+            StateFlowSheet(onDismiss: { isStateFlowPresented = false })
+        }
+        .sheet(isPresented: $isSitemapPresented) {
+            SitemapRouterSheet(onDismiss: { isSitemapPresented = false })
+        }
+        .sheet(isPresented: $isGitStoryPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            GitStorytellerSheet(
+                title: title,
+                concept: rawPrompt,
+                platform: selectedPlatform,
+                style: selectedStyle,
+                onDismiss: { isGitStoryPresented = false }
+            )
         }
     }
 

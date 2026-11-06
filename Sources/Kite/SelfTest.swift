@@ -171,6 +171,21 @@ enum SelfTest {
 
         check("InstantPreviewServer initializes with valid port", InstantPreviewServer.shared.localPort == 49495)
 
+        let tsClient = APIContractBuilder.generateTypeScript(routes: APIContractBuilder.starterPack)
+        let mockRes = APIContractBuilder.findMockResponse(for: "/api/projects", method: "GET", in: APIContractBuilder.starterPack)
+        check("APIContractBuilder generates valid TypeScript client and finds mock responses", tsClient.contains("export async function") && mockRes?.status == 200)
+
+        let xstate = StateFlowSimulator.generateTypeScriptXState(flow: StateFlowSimulator.defaultFlow)
+        let swiftStore = StateFlowSimulator.generateSwiftUIStateMachine(flow: StateFlowSimulator.defaultFlow)
+        check("StateFlowSimulator generates valid XState config and SwiftUI state machine", xstate.contains("initial: 'idle'") && swiftStore.contains("enum AppState"))
+
+        let sitemapNext = SitemapRouterBuilder.generateNextJsAppRouter(routes: SitemapRouterBuilder.starterSitemap)
+        let sitemapSwift = SitemapRouterBuilder.generateSwiftUIRouter(routes: SitemapRouterBuilder.starterSitemap)
+        check("SitemapRouterBuilder generates Next.js App Router manifest and SwiftUI routes", sitemapNext.contains("APP_ROUTES") && sitemapSwift.contains("enum AppRoute"))
+
+        let story = GitStoryteller.craftStory(title: "Task App", concept: "Task management", platform: "Web", style: "Minimal")
+        check("GitStoryteller crafts Conventional Commits and complete PR description", story.suggestedCommits.count == 4 && story.prTitle.contains("feat:") && story.prBodyMarkdown.contains("Architectural Waves"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

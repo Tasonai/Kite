@@ -68,7 +68,11 @@ Sources/Kite/
 ├── VibeErrorDoctorSheet.swift     Terminal and compiler log diagnostic sheet with surgical Antigravity fix prompts
 ├── DataSchemaDesignerSheet.swift  Visual schema and entity designer with SQL, Prisma, and SwiftData generator
 ├── CodebaseAuditorSheet.swift     Post-flight repository cleanliness auditor and polish prompt generator
-└── DesignTokenSandboxSheet.swift  Interactive live design token sandbox with spring physics
+├── DesignTokenSandboxSheet.swift  Interactive live design token sandbox with spring physics
+├── APIContractSheet.swift         Visual API route builder and local mock server inspector
+├── StateFlowSheet.swift           Interactive state machine simulator and XState / Swift store generator
+├── SitemapRouterSheet.swift       Application screen hierarchy and Next.js / SwiftUI router generator
+└── GitStorytellerSheet.swift      Conventional Commits sequence and GitHub Pull Request description generator
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -77,7 +81,11 @@ Sources/KiteKit/
 ├── VibeErrorDoctor.swift          Error log analyzer and root-cause diagnostician
 ├── DataSchemaDesigner.swift       Multi-dialect data model and schema generator
 ├── CodebaseAuditor.swift          File-level code quality, leftover log, and emoji auditor
-└── InstantPreviewServer.swift     Local Wi-Fi HTTP server and native vector QR code generator
+├── InstantPreviewServer.swift     Local Wi-Fi HTTP server, mock API router, and native vector QR code generator
+├── APIContractBuilder.swift       API route definitions, TypeScript client, and OpenAPI generator
+├── StateFlowSimulator.swift       State flow and transition definition model
+├── SitemapRouterBuilder.swift     Route tree and screen presentation router generator
+└── GitStoryteller.swift           Conventional Commits and Pull Request story compiler
 ```
 
 ### Quality and Craftsmanship Standards
@@ -85,4 +93,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 59/59 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, and instant preview server.
+- **Automated Self-Test**: 63/63 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, and git storyteller.

@@ -38,6 +38,10 @@ struct CanvasToolbarView: View {
     let onOpenAntigravityPack: () -> Void
     let onOpenErrorDoctor: () -> Void
     let onOpenDataDesigner: () -> Void
+    let onOpenAPIContract: () -> Void
+    let onOpenStateFlow: () -> Void
+    let onOpenSitemap: () -> Void
+    let onOpenGitStory: () -> Void
     let onOpenCodebaseAuditor: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
@@ -103,6 +107,26 @@ struct CanvasToolbarView: View {
                     }
 
                     Button {
+                        onOpenAPIContract()
+                    } label: {
+                        Label("API-контракты и Mock-сервер", systemImage: "arrow.triangle.swap")
+                    }
+
+                    Button {
+                        onOpenStateFlow()
+                    } label: {
+                        Label("Симулятор стейт-машины", systemImage: "arrow.triangle.branch")
+                    }
+
+                    Button {
+                        onOpenSitemap()
+                    } label: {
+                        Label("Карта экранов и навигации", systemImage: "map")
+                    }
+
+                    Divider()
+
+                    Button {
                         onOpenErrorDoctor()
                     } label: {
                         Label("Доктор ошибок Antigravity", systemImage: "cross.case")
@@ -112,6 +136,12 @@ struct CanvasToolbarView: View {
                         onOpenCodebaseAuditor()
                     } label: {
                         Label("Аудит чистоты репозитория", systemImage: "checkmark.seal")
+                    }
+
+                    Button {
+                        onOpenGitStory()
+                    } label: {
+                        Label("Генератор Git PR и коммитов", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                     }
 
                     Divider()

@@ -16,7 +16,7 @@ public final class InstantPreviewServer: ObservableObject {
 
     private init() {}
 
-    public func start(html: String, preferredPort: UInt16 = 49495) {
+    public func start(html: String, routes: [APIRoute] = [], preferredPort: UInt16 = 49495) {
         stop()
         self.localPort = preferredPort
         let bodyData = html.data(using: .utf8) ?? Data()
@@ -27,7 +27,7 @@ public final class InstantPreviewServer: ObservableObject {
             let newListener = try NWListener(using: params, on: port)
 
             newListener.newConnectionHandler = { connection in
-                Self.serveConnection(connection, bodyData: bodyData)
+                Self.serveConnection(connection, bodyData: bodyData, routes: routes)
             }
 
             newListener.stateUpdateHandler = { [weak self] state in
@@ -62,12 +62,43 @@ public final class InstantPreviewServer: ObservableObject {
         qrCodeImage = nil
     }
 
-    nonisolated private static func serveConnection(_ connection: NWConnection, bodyData: Data) {
+    nonisolated private static func serveConnection(_ connection: NWConnection, bodyData: Data, routes: [APIRoute]) {
         connection.start(queue: .global(qos: .userInitiated))
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { _, _, _, _ in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, _ in
+            var method = "GET"
+            var reqPath = "/"
+            if let d = data, let reqStr = String(data: d, encoding: .utf8) {
+                let firstLine = reqStr.components(separatedBy: "\r\n").first ?? ""
+                let parts = firstLine.components(separatedBy: " ")
+                if parts.count >= 2 {
+                    method = parts[0]
+                    reqPath = parts[1]
+                }
+            }
+
+            if reqPath.hasPrefix("/api/") {
+                if let mock = APIContractBuilder.findMockResponse(for: reqPath, method: method, in: routes) {
+                    let jsonBytes = mock.json.data(using: .utf8) ?? Data()
+                    let headers = """
+                    HTTP/1.1 \(mock.status) OK\r
+                    Content-Type: application/json; charset=utf-8\r
+                    Access-Control-Allow-Origin: *\r
+                    Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r
+                    Content-Length: \(jsonBytes.count)\r
+                    Connection: close\r
+                    \r\n
+                    """
+                    var resp = headers.data(using: .utf8) ?? Data()
+                    resp.append(jsonBytes)
+                    connection.send(content: resp, completion: .contentProcessed({ _ in connection.cancel() }))
+                    return
+                }
+            }
+
             let headers = """
             HTTP/1.1 200 OK\r
             Content-Type: text/html; charset=utf-8\r
+            Access-Control-Allow-Origin: *\r
             Content-Length: \(bodyData.count)\r
             Connection: close\r
             \r\n

@@ -79,6 +79,10 @@ struct InfiniteCanvasView: View {
     @State private var isErrorDoctorPresented: Bool = false
     @State private var isDataDesignerPresented: Bool = false
     @State private var isCodebaseAuditorPresented: Bool = false
+    @State private var isAPIContractPresented: Bool = false
+    @State private var isStateFlowPresented: Bool = false
+    @State private var isSitemapPresented: Bool = false
+    @State private var isGitStoryPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -230,6 +234,10 @@ struct InfiniteCanvasView: View {
                 onOpenAntigravityPack: { isAntigravityPackPresented = true },
                 onOpenErrorDoctor: { isErrorDoctorPresented = true },
                 onOpenDataDesigner: { isDataDesignerPresented = true },
+                onOpenAPIContract: { isAPIContractPresented = true },
+                onOpenStateFlow: { isStateFlowPresented = true },
+                onOpenSitemap: { isSitemapPresented = true },
+                onOpenGitStory: { isGitStoryPresented = true },
                 onOpenCodebaseAuditor: { isCodebaseAuditorPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
@@ -282,6 +290,26 @@ struct InfiniteCanvasView: View {
         }
         .sheet(isPresented: $isCodebaseAuditorPresented) {
             CodebaseAuditorSheet(onDismiss: { isCodebaseAuditorPresented = false })
+        }
+        .sheet(isPresented: $isAPIContractPresented) {
+            APIContractSheet(onDismiss: { isAPIContractPresented = false })
+        }
+        .sheet(isPresented: $isStateFlowPresented) {
+            StateFlowSheet(onDismiss: { isStateFlowPresented = false })
+        }
+        .sheet(isPresented: $isSitemapPresented) {
+            SitemapRouterSheet(onDismiss: { isSitemapPresented = false })
+        }
+        .sheet(isPresented: $isGitStoryPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Архитектура на холсте")
+            let concept = stickies.map(\.text).joined(separator: ". ")
+            GitStorytellerSheet(
+                title: title,
+                concept: concept.isEmpty ? "Архитектура из холста Kite" : concept,
+                platform: "Web",
+                style: "Editorial & Swiss Modern",
+                onDismiss: { isGitStoryPresented = false }
+            )
         }
         .sheet(isPresented: $isReferencePickerOpen) {
             CanvasReferencePickerSheet(
