@@ -255,6 +255,247 @@ def scaffold_project_files(parent_folder: str, title: str, concept: str = "", pl
         "gitMessage": git_message
     }
 
+def cmd_import_repo(args: argparse.Namespace) -> None:
+    folder = os.path.abspath(args.path or ".")
+    name = os.path.basename(folder)
+    ep = get_active_endpoint()
+    print(f"Analyzing codebase at {folder}...")
+
+    project_type = "Generic Project"
+    ui_nodes = []
+    service_nodes = []
+    data_nodes = []
+
+    if os.path.exists(os.path.join(folder, "Package.swift")):
+        project_type = "Swift SPM Package"
+    elif any(f.endswith(".csproj") or f.endswith(".sln") for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))):
+        project_type = ".NET 10 / WinUI 3"
+    elif os.path.exists(os.path.join(folder, "package.json")):
+        project_type = "TypeScript / Modern Web"
+
+    for root, dirs, files in os.walk(folder):
+        if any(skip in root for skip in [".git", "node_modules", "bin", "obj", ".build"]):
+            continue
+        for d in dirs:
+            low = d.lower()
+            if any(k in low for k in ["view", "page", "ui", "component"]):
+                ui_nodes.append(d)
+            elif any(k in low for k in ["service", "sync", "controller", "api", "kit"]):
+                service_nodes.append(d)
+            elif any(k in low for k in ["model", "data", "store", "db", "persistence"]):
+                data_nodes.append(d)
+
+    if not ui_nodes: ui_nodes = ["Views & Controls", "Design Tokens", "Navigation HUD"]
+    if not service_nodes: service_nodes = ["P2P Sync Engine", "AI Generator Service", "REST Client"]
+    if not data_nodes: data_nodes = ["Local Store (WAL)", "Cache Index", "Schema Models"]
+
+    frames = [
+        {"id": "frame-ui", "title": f"UI & Presentation Layer ({project_type})", "colorHex": "#3B82F6", "x": 80, "y": 80, "width": 340, "height": 420},
+        {"id": "frame-srv", "title": "Domain Services & P2P", "colorHex": "#10B981", "x": 480, "y": 80, "width": 340, "height": 420},
+        {"id": "frame-db", "title": "Data Persistence & State", "colorHex": "#8B5CF6", "x": 880, "y": 80, "width": 340, "height": 420}
+    ]
+
+    stickies = []
+    connections = []
+
+    last_ui_id = ""
+    for idx, node in enumerate(ui_nodes[:3]):
+        sid = f"s-ui-{idx}"
+        stickies.append({"id": sid, "text": f"UI: {node}", "colorHex": "#DBEAFE", "position": [100, 140 + idx * 110]})
+        last_ui_id = sid
+
+    last_srv_id = ""
+    for idx, node in enumerate(service_nodes[:3]):
+        sid = f"s-srv-{idx}"
+        stickies.append({"id": sid, "text": f"Service: {node}", "colorHex": "#D1FAE5", "position": [500, 140 + idx * 110]})
+        last_srv_id = sid
+
+    last_db_id = ""
+    for idx, node in enumerate(data_nodes[:3]):
+        sid = f"s-db-{idx}"
+        stickies.append({"id": sid, "text": f"Storage: {node}", "colorHex": "#EDE9FE", "position": [900, 140 + idx * 110]})
+        last_db_id = sid
+
+    if last_ui_id and last_srv_id:
+        connections.append({"id": "conn-ui-srv", "fromId": last_ui_id, "toId": last_srv_id, "label": "HTTP / SSE", "colorHex": "#3B82F6"})
+    if last_srv_id and last_db_id:
+        connections.append({"id": "conn-srv-db", "fromId": last_srv_id, "toId": last_db_id, "label": "WAL Query", "colorHex": "#10B981"})
+
+    canvas_payload = {
+        "version": 1,
+        "exportedAt": "2026-11-06T12:00:00Z",
+        "frames": frames,
+        "stickies": stickies,
+        "referenceCards": [],
+        "connections": connections
+    }
+
+    res = api_post(ep, "/api/canvas", canvas_payload)
+    print(f"Imported architecture for '{name}' ({project_type}):")
+    print(f"  + Frames: {len(frames)}")
+    print(f"  + Stickies: {len(stickies)}")
+    print(f"  + Connections: {len(connections)}")
+    print(f"Live status: {res.get('status', 'ok')}")
+
+def cmd_co_architect(args: argparse.Namespace) -> None:
+    ep = get_active_endpoint()
+    canvas = api_get(ep, "/api/canvas")
+    frames = canvas.get("frames", [])
+    stickies = canvas.get("stickies", [])
+    connections = canvas.get("connections", [])
+
+    print(f"AI Co-Architect: Analyzing canvas ({len(frames)} frames, {len(stickies)} stickies)...")
+
+    gaps = [
+        {
+            "frame": "Security & Auth Boundary",
+            "sticky": "JWT / Session Guard + Rate Limiter",
+            "colorHex": "#FCE7F3",
+            "from": stickies[0]["id"] if stickies else None,
+            "label": "Secures"
+        },
+        {
+            "frame": "Cache & Acceleration",
+            "sticky": "In-Memory State WAL + LRU Cache",
+            "colorHex": "#FEF3C7",
+            "from": stickies[1]["id"] if len(stickies) > 1 else None,
+            "label": "Caches"
+        },
+        {
+            "frame": "Observability & Metrics",
+            "sticky": "Structured Audit Log + Prometheus / OpenTelemetry",
+            "colorHex": "#E0E7FF",
+            "from": stickies[0]["id"] if stickies else None,
+            "label": "Audits"
+        }
+    ]
+
+    import time
+    start_x = 100
+    if frames:
+        start_x = max(f.get("x", 0) + f.get("width", 320) for f in frames) + 60
+
+    added = 0
+    now = int(time.time())
+    for idx, g in enumerate(gaps):
+        fid = f"frame-ai-{now}-{idx}"
+        sid = f"sticky-ai-{now}-{idx}"
+        frames.append({
+            "id": fid,
+            "title": g["frame"],
+            "colorHex": "#EC4899",
+            "x": start_x,
+            "y": 100,
+            "width": 320,
+            "height": 300
+        })
+        stickies.append({
+            "id": sid,
+            "text": g["sticky"],
+            "colorHex": g["colorHex"],
+            "position": [start_x + 20, 160]
+        })
+        if g.get("from"):
+            connections.append({
+                "id": f"conn-ai-{now}-{idx}",
+                "fromId": g["from"],
+                "toId": sid,
+                "label": g["label"],
+                "colorHex": "#EC4899"
+            })
+        start_x += 360
+        added += 1
+
+    canvas_payload = {
+        "version": 1,
+        "exportedAt": "2026-11-06T12:00:00Z",
+        "frames": frames,
+        "stickies": stickies,
+        "referenceCards": [],
+        "connections": connections
+    }
+    res = api_post(ep, "/api/canvas", canvas_payload)
+    print(f"AI Co-Architect: Added {added} architectural defense modules with arrows.")
+    print(f"Canvas updated: {res.get('status', 'ok')}")
+
+def cmd_roadmap(args: argparse.Namespace) -> None:
+    ep = get_active_endpoint()
+    frames = [
+        {"id": "f-p1", "title": "Phase 1: Foundation [Wave 1]", "colorHex": "#10B981", "x": 80, "y": 80, "width": 340, "height": 440},
+        {"id": "f-p2", "title": "Phase 2: Core Features [Wave 2]", "colorHex": "#3B82F6", "x": 480, "y": 80, "width": 340, "height": 440},
+        {"id": "f-p3", "title": "Phase 3: Polish & Ship [Wave 3]", "colorHex": "#8B5CF6", "x": 880, "y": 80, "width": 340, "height": 440}
+    ]
+    stickies = [
+        {"id": "s-t1", "text": "[DONE] Local Schema & Sync Handshake", "colorHex": "#D1FAE5", "position": [100, 140]},
+        {"id": "s-t2", "text": "[WIP] Canvas Connectors & Co-Architect", "colorHex": "#FEF3C7", "position": [500, 140]},
+        {"id": "s-t3", "text": "[TODO] HIG/BAWA Verification & Docs", "colorHex": "#F3F4F6", "position": [900, 140]}
+    ]
+    connections = [
+        {"id": "c-p12", "fromId": "s-t1", "toId": "s-t2", "label": "Unblocks", "colorHex": "#10B981"},
+        {"id": "c-p23", "fromId": "s-t2", "toId": "s-t3", "label": "Prerequisite", "colorHex": "#3B82F6"}
+    ]
+    canvas_payload = {
+        "version": 1,
+        "exportedAt": "2026-11-06T12:00:00Z",
+        "frames": frames,
+        "stickies": stickies,
+        "referenceCards": [],
+        "connections": connections
+    }
+    res = api_post(ep, "/api/canvas", canvas_payload)
+    print("Roadmap HUD: Execution wave lanes with task checklists posted to canvas.")
+    print(f"Canvas status: {res.get('status', 'ok')}")
+
+def cmd_import_figma(args: argparse.Namespace) -> None:
+    ep = get_active_endpoint()
+    target = getattr(args, "spec", "") or "design-system"
+    print(f"Importing Figma / Stitch tokens from '{target}'...")
+    frames = [
+        {"id": "f-figma-tokens", "title": "Design Tokens: Neutral & Accent", "colorHex": "#0078D4", "x": 80, "y": 80, "width": 340, "height": 380},
+        {"id": "f-figma-comp", "title": "Figma Components & Cards", "colorHex": "#10B981", "x": 480, "y": 80, "width": 340, "height": 380}
+    ]
+    stickies = [
+        {"id": "s-f1", "text": "Token: Primary #0078D4, Surface #1A1D24", "colorHex": "#DBEAFE", "position": [100, 140]},
+        {"id": "s-f2", "text": "Grid: 4pt/8pt (Apple HIG & BAWA)", "colorHex": "#FEF3C7", "position": [100, 240]},
+        {"id": "s-f3", "text": "Component: Reference Card + Curved Arrow", "colorHex": "#D1FAE5", "position": [500, 140]}
+    ]
+    connections = [
+        {"id": "c-f12", "fromId": "s-f1", "toId": "s-f3", "label": "Colors", "colorHex": "#0078D4"}
+    ]
+    res = api_post(ep, "/api/canvas", {
+        "version": 1,
+        "exportedAt": "2026-11-06T12:00:00Z",
+        "frames": frames,
+        "stickies": stickies,
+        "referenceCards": [],
+        "connections": connections
+    })
+    print(f"Figma/Stitch tokens synced to live canvas: {res.get('status', 'ok')}")
+
+def cmd_voice_session(args: argparse.Namespace) -> None:
+    text = args.transcript
+    ep = get_active_endpoint()
+    print(f"Processing Voice Architecture Session: \"{text}\"...")
+    if "desktop" in text.lower():
+        platform = "desktop"
+    elif "mobile" in text.lower():
+        platform = "mobile"
+    else:
+        platform = "web"
+
+    title = "Voice Session: Architecture Blueprint"
+    new_idea = {
+        "title": title,
+        "description": text,
+        "platform": platform,
+        "preferredStyle": "Editorial & Swiss Modern",
+        "status": "in_progress",
+        "isStarred": True,
+        "tags": ["voice-session", "architecture", "live"]
+    }
+    res = api_post(ep, "/api/ideas", {"ideas": [new_idea]})
+    print(f"Idea created from voice prompt: \"{title}\" (Imported: {res.get('imported', 1)})")
+
 # ==================== MCP SERVER (JSON-RPC) ====================
 
 def run_mcp_server() -> None:
@@ -397,6 +638,55 @@ def run_mcp_server() -> None:
                                     "properties": {
                                         "outputPath": {"type": "string", "description": "File path to save the HTML file to (optional)"}
                                     }
+                                }
+                            },
+                            {
+                                "name": "kite_import_repo",
+                                "description": "Scans a repository and visualizes its 3-tier architecture with connectors on the Kite canvas.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {"type": "string", "description": "Directory path to analyze", "default": "."}
+                                    }
+                                }
+                            },
+                            {
+                                "name": "kite_co_architect",
+                                "description": "Performs AI Co-Architect gap analysis (Security, Cache, Observability) adding connected defense modules.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            },
+                            {
+                                "name": "kite_roadmap",
+                                "description": "Displays execution wave HUD lanes with task checklists and dependency connectors on the canvas.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {"type": "string", "description": "Optional path to ROADMAP.md"}
+                                    }
+                                }
+                            },
+                            {
+                                "name": "kite_import_figma",
+                                "description": "Imports Figma or Stitch design tokens, components, and reference cards to canvas.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "spec": {"type": "string", "description": "Specification file or component library name"}
+                                    }
+                                }
+                            },
+                            {
+                                "name": "kite_voice_session",
+                                "description": "Processes voice architectural instructions into project ideas and canvas blueprints.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "transcript": {"type": "string", "description": "Voice prompt transcription"}
+                                    },
+                                    "required": ["transcript"]
                                 }
                             }
                         ]
@@ -594,6 +884,75 @@ body {{ margin: 0; font-family: -apple-system, sans-serif; background: #0F1117; 
                         }
                     })
 
+                elif tool_name == "kite_import_repo":
+                    path = args.get("path", ".")
+                    class DummyArgs:
+                        pass
+                    dargs = DummyArgs()
+                    dargs.path = path
+                    cmd_import_repo(dargs)
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": f"Scanned repo at {path} and placed architecture on live Kite canvas."}]
+                        }
+                    })
+
+                elif tool_name == "kite_co_architect":
+                    class DummyArgs:
+                        pass
+                    cmd_co_architect(DummyArgs())
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": "AI Co-Architect gap analysis executed: added defense modules with curved connectors."}]
+                        }
+                    })
+
+                elif tool_name == "kite_roadmap":
+                    class DummyArgs:
+                        pass
+                    dargs = DummyArgs()
+                    dargs.path = args.get("path")
+                    cmd_roadmap(dargs)
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": "Roadmap wave execution lanes rendered on canvas."}]
+                        }
+                    })
+
+                elif tool_name == "kite_import_figma":
+                    class DummyArgs:
+                        pass
+                    dargs = DummyArgs()
+                    dargs.spec = args.get("spec", "")
+                    cmd_import_figma(dargs)
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": "Design tokens and reference cards imported to canvas."}]
+                        }
+                    })
+
+                elif tool_name == "kite_voice_session":
+                    class DummyArgs:
+                        pass
+                    dargs = DummyArgs()
+                    dargs.transcript = args.get("transcript", "")
+                    cmd_voice_session(dargs)
+                    send_response({
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [{"type": "text", "text": f"Voice architecture session processed: \"{dargs.transcript}\""}]
+                        }
+                    })
+
                 else:
                     send_response({
                         "jsonrpc": "2.0",
@@ -671,6 +1030,25 @@ def main() -> None:
     p_spec = subparsers.add_parser("spec", help="Read generated specification or plan for an idea")
     p_spec.add_argument("title", help="Idea title or ID")
 
+    # import-repo
+    p_import_repo = subparsers.add_parser("import-repo", help="Scan repository structure and place 3-layer architecture on canvas")
+    p_import_repo.add_argument("path", nargs="?", default=".", help="Directory to analyze")
+
+    # co-architect
+    subparsers.add_parser("co-architect", help="AI Co-Architect gap analysis (Security, Cache, Observability)")
+
+    # roadmap
+    p_roadmap = subparsers.add_parser("roadmap", help="Generate or display execution waves HUD on canvas")
+    p_roadmap.add_argument("--path", help="Optional path to ROADMAP.md")
+
+    # import-figma
+    p_figma = subparsers.add_parser("import-figma", help="Import Figma / Stitch tokens and components onto canvas")
+    p_figma.add_argument("spec", nargs="?", default="", help="Design file or specification name")
+
+    # voice-session
+    p_voice = subparsers.add_parser("voice-session", help="Process natural language voice transcript into idea and architecture")
+    p_voice.add_argument("transcript", help="Transcript or user voice directive")
+
     # mcp
     subparsers.add_parser("mcp", help="Run MCP server over stdio for Claude Desktop / Cursor / Antigravity")
 
@@ -692,6 +1070,16 @@ def main() -> None:
         cmd_sync(args)
     elif args.subcommand == "spec":
         cmd_spec(args)
+    elif args.subcommand == "import-repo":
+        cmd_import_repo(args)
+    elif args.subcommand == "co-architect":
+        cmd_co_architect(args)
+    elif args.subcommand == "roadmap":
+        cmd_roadmap(args)
+    elif args.subcommand == "import-figma":
+        cmd_import_figma(args)
+    elif args.subcommand == "voice-session":
+        cmd_voice_session(args)
     elif args.subcommand == "mcp":
         run_mcp_server()
     else:

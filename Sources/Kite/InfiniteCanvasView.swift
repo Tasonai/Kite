@@ -143,37 +143,77 @@ struct InfiniteCanvasView: View {
 
                     Spacer(minLength: 8)
 
-                    // AI Auto-Layout Button
-                    Button {
-                        performAIAutoLayout()
+                    // AI Architecture Tools Menu
+                    Menu {
+                        Button {
+                            performAIAutoLayout()
+                        } label: {
+                            Label("AI-Раскладка секций", systemImage: "wand.and.stars")
+                        }
+
+                        Button {
+                            applyCoArchitect()
+                        } label: {
+                            Label("AI Ко-Архитектор (пробелы и защита)", systemImage: "cpu")
+                        }
+
+                        Button {
+                            applyRepoIngestion()
+                        } label: {
+                            Label("Импорт структуры репозитория", systemImage: "square.stack.3d.down.right")
+                        }
+
+                        Button {
+                            applyRoadmapHUD()
+                        } label: {
+                            Label("Дорожная карта (волны выполнения)", systemImage: "chart.bar.xaxis")
+                        }
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "wand.and.stars")
-                            Text("AI-Раскладка")
+                            Text("AI Архитектор")
                         }
                         .font(.caption.bold())
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.indigo)
-                    .help("Упорядочить элементы и создать смысловые секции с помощью AI")
+                    .fixedSize()
+                    .help("Инструменты AI-проектирования: авто-раскладка, аудит пробелов, дорожная карта")
 
-                    // Add Frame Button
-                    Button {
-                        addFrame()
+                    // Add Elements Menu
+                    Menu {
+                        Button {
+                            addFrame()
+                        } label: {
+                            Label("Фрейм", systemImage: "squareshape.dashed.squareshape")
+                        }
+
+                        Button {
+                            addSticky()
+                        } label: {
+                            Label("Стикер", systemImage: "note.text.badge.plus")
+                        }
+
+                        Button {
+                            addNewIdea()
+                        } label: {
+                            Label("Идея", systemImage: "plus")
+                        }
+
+                        Button {
+                            isReferencePickerOpen = true
+                        } label: {
+                            Label("Референс (Mobbin / Figma)", systemImage: "photo.on.rectangle.angled")
+                        }
                     } label: {
-                        Label("+ Фрейм", systemImage: "squareshape.dashed.squareshape")
-                            .font(.caption)
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                            Text("Добавить")
+                        }
+                        .font(.caption)
                     }
                     .buttonStyle(.bordered)
-
-                    // Add Reference Button
-                    Button {
-                        isReferencePickerOpen = true
-                    } label: {
-                        Label("+ Референс", systemImage: "photo.on.rectangle.angled")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
+                    .fixedSize()
 
                     // Connect Mode Toggle Button
                     Button {
@@ -192,25 +232,7 @@ struct InfiniteCanvasView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
-
-                    // Add Sticky Button
-                    Button {
-                        addSticky()
-                    } label: {
-                        Label("+ Стикер", systemImage: "note.text.badge.plus")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
-
-                    // Add Idea Button
-                    Button {
-                        addNewIdea()
-                    } label: {
-                        Label("+ Идея", systemImage: "plus")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
-
+                    .fixedSize()
                     // Export Menu
                     Menu {
                         Button {
@@ -940,6 +962,38 @@ struct InfiniteCanvasView: View {
         )
         frames.append(newFrame)
         showToast("Фрейм добавлен на холст")
+    }
+
+    private func applyCoArchitect() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            let count = CanvasCoArchitect.applyGaps(to: &frames, stickies: &stickies, connections: &connections)
+            if count > 0 {
+                showToast("AI Архитектор: добавлено \(count) критических модулей со связями")
+            } else {
+                showToast("Архитектура сбалансирована, критических пробелов не обнаружено")
+            }
+        }
+    }
+
+    private func applyRepoIngestion() {
+        let currentFolder = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let arch = CodebaseIngestion.analyze(at: currentFolder)
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            frames = arch.frames
+            stickies = arch.stickies
+            connections = arch.connections
+        }
+        showToast("Импорт структуры: \(arch.name) (\(arch.projectType)) размещен на холсте")
+    }
+
+    private func applyRoadmapHUD() {
+        let (rFrames, rStickies, rConnections) = RoadmapTracker.generateWaves()
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            frames = rFrames
+            stickies = rStickies
+            connections = rConnections
+        }
+        showToast("Дорожная карта: волны выполнения и статус задач отображены")
     }
 
     private func initializePositionsIfNeeded() {
