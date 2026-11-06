@@ -99,6 +99,10 @@ struct InfiniteCanvasView: View {
     @State private var isFeatureFlagPresented: Bool = false
     @State private var isTelemetryPresented: Bool = false
     @State private var isPerformanceBudgetPresented: Bool = false
+    @State private var isThreatModelerPresented: Bool = false
+    @State private var isMigrationStrategistPresented: Bool = false
+    @State private var isLocalizationPresented: Bool = false
+    @State private var isWebhookPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -271,6 +275,10 @@ struct InfiniteCanvasView: View {
                 onOpenFeatureFlagMatrix: { isFeatureFlagPresented = true },
                 onOpenTelemetrySpecifier: { isTelemetryPresented = true },
                 onOpenPerformanceBudget: { isPerformanceBudgetPresented = true },
+                onOpenThreatModeler: { isThreatModelerPresented = true },
+                onOpenMigrationStrategist: { isMigrationStrategistPresented = true },
+                onOpenLocalizationSpecifier: { isLocalizationPresented = true },
+                onOpenWebhookSimulator: { isWebhookPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -436,6 +444,34 @@ struct InfiniteCanvasView: View {
             PerformanceBudgetSheet(
                 title: title,
                 onDismiss: { isPerformanceBudgetPresented = false }
+            )
+        }
+        .sheet(isPresented: $isThreatModelerPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            ThreatModelerSheet(
+                title: title,
+                onDismiss: { isThreatModelerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isMigrationStrategistPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            MigrationStrategistSheet(
+                title: title,
+                onDismiss: { isMigrationStrategistPresented = false }
+            )
+        }
+        .sheet(isPresented: $isLocalizationPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            LocalizationSheet(
+                title: title,
+                onDismiss: { isLocalizationPresented = false }
+            )
+        }
+        .sheet(isPresented: $isWebhookPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            WebhookSheet(
+                title: title,
+                onDismiss: { isWebhookPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

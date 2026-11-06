@@ -48,6 +48,10 @@ struct PromptTranslatorView: View {
     @State private var isFeatureFlagPresented: Bool = false
     @State private var isTelemetryPresented: Bool = false
     @State private var isPerformanceBudgetPresented: Bool = false
+    @State private var isThreatModelerPresented: Bool = false
+    @State private var isMigrationStrategistPresented: Bool = false
+    @State private var isLocalizationPresented: Bool = false
+    @State private var isWebhookPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -425,6 +429,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Бюджет Core Web Vitals и оптимизация бандла")
+
+                            Button {
+                                isThreatModelerPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.shield")
+                                    Text("Угрозы OWASP")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Моделирование угроз, IDOR, SSRF и RLS")
+
+                            Button {
+                                isMigrationStrategistPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.2.circlepath.circle")
+                                    Text("Миграции БД")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Безопасные миграции данных Expand & Contract")
+
+                            Button {
+                                isLocalizationPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "character.book.closed")
+                                    Text("Локализация")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Спецификатор локализации и словари ru/en")
+
+                            Button {
+                                isWebhookPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.pull")
+                                    Text("Вебхуки")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Стенд валидации подписей вебхуков (Stripe, Clerk, GitHub)")
                         }
                         .padding(.vertical, 2)
                     }
@@ -849,6 +901,38 @@ struct PromptTranslatorView: View {
             PerformanceBudgetSheet(
                 title: title,
                 onDismiss: { isPerformanceBudgetPresented = false }
+            )
+        }
+        .sheet(isPresented: $isThreatModelerPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            ThreatModelerSheet(
+                title: title,
+                onDismiss: { isThreatModelerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isMigrationStrategistPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            MigrationStrategistSheet(
+                title: title,
+                onDismiss: { isMigrationStrategistPresented = false }
+            )
+        }
+        .sheet(isPresented: $isLocalizationPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            LocalizationSheet(
+                title: title,
+                onDismiss: { isLocalizationPresented = false }
+            )
+        }
+        .sheet(isPresented: $isWebhookPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            WebhookSheet(
+                title: title,
+                onDismiss: { isWebhookPresented = false }
             )
         }
     }

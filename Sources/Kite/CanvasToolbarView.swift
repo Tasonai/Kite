@@ -59,6 +59,10 @@ struct CanvasToolbarView: View {
     let onOpenFeatureFlagMatrix: () -> Void
     let onOpenTelemetrySpecifier: () -> Void
     let onOpenPerformanceBudget: () -> Void
+    let onOpenThreatModeler: () -> Void
+    let onOpenMigrationStrategist: () -> Void
+    let onOpenLocalizationSpecifier: () -> Void
+    let onOpenWebhookSimulator: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -258,6 +262,30 @@ struct CanvasToolbarView: View {
                         onOpenPerformanceBudget()
                     } label: {
                         Label("Бюджет производительности (Vitals)", systemImage: "gauge.with.needle")
+                    }
+
+                    Button {
+                        onOpenThreatModeler()
+                    } label: {
+                        Label("Моделирование угроз (OWASP)", systemImage: "exclamationmark.shield")
+                    }
+
+                    Button {
+                        onOpenMigrationStrategist()
+                    } label: {
+                        Label("Стратег миграций БД (Expand/Contract)", systemImage: "arrow.triangle.2.circlepath.circle")
+                    }
+
+                    Button {
+                        onOpenLocalizationSpecifier()
+                    } label: {
+                        Label("Спецификатор локализации (I18N)", systemImage: "character.book.closed")
+                    }
+
+                    Button {
+                        onOpenWebhookSimulator()
+                    } label: {
+                        Label("Стенд вебхуков (Webhooks)", systemImage: "arrow.triangle.pull")
                     }
 
                     Divider()

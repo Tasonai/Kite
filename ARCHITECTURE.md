@@ -88,7 +88,11 @@ Sources/Kite/
 ├── EvalHarnessSheet.swift         AI regression eval test bench, assertions, and prompt runner sheet
 ├── FeatureFlagSheet.swift         Feature flag catalog, rollout percentage, and TypeScript resolver sheet
 ├── TelemetrySheet.swift           Product analytics event registry and PII-free client sheet
-└── PerformanceBudgetSheet.swift   Core Web Vitals budgets, bundle size limits, and next.config sheet
+├── PerformanceBudgetSheet.swift   Core Web Vitals budgets, bundle size limits, and next.config sheet
+├── ThreatModelerSheet.swift       OWASP threat model, RLS policies, and SECURITY.md sheet
+├── MigrationStrategistSheet.swift Zero-downtime expand-and-contract migrations and MIGRATIONS.md sheet
+├── LocalizationSheet.swift        I18n interface strings, namespace catalogs, and LOCALIZATION.md sheet
+└── WebhookSheet.swift             Webhook signature verification bench and WEBHOOKS.md sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -117,7 +121,11 @@ Sources/KiteKit/
 ├── EvalHarness.swift              AI eval benchmark generator, assertion runner, and prompt directive
 ├── FeatureFlagMatrix.swift        Feature flag catalog, TypeScript SDK client, and rollout directive
 ├── TelemetrySpecifier.swift       Product analytics event catalog, PII-free client, and tracking directive
-└── PerformanceBudget.swift        Core Web Vitals threshold definitions and Next.js optimization directive
+├── PerformanceBudget.swift        Core Web Vitals threshold definitions and Next.js optimization directive
+├── ThreatModeler.swift            OWASP threat modeling, RLS policies, and security directive compiler
+├── MigrationStrategist.swift      Safe two-phase database migration planner and Expand/Contract directive
+├── LocalizationSpecifier.swift    I18n string dictionary generator and catalog specifier
+└── WebhookSimulator.swift         Webhook cryptographic signature verifier and test dispatcher
 ```
 
 ### Quality and Craftsmanship Standards
@@ -125,4 +133,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 79/79 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, and performance budget.
+- **Automated Self-Test**: 83/83 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, and webhook simulator.

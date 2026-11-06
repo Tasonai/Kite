@@ -269,6 +269,22 @@ enum SelfTest {
         let nextCfg = PerformanceBudget.generateNextConfigSnippet(budgets: PerformanceBudget.starterBudgets)
         check("PerformanceBudget generates Web Vitals limits and Next.js config", perfMd.contains("PERFORMANCE & WEB VITALS BUDGET") && nextCfg.contains("optimizePackageImports"))
 
+        let threatMd = ThreatModeler.generateSecurityMarkdown(title: "Task Studio", threats: ThreatModeler.starterThreats)
+        let threatPrompt = ThreatModeler.generatePromptDirective(threats: ThreatModeler.starterThreats)
+        check("ThreatModeler generates OWASP threat model and Antigravity security directive", threatMd.contains("SECURITY THREAT MODEL") && threatPrompt.contains("ANTIGRAVITY SECURITY & OWASP DIRECTIVE"))
+
+        let migMd = MigrationStrategist.generateMigrationsMarkdown(title: "Task Studio", steps: MigrationStrategist.starterSteps)
+        let migPrompt = MigrationStrategist.generatePromptDirective(steps: MigrationStrategist.starterSteps)
+        check("MigrationStrategist generates Expand & Contract migration spec and safe directive", migMd.contains("ZERO-DOWNTIME DATABASE MIGRATION SPEC") && migPrompt.contains("ANTIGRAVITY SAFE MIGRATION DIRECTIVE"))
+
+        let ruJson = LocalizationSpecifier.generateDictionaryJSON(entries: LocalizationSpecifier.starterEntries, language: "ru")
+        let i18nMd = LocalizationSpecifier.generateLocalizationMarkdown(title: "Task Studio", entries: LocalizationSpecifier.starterEntries)
+        check("LocalizationSpecifier generates JSON dictionary and i18n markdown spec", ruJson.contains("Сохранить") && i18nMd.contains("LOCALIZATION (I18N) CATALOG SPEC"))
+
+        let whMd = WebhookSimulator.generateWebhooksMarkdown(title: "Task Studio", webhooks: WebhookSimulator.starterWebhooks)
+        let whHandler = WebhookSimulator.generateVerificationHandlerSnippet(webhooks: WebhookSimulator.starterWebhooks)
+        check("WebhookSimulator generates webhook verification spec and signature handler", whMd.contains("Stripe-Signature") && whHandler.contains("stripeSig"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
