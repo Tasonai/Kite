@@ -184,7 +184,17 @@ struct PromptTranslatorView: View {
                     }
 
                     if !interviewQuestions.isEmpty {
-                        interviewPanel
+                        TranslatorInterviewPanel(
+                            questions: interviewQuestions,
+                            answers: $interviewAnswers,
+                            onSubmit: {
+                                let answers = interviewQuestions.map { (question: $0.text, answer: interviewAnswers[$0.id] ?? "") }
+                                Task { await runTranslate(answers: answers) }
+                            },
+                            onSkip: {
+                                Task { await runTranslate() }
+                            }
+                        )
                     }
 
                     // Primary Generator Buttons
@@ -245,76 +255,14 @@ struct PromptTranslatorView: View {
             .frame(minWidth: 360, idealWidth: 420)
 
             // Right: Output & Quality Gauge
-            VStack(alignment: .leading, spacing: 16) {
-                // Quality Gauge Banner
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(qualityColor)
-                                .frame(width: 8, height: 8)
-                            Text(selectedMode == "stitch" ? "Google Stitch Спецификация" : selectedMode == "edit" ? "Таргетированный эдит" : "Индекс плотности плана:")
-                                .font(.caption.bold())
-                            Text("\(qualityScore)%")
-                                .font(.caption.monospaced().bold())
-                                .foregroundStyle(qualityColor)
-                        }
-                        Text(selectedMode == "stitch" ? "Спецификация по стандарту enhance-prompt + design-md." : (selectedMode == "edit" ? "Хирургическое изменение конкретного узла без регрессий." : qualityDescription))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-
-                    if !generatedBlueprint.isEmpty {
-                        Button {
-                            copyBlueprint()
-                        } label: {
-                            Label(isCopied ? "Скопировано" : (selectedMode == "stitch" ? "Копировать для Stitch" : "Скопировать план"), systemImage: isCopied ? "checkmark" : "doc.on.doc")
-                                .font(.caption.weight(.medium))
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                }
-                .padding(12)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                // Output Editor
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Инженерный план Antigravity")
-                        .font(.headline)
-
-                    if generatedBlueprint.isEmpty {
-                        ContentUnavailableView("Готовый план появится здесь", systemImage: "doc.text.magnifyingglass", description: Text("Введите идею слева и нажмите «Скомпилировать /plan»."))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(Color(nsColor: .textBackgroundColor))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    } else {
-                        TextEditor(text: $generatedBlueprint)
-                            .font(.system(.caption, design: .monospaced))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .padding(8)
-                            .background(Color(nsColor: .textBackgroundColor))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
-                    }
-                }
-            }
-            .padding(20)
-            .frame(minWidth: 360, idealWidth: 440)
+            TranslatorOutputView(
+                generatedBlueprint: $generatedBlueprint,
+                selectedMode: selectedMode,
+                qualityScore: qualityScore,
+                isCopied: isCopied,
+                onCopy: { copyBlueprint() }
+            )
         }
-    }
-
-    private var qualityColor: Color {
-        if qualityScore >= 80 { return .green }
-        if qualityScore >= 50 { return .orange }
-        return .red
-    }
-
-    private var qualityDescription: String {
-        if qualityScore >= 80 { return "Высокая точность: стек, дизайн-система и скиллы сбалансированы." }
-        if qualityScore >= 50 { return "Базовая спецификация: рекомендуется уточнить детали идеи." }
-        return "Минимальный ввод: добавьте описание ключевого сценария."
     }
 
     private func presetButton(_ title: String, style: String, platform: String, prompt: String) -> some View {
@@ -361,58 +309,6 @@ struct PromptTranslatorView: View {
             interviewAnswers = [:]
             interviewQuestions = questions
         }
-    }
-
-    private var interviewPanel: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Уточните, чтобы план вышел точным")
-                .font(.headline)
-
-            ForEach(interviewQuestions) { question in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(question.text)
-                        .font(.subheadline.weight(.semibold))
-                    HStack(spacing: 8) {
-                        ForEach(question.options, id: \.self) { option in
-                            let chosen = interviewAnswers[question.id] == option
-                            Button {
-                                interviewAnswers[question.id] = chosen ? "" : option
-                            } label: {
-                                Text(option)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(chosen ? Color.accentColor : Color.secondary.opacity(0.12))
-                                    .foregroundStyle(chosen ? Color.white : Color.primary)
-                                    .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    TextField("Свой ответ", text: Binding(
-                        get: { interviewAnswers[question.id] ?? "" },
-                        set: { interviewAnswers[question.id] = $0 }
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                    .font(.caption)
-                }
-            }
-
-            HStack(spacing: 12) {
-                Button("Сгенерировать с ответами") {
-                    let answers = interviewQuestions.map { (question: $0.text, answer: interviewAnswers[$0.id] ?? "") }
-                    Task { await runTranslate(answers: answers) }
-                }
-                .buttonStyle(.borderedProminent)
-                Button("Пропустить") {
-                    Task { await runTranslate() }
-                }
-                .buttonStyle(.bordered)
-            }
-        }
-        .padding(16)
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func runTranslate(answers: [(question: String, answer: String)] = []) async {
@@ -500,7 +396,6 @@ struct PromptTranslatorView: View {
             }
             NSSound.beep()
         } catch {
-            // The model failed, so what follows is the fixed offline template, not an AI answer. Say so.
             if generatedBlueprint.isEmpty {
                 errorMessage = "Модель не ответила, показан офлайн-шаблон, а не ответ ИИ. Причина: \(error.localizedDescription)"
                 generatedBlueprint = compileLocally()

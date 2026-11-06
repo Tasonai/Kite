@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 public struct CanvasSticky: Identifiable, Sendable, Equatable, Codable {
@@ -6,7 +7,7 @@ public struct CanvasSticky: Identifiable, Sendable, Equatable, Codable {
     public var colorHex: String
     public var position: CGPoint
 
-    public init(id: UUID = UUID(), text: String, colorHex: String, position: CGPoint) {
+    public init(id: UUID = UUID(), text: String, colorHex: String, position: CGPoint = .zero) {
         self.id = id
         self.text = text
         self.colorHex = colorHex

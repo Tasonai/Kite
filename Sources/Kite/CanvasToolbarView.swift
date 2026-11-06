@@ -10,6 +10,7 @@ struct CanvasToolbarView: View {
     let lanPeers: [KitePeer]
     @Binding var zoomScale: CGFloat
     let toastMessage: String?
+    @Binding var isSimulationActive: Bool
 
     // Action callbacks
     let onAIAutoLayout: () -> Void
@@ -85,6 +86,14 @@ struct CanvasToolbarView: View {
                     } label: {
                         Label("Дорожная карта (волны выполнения)", systemImage: "chart.bar.xaxis")
                     }
+
+                    Divider()
+
+                    Button {
+                        isSimulationActive.toggle()
+                    } label: {
+                        Label(isSimulationActive ? "Остановить симуляцию потоков" : "Запуск симуляции потоков (QPS/RPS)", systemImage: "waveform.path.ecg")
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "wand.and.stars")
@@ -149,6 +158,25 @@ struct CanvasToolbarView: View {
                 }
                 .buttonStyle(.plain)
                 .fixedSize()
+
+                // Live Simulation Toggle Button
+                Button {
+                    isSimulationActive.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isSimulationActive ? "waveform.path.ecg" : "play.fill")
+                        Text(isSimulationActive ? "Потоки" : "Симуляция")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(isSimulationActive ? Color.white : Color.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(isSimulationActive ? Color.green : Color.secondary.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .fixedSize()
+                .help("Живая симуляция потоков данных и пропускной способности связей (RPS/QPS)")
 
                 // Canvas Tool Mode (Select vs Pan)
                 Picker("", selection: $canvasTool) {

@@ -115,6 +115,18 @@ enum SelfTest {
         let testFrame = CanvasFrame(title: "Subsystem", x: 100, y: 100, width: 200, height: 200)
         check("CanvasFrame computes bounding box correctly", testFrame.rect.contains(CGPoint(x: 150, y: 150)) && !testFrame.rect.contains(CGPoint(x: 50, y: 50)))
 
+        let localSticky = CanvasSticky(text: "Local Note", colorHex: "#FEF08A", position: CGPoint(x: 100, y: 100))
+        let remoteSticky = CanvasSticky(text: "Remote Windows Note", colorHex: "#BBF7D0", position: CGPoint(x: 300, y: 100))
+        let remoteDoc = CanvasExportModel(stickies: [remoteSticky])
+        let mergedResult = CanvasConflictResolver.merge(
+            localFrames: [],
+            localStickies: [localSticky],
+            localReferenceCards: [],
+            localConnections: [],
+            remote: remoteDoc
+        )
+        check("CanvasConflictResolver preserves local items and unions remote", mergedResult.stickies.count == 2 && mergedResult.addedNodesCount == 1)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

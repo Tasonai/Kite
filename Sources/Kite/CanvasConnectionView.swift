@@ -6,6 +6,7 @@ struct CanvasConnectionView: View {
     let isSelected: Bool
     let start: CGPoint
     let end: CGPoint
+    let isSimulationActive: Bool
     let isEditing: Bool
     @Binding var editingText: String
     let onStartEditing: () -> Void
@@ -49,8 +50,40 @@ struct CanvasConnectionView: View {
             }
             .stroke(
                 isSelected ? Color.orange : Color(hex: conn.colorHex),
-                style: StrokeStyle(lineWidth: isSelected ? 3 : 2, dash: [6, 4]) // grid: ok stroke
+                style: StrokeStyle(lineWidth: isSelected ? 3 : 2, dash: isSimulationActive ? [4, 4] : [6, 4]) // grid: ok stroke
             )
+
+            // Dynamic Throughput Particle Stream (when simulation is active)
+            if isSimulationActive {
+                TimelineView(.animation) { timeline in
+                    let time = timeline.date.timeIntervalSinceReferenceDate
+                    let p0 = geo.startPt
+                    let cdx = (geo.endPt.x - geo.startPt.x) * 0.5
+                    let p1 = CGPoint(x: geo.startPt.x + cdx, y: geo.startPt.y)
+                    let p2 = CGPoint(x: geo.endPt.x - cdx, y: geo.endPt.y)
+                    let p3 = geo.endPt
+
+                    ForEach(0..<2, id: \.self) { idx in
+                        let phase = Double(idx) * 0.5
+                        let t = CGFloat((time * 0.8 + phase).truncatingRemainder(dividingBy: 1.0))
+
+                        let u = 1.0 - t
+                        let tt = t * t
+                        let uu = u * u
+                        let uuu = uu * u
+                        let ttt = tt * t
+
+                        let px = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x
+                        let py = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+
+                        Circle()
+                            .fill(isSelected ? Color.orange : Color(hex: conn.colorHex))
+                            .frame(width: 8, height: 8)
+                            .shadow(color: Color(hex: conn.colorHex).opacity(0.8), radius: 4)
+                            .position(x: px, y: py) // grid: ok simulation particle
+                    }
+                }
+            }
 
             // Arrow Head at end
             ArrowHead(at: geo.endPt, from: CGPoint(x: geo.endPt.x - (geo.dx > 0 ? 20 : -20), y: geo.endPt.y))
@@ -87,10 +120,22 @@ struct CanvasConnectionView: View {
                 .position(geo.midPt) // grid: ok connection mid badge position
             } else {
                 HStack(spacing: 4) {
+                    if isSimulationActive {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 4, height: 4)
+                    }
+
                     if !conn.label.isEmpty {
                         Text(conn.label)
                             .font(.system(size: 10, weight: .semibold, design: .monospaced)) // grid: ok font
                             .foregroundStyle(Color.primary)
+                    }
+
+                    if isSimulationActive {
+                        Text("1.2k rps")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced)) // grid: ok font
+                            .foregroundStyle(Color.green)
                     }
 
                     if isSelected {

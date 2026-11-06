@@ -72,6 +72,9 @@ struct InfiniteCanvasView: View {
     @State private var editingConnectionId: UUID? = nil
     @State private var editingConnectionText: String = ""
 
+    // Live Data Flow Simulation
+    @State private var isSimulationActive: Bool = false
+
     // Notification toast
     @State private var exportToast: String? = nil
 
@@ -200,6 +203,7 @@ struct InfiniteCanvasView: View {
                 lanPeers: lanPeers,
                 zoomScale: $zoomScale,
                 toastMessage: exportToast,
+                isSimulationActive: $isSimulationActive,
                 onAIAutoLayout: { performAIAutoLayout() },
                 onCoArchitect: { applyCoArchitect() },
                 onRepoIngestion: { applyRepoIngestion() },
@@ -535,6 +539,7 @@ struct InfiniteCanvasView: View {
                 isSelected: selectedConnectionId == conn.id,
                 start: start,
                 end: end,
+                isSimulationActive: isSimulationActive,
                 isEditing: editingConnectionId == conn.id,
                 editingText: $editingConnectionText,
                 onStartEditing: {
@@ -723,11 +728,23 @@ struct InfiniteCanvasView: View {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 let doc = try JSONDecoder().decode(CanvasExportModel.self, from: data)
                 await MainActor.run {
-                    self.frames = doc.frames
-                    self.stickies = doc.stickies
-                    self.referenceCards = doc.referenceCards
-                    self.connections = doc.connections
-                    showToast("Холст синхронизирован с \(peer.hostname)")
+                    let result = CanvasConflictResolver.merge(
+                        localFrames: self.frames,
+                        localStickies: self.stickies,
+                        localReferenceCards: self.referenceCards,
+                        localConnections: self.connections,
+                        remote: doc
+                    )
+                    self.frames = result.frames
+                    self.stickies = result.stickies
+                    self.referenceCards = result.referenceCards
+                    self.connections = result.connections
+
+                    if result.addedNodesCount > 0 || result.addedConnectionsCount > 0 {
+                        showToast("Синхронизировано с \(peer.hostname): +\(result.addedNodesCount) узлов, +\(result.addedConnectionsCount) связей")
+                    } else {
+                        showToast("Холст актуален с \(peer.hostname)")
+                    }
                 }
             } catch {
                 await MainActor.run {
