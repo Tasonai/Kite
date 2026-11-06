@@ -56,9 +56,12 @@ Sources/Kite/
 
 ```
 Sources/Kite/
-├── PromptTranslatorView.swift     Form inputs, platform/style pickers, and skill tag matrix
+├── PromptTranslatorView.swift     Form inputs, platform/style pickers, Guided Wizard, and skill tag matrix
 ├── TranslatorInterviewPanel.swift Socratic question card and option chips
-└── TranslatorOutputView.swift     Quality gauge indicator and multi-format plan output editor
+└── TranslatorOutputView.swift     Quality readiness gauge, Anti-Pitfall card, starter prompt copy, and plan editor
+Sources/KiteKit/
+├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
+└── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
 ```
 
 ### Quality and Craftsmanship Standards
@@ -66,4 +69,4 @@ Sources/Kite/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 46/46 regression checks covering search, models, networking, canvas serialization, and conflict resolution.
+- **Automated Self-Test**: 48/48 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, and starter prompt generation.

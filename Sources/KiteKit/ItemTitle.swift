@@ -325,4 +325,39 @@ public enum PromptCompiler {
         [ ] Проверить отсутствие регрессий в смежных модулях
         """
     }
+
+    /// Генерирует пошаговый диалоговый промпт первого шага для Cursor, Claude Code, Antigravity
+    public static func compileStarterPrompt(
+        title: String,
+        concept: String,
+        platform: String,
+        style: String
+    ) -> String {
+        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveTitle = cleanTitle.isEmpty ? "Новый проект" : cleanTitle
+        let cleanConcept = concept.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveConcept = cleanConcept.isEmpty ? "Реализация проекта без лишнего шума и шаблонов." : cleanConcept
+
+        return """
+        # СТАРТОВЫЙ ДИАЛОГОВЫЙ ПРОМПТ ДЛЯ AI-КОДЕРА (CURSOR / CLAUDE / ANTIGRAVITY)
+
+        Привет! Я спроектировал архитектуру проекта «\(effectiveTitle)» в Kite.
+        Целевая платформа: \(platform)
+        Визуальная система: \(style)
+        Концепция: \(effectiveConcept)
+
+        ПРАВИЛА РАБОТЫ (СТРОГО ОБЯЗАТЕЛЬНО):
+        1. Не пиши весь проект за один раз. Это приводит к поломкам, галлюцинациям и багам.
+        2. Мы двигаемся строго по шагам.
+        3. Не усложняй архитектуру: для первого этапа используй самое простое и надежное локальное решение.
+        4. Если чего-то не хватает — спроси меня, не придумывай лишнего.
+
+        ШАГ 1: ИНИЦИАЛИЗАЦИЯ И ПЕРВЫЙ ЗАПУСК
+        - Создай базовую структуру файлов и главный экран с заголовком и стилями.
+        - Дай мне одну точную команду для терминала, чтобы запустить проект и увидеть его вживую.
+        - Дождись моего подтверждения («Шаг 1 работает»), прежде чем писать следующий код.
+
+        Начни с выполнения Шага 1!
+        """
+    }
 }

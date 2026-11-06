@@ -128,6 +128,16 @@ public enum ProjectScaffolder {
         """
         try readme.write(to: projectDir.appendingPathComponent("README.md"), atomically: true, encoding: .utf8)
         createdFiles.append("README.md")
+
+        // 1.1 START_HERE.md (First step guide for Cursor / Claude / Antigravity)
+        let startHere = PromptCompiler.compileStarterPrompt(
+            title: title,
+            concept: concept,
+            platform: platform,
+            style: style
+        )
+        try startHere.write(to: projectDir.appendingPathComponent("START_HERE.md"), atomically: true, encoding: .utf8)
+        createdFiles.append("START_HERE.md")
         
         // 2. SPEC.md & PRD.md
         let spec = """

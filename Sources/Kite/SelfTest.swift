@@ -127,6 +127,12 @@ enum SelfTest {
         )
         check("CanvasConflictResolver preserves local items and unions remote", mergedResult.stickies.count == 2 && mergedResult.addedNodesCount == 1)
 
+        let pitfalls = AIPitfallProtector.analyze(concept: "Сервис с авторизацией и оплатой подписки", platform: "Web")
+        check("AIPitfallProtector detects auth and payment traps", pitfalls.contains(where: { $0.id == "auth-complexity" }) && pitfalls.contains(where: { $0.id == "payment-setup" }))
+
+        let starterPrompt = PromptCompiler.compileStarterPrompt(title: "Habit Tracker", concept: "Track habits", platform: "Web", style: "Minimal")
+        check("PromptCompiler creates step-by-step starter prompt", starterPrompt.contains("ШАГ 1") && starterPrompt.contains("Habit Tracker"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

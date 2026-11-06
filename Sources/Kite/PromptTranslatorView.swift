@@ -3,10 +3,17 @@ import SwiftData
 import SwiftUI
 import KiteKit
 
+enum InputExperience: String, CaseIterable, Identifiable {
+    case wizard = "Простой мастер"
+    case expert = "Экспертный"
+    var id: String { rawValue }
+}
+
 struct PromptTranslatorView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.modelContext) private var context
 
+    @State private var inputExperience: InputExperience = .wizard
     @State private var rawPrompt: String = ""
     @State private var generatedBlueprint: String = ""
     @State private var selectedMode: String = "full"
@@ -14,6 +21,7 @@ struct PromptTranslatorView: View {
     @State private var selectedStyle: String = "Editorial & Swiss Modern"
     @State private var activeSkills: Set<String> = ["/site-md", "/design-md", "/taste-design", "/impeccable", "/emil-design-eng"]
     @State private var isCopied: Bool = false
+    @State private var isStarterCopied: Bool = false
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
     @State private var errorMessage: String?
@@ -67,57 +75,43 @@ struct PromptTranslatorView: View {
         return min(score, 100)
     }
 
+    private var pitfalls: [PitfallWarning] {
+        guard !rawPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        return AIPitfallProtector.analyze(concept: rawPrompt, platform: selectedPlatform)
+    }
+
     var body: some View {
         HSplitView {
             // Left: Input & Controls
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Header
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Промпт-переводчик Antigravity")
-                            .font(.title2.bold())
-                        Text("Превращайте идеи и эскизы в точную инженерную спецификацию /plan.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    // Mode Selector
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Режим вывода")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                        Picker("", selection: $selectedMode) {
-                            ForEach(modes, id: \.0) { m in
-                                Text(m.1).tag(m.0)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
-                    }
-
-                    // Presets Bar
+                    // Header & Experience Mode Selector
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Быстрые пресеты")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                presetButton("Stitch Landing", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Лендинг цифрового сервиса с шапкой, карточками преимуществ, формой обратной связи и четкой дизайн-системой.")
-                                presetButton("Claude Paper", style: "Claude Parchment", platform: "Web", prompt: "Академический исследовательский интерфейс на теплом пергаменте со строгой типографикой, цитатами и минимальным шумом.")
-                                presetButton("Codex Minimal", style: "Codex Minimal", platform: "Web", prompt: "Радикально чистый монохромный интерфейс без теней, чистый белый холст и швейцарские шрифты.")
-                                presetButton("Terracotta Journal", style: "Terracotta Clay", platform: "Web", prompt: "Теплый глиняный журнал с мягкими тенями, тактильными пилюлями и кремовым фоном.")
-                                presetButton("Agent Cockpit", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
-                                presetButton("Habit Radar", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
-                                presetButton("Voxel Studio", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Промпт-переводчик Antigravity")
+                                    .font(.title3.bold())
+                                Text("Превращайте задумку в надежный инженерный план для AI.")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
                             }
+                            Spacer()
+
+                            Picker("", selection: $inputExperience) {
+                                ForEach(InputExperience.allCases) { exp in
+                                    Text(exp.rawValue).tag(exp)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.segmented)
+                            .fixedSize()
                         }
                     }
 
                     // Raw Input
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Ваша идея или черновик")
+                            Text(inputExperience == .wizard ? "Опишите вашу идею своими словами" : "Ваша идея или черновик")
                                 .font(.headline)
                             Spacer()
                             Text("\(rawPrompt.count) символов")
@@ -134,51 +128,146 @@ struct PromptTranslatorView: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
                     }
 
-                    // Platform & Style
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Платформа").font(.caption.bold()).foregroundStyle(.secondary)
-                            Picker("", selection: $selectedPlatform) {
-                                ForEach(platforms, id: \.self) { p in Text(p).tag(p) }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                        }
+                    if inputExperience == .wizard {
+                        // 1. Where does it run?
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("1. Где будет работать проект?")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Дизайн-система").font(.caption.bold()).foregroundStyle(.secondary)
-                            Picker("", selection: $selectedStyle) {
-                                ForEach(styles, id: \.self) { s in Text(s).tag(s) }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                        }
-                    }
-
-                    // Skills Matrix
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Активные скиллы Antigravity")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-
-                        FlowLayout(spacing: 8) {
-                            ForEach(availableSkills, id: \.self) { skill in
-                                Button {
-                                    if activeSkills.contains(skill) {
-                                        activeSkills.remove(skill)
-                                    } else {
-                                        activeSkills.insert(skill)
-                                    }
-                                } label: {
-                                    Text(skill)
-                                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(activeSkills.contains(skill) ? Color.accentColor : Color.secondary.opacity(0.12))
-                                        .foregroundStyle(activeSkills.contains(skill) ? Color.white : Color.primary)
-                                        .clipShape(Capsule())
+                            HStack(spacing: 8) {
+                                wizardChip("В браузере (Веб)", isSelected: selectedPlatform == "Web") {
+                                    selectedPlatform = "Web"
+                                    selectedStyle = "Editorial & Swiss Modern"
                                 }
-                                .buttonStyle(.plain)
+                                wizardChip("На смартфоне (Мобильный)", isSelected: selectedPlatform == "Mobile") {
+                                    selectedPlatform = "Mobile"
+                                    selectedStyle = "Neo-Brutalism & Tactical"
+                                }
+                                wizardChip("На компьютере (Десктоп)", isSelected: selectedPlatform == "Desktop") {
+                                    selectedPlatform = "Desktop"
+                                    selectedStyle = "Linear & DevTool Cockpit"
+                                }
+                            }
+                        }
+
+                        // 2. How should it feel?
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("2. Как интерфейс должен ощущаться?")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+
+                            HStack(spacing: 8) {
+                                wizardChip("Современно и чисто", isSelected: selectedStyle == "Editorial & Swiss Modern") {
+                                    selectedStyle = "Editorial & Swiss Modern"
+                                }
+                                wizardChip("Тёмный пульт (Linear)", isSelected: selectedStyle == "Linear & DevTool Cockpit") {
+                                    selectedStyle = "Linear & DevTool Cockpit"
+                                }
+                                wizardChip("Теплый блокнот (Claude)", isSelected: selectedStyle == "Claude Parchment") {
+                                    selectedStyle = "Claude Parchment"
+                                }
+                            }
+                        }
+
+                        // 3. What is the focus?
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("3. Главная задача?")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+
+                            HStack(spacing: 8) {
+                                wizardChip("Быстрый ввод и списки", isSelected: activeSkills.contains("/impeccable")) {
+                                    activeSkills = ["/site-md", "/design-md", "/impeccable", "/emil-design-eng"]
+                                }
+                                wizardChip("AI-Ассистент / Чат", isSelected: activeSkills.contains("/subagent-driven-development")) {
+                                    activeSkills = ["/subagent-driven-development", "/site-md", "/design-md"]
+                                }
+                                wizardChip("Лендинг / Витрина", isSelected: activeSkills.contains("/taste-design")) {
+                                    activeSkills = ["/enhance-prompt", "/taste-design", "/design-md"]
+                                }
+                            }
+                        }
+                    } else {
+                        // Expert Mode: Mode Selector
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Режим вывода")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+                            Picker("", selection: $selectedMode) {
+                                ForEach(modes, id: \.0) { m in
+                                    Text(m.1).tag(m.0)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.segmented)
+                        }
+
+                        // Presets Bar
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Быстрые пресеты")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    presetButton("Stitch Landing", style: "Editorial & Swiss Modern", platform: "Web", prompt: "Лендинг цифрового сервиса с шапкой, карточками преимуществ, формой обратной связи и четкой дизайн-системой.")
+                                    presetButton("Claude Paper", style: "Claude Parchment", platform: "Web", prompt: "Академический исследовательский интерфейс на теплом пергаменте со строгой типографикой, цитатами и минимальным шумом.")
+                                    presetButton("Codex Minimal", style: "Codex Minimal", platform: "Web", prompt: "Радикально чистый монохромный интерфейс без теней, чистый белый холст и швейцарские шрифты.")
+                                    presetButton("Terracotta Journal", style: "Terracotta Clay", platform: "Web", prompt: "Теплый глиняный журнал с мягкими тенями, тактильными пилюлями и кремовым фоном.")
+                                    presetButton("Agent Cockpit", style: "Linear & DevTool Cockpit", platform: "Desktop", prompt: "Тёмный пульт разработчика для мониторинга фоновых агентов, очереди сборки и стриминга логов.")
+                                    presetButton("Habit Radar", style: "Neo-Brutalism & Tactical", platform: "Mobile", prompt: "Тактический нео-бруталистический трекер привычек с жесткими тенями, тактильным звуковым кликом и бейджами.")
+                                    presetButton("Voxel Studio", style: "Voxel & 3D Isometric", platform: "Web", prompt: "3D конструктор изометрических сцен с мягким светом Ambient Occlusion и воксельными карточками.")
+                                }
+                            }
+                        }
+
+                        // Platform & Style
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Платформа").font(.caption.bold()).foregroundStyle(.secondary)
+                                Picker("", selection: $selectedPlatform) {
+                                    ForEach(platforms, id: \.self) { p in Text(p).tag(p) }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Дизайн-система").font(.caption.bold()).foregroundStyle(.secondary)
+                                Picker("", selection: $selectedStyle) {
+                                    ForEach(styles, id: \.self) { s in Text(s).tag(s) }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                            }
+                        }
+
+                        // Skills Matrix
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Активные скиллы Antigravity")
+                                .font(.caption.bold())
+                                .foregroundStyle(.secondary)
+
+                            FlowLayout(spacing: 8) {
+                                ForEach(availableSkills, id: \.self) { skill in
+                                    Button {
+                                        if activeSkills.contains(skill) {
+                                            activeSkills.remove(skill)
+                                        } else {
+                                            activeSkills.insert(skill)
+                                        }
+                                    } label: {
+                                        Text(skill)
+                                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(activeSkills.contains(skill) ? Color.accentColor : Color.secondary.opacity(0.12))
+                                            .foregroundStyle(activeSkills.contains(skill) ? Color.white : Color.primary)
+                                            .clipShape(Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
                     }
@@ -260,9 +349,25 @@ struct PromptTranslatorView: View {
                 selectedMode: selectedMode,
                 qualityScore: qualityScore,
                 isCopied: isCopied,
-                onCopy: { copyBlueprint() }
+                isStarterCopied: isStarterCopied,
+                pitfalls: pitfalls,
+                onCopy: { copyBlueprint() },
+                onCopyStarterPrompt: { copyStarterPrompt() }
             )
         }
+    }
+
+    private func wizardChip(_ label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+                .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.12))
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func presetButton(_ title: String, style: String, platform: String, prompt: String) -> some View {
@@ -412,6 +517,24 @@ struct PromptTranslatorView: View {
         NSSound.beep()
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             isCopied = false
+        }
+    }
+
+    private func copyStarterPrompt() {
+        let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+        let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+        let prompt = PromptCompiler.compileStarterPrompt(
+            title: title,
+            concept: rawPrompt,
+            platform: selectedPlatform,
+            style: selectedStyle
+        )
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(prompt, forType: .string)
+        isStarterCopied = true
+        NSSound.beep()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            isStarterCopied = false
         }
     }
 
