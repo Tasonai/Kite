@@ -11,6 +11,8 @@ struct InteractiveMockupSheet: View {
     let onDismiss: () -> Void
 
     @State private var previewHTML: String = ""
+    @State private var showQRSharePopover: Bool = false
+    @ObservedObject private var previewServer = InstantPreviewServer.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,6 +36,61 @@ struct InteractiveMockupSheet: View {
                     .foregroundStyle(.secondary)
 
                 Spacer()
+
+                Button {
+                    previewServer.start(html: previewHTML)
+                    showQRSharePopover = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "qrcode")
+                        Text("На телефон")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .popover(isPresented: $showQRSharePopover) {
+                    VStack(spacing: 12) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "iphone.gen3")
+                                .foregroundStyle(Color.accentColor)
+                            Text("Просмотр на смартфоне")
+                                .font(.headline)
+                        }
+
+                        if let qr = previewServer.qrCodeImage {
+                            Image(nsImage: qr)
+                                .interpolation(.none)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 160, height: 160)
+                                .padding(8)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        } else {
+                            ProgressView()
+                                .frame(width: 160, height: 160)
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("Наведите камеру iPhone в одной сети Wi-Fi:")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+
+                            Text(previewServer.localURLString)
+                                .font(.caption.monospaced().bold())
+                                .textSelection(.enabled)
+                        }
+
+                        Button("Скопировать ссылку") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(previewServer.localURLString, forType: .string)
+                        }
+                        .font(.caption)
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(16)
+                    .frame(width: 240)
+                }
 
                 Button {
                     openInExternalBrowser()

@@ -64,12 +64,20 @@ Sources/KiteKit/
 Sources/Kite/
 ├── PromptTranslatorView.swift     Form inputs, platform/style pickers, Guided Wizard, and skill tag matrix
 ├── TranslatorInterviewPanel.swift Socratic question card and option chips
-└── TranslatorOutputView.swift     Quality readiness gauge, Anti-Pitfall card, starter prompt copy, and plan editor
+├── TranslatorOutputView.swift     Quality readiness gauge, Anti-Pitfall card, starter prompt copy, and plan editor
+├── VibeErrorDoctorSheet.swift     Terminal and compiler log diagnostic sheet with surgical Antigravity fix prompts
+├── DataSchemaDesignerSheet.swift  Visual schema and entity designer with SQL, Prisma, and SwiftData generator
+├── CodebaseAuditorSheet.swift     Post-flight repository cleanliness auditor and polish prompt generator
+└── DesignTokenSandboxSheet.swift  Interactive live design token sandbox with spring physics
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
 ├── EditorLauncher.swift           One-click launcher for Cursor, VS Code, and Terminal
-└── WebMockupGenerator.swift       Self-contained interactive HTML/Tailwind web prototype generator
+├── WebMockupGenerator.swift       Self-contained interactive HTML/Tailwind web prototype generator
+├── VibeErrorDoctor.swift          Error log analyzer and root-cause diagnostician
+├── DataSchemaDesigner.swift       Multi-dialect data model and schema generator
+├── CodebaseAuditor.swift          File-level code quality, leftover log, and emoji auditor
+└── InstantPreviewServer.swift     Local Wi-Fi HTTP server and native vector QR code generator
 ```
 
 ### Quality and Craftsmanship Standards
@@ -77,4 +85,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 55/55 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, and enhanced Mermaid export.
+- **Automated Self-Test**: 59/59 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, and instant preview server.

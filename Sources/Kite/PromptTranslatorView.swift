@@ -24,6 +24,10 @@ struct PromptTranslatorView: View {
     @State private var isStarterCopied: Bool = false
     @State private var isMockupPresented: Bool = false
     @State private var isAntigravityPackPresented: Bool = false
+    @State private var isErrorDoctorPresented: Bool = false
+    @State private var isDataDesignerPresented: Bool = false
+    @State private var isTokenSandboxPresented: Bool = false
+    @State private var isAuditorPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -109,6 +113,59 @@ struct PromptTranslatorView: View {
                             .pickerStyle(.segmented)
                             .fixedSize()
                         }
+                    }
+
+                    // Quick Vibe Tools Bar
+                    HStack(spacing: 8) {
+                        Button {
+                            isErrorDoctorPresented = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "cross.case")
+                                Text("Доктор ошибок")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Диагностика сбоев терминала и генерация точечного Fix-промпта")
+
+                        Button {
+                            isDataDesignerPresented = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "cylinder.split.1x2")
+                                Text("Схема данных")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Визуальное проектирование таблиц и генерация SQL/Prisma/SwiftData")
+
+                        Button {
+                            isTokenSandboxPresented = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "paintpalette")
+                                Text("Песочница токенов")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Интерактивная проверка стилей, кнопок и карточек")
+
+                        Button {
+                            isAuditorPresented = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.seal")
+                                Text("Аудит кода")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Проверка готового проекта на чистоту кода, логи и эмодзи")
+
+                        Spacer()
                     }
 
                     // Raw Input
@@ -393,6 +450,18 @@ struct PromptTranslatorView: View {
                 style: selectedStyle,
                 onDismiss: { isMockupPresented = false }
             )
+        }
+        .sheet(isPresented: $isErrorDoctorPresented) {
+            VibeErrorDoctorSheet(onDismiss: { isErrorDoctorPresented = false })
+        }
+        .sheet(isPresented: $isDataDesignerPresented) {
+            DataSchemaDesignerSheet(onDismiss: { isDataDesignerPresented = false })
+        }
+        .sheet(isPresented: $isTokenSandboxPresented) {
+            DesignTokenSandboxSheet(initialStyle: selectedStyle, onDismiss: { isTokenSandboxPresented = false })
+        }
+        .sheet(isPresented: $isAuditorPresented) {
+            CodebaseAuditorSheet(onDismiss: { isAuditorPresented = false })
         }
     }
 

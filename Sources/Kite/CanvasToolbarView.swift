@@ -36,6 +36,9 @@ struct CanvasToolbarView: View {
     let onExportMermaid: () -> Void
     let onCopyMermaid: () -> Void
     let onOpenAntigravityPack: () -> Void
+    let onOpenErrorDoctor: () -> Void
+    let onOpenDataDesigner: () -> Void
+    let onOpenCodebaseAuditor: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -89,6 +92,26 @@ struct CanvasToolbarView: View {
                         onRoadmapHUD()
                     } label: {
                         Label("Дорожная карта (волны выполнения)", systemImage: "chart.bar.xaxis")
+                    }
+
+                    Divider()
+
+                    Button {
+                        onOpenDataDesigner()
+                    } label: {
+                        Label("Конструктор схемы данных", systemImage: "cylinder.split.1x2")
+                    }
+
+                    Button {
+                        onOpenErrorDoctor()
+                    } label: {
+                        Label("Доктор ошибок Antigravity", systemImage: "cross.case")
+                    }
+
+                    Button {
+                        onOpenCodebaseAuditor()
+                    } label: {
+                        Label("Аудит чистоты репозитория", systemImage: "checkmark.seal")
                     }
 
                     Divider()

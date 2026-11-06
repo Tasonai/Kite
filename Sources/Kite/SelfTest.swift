@@ -154,6 +154,23 @@ enum SelfTest {
         let mmdExport = CanvasExporter.exportMermaid(items: [], connections: [sampleConn], frames: [sampleFrame], itemPositions: [:])
         check("CanvasExporter includes subgraphs and connection protocol badges in Mermaid", mmdExport.contains("subgraph") && mmdExport.contains("-->|HTTP/REST|"))
 
+        let diag = VibeErrorDoctor.diagnose(rawLog: "Cannot find module '@supabase/supabase-js' from /src/api.ts:24")
+        check("VibeErrorDoctor diagnoses missing dependency and produces surgical prompt", diag.category == .missingDependency && diag.targetFile == "api.ts" && diag.lineNumber == 24)
+
+        let schemaSQL = DataSchemaDesigner.generateSQL(entities: DataSchemaDesigner.starterPack)
+        let schemaPrisma = DataSchemaDesigner.generatePrisma(entities: DataSchemaDesigner.starterPack)
+        check("DataSchemaDesigner generates valid SQL DDL and Prisma models", schemaSQL.contains("CREATE TABLE") && schemaPrisma.contains("model User"))
+
+        let tempAuditDir = FileManager.default.temporaryDirectory.appendingPathComponent("kite_test_audit_\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: tempAuditDir, withIntermediateDirectories: true)
+        let dirtyFile = tempAuditDir.appendingPathComponent("Test.ts")
+        try? "console.log('debug output');\n// TODO: finish this\n".write(to: dirtyFile, atomically: true, encoding: .utf8)
+        let audit = CodebaseAuditor.audit(directory: tempAuditDir)
+        try? FileManager.default.removeItem(at: tempAuditDir)
+        check("CodebaseAuditor detects leftover logs and produces polish prompt", audit.findings.contains(where: { $0.issueType == .leftoverLog }) && audit.polishPrompt.contains("[ANTIGRAVITY CLEANUP"))
+
+        check("InstantPreviewServer initializes with valid port", InstantPreviewServer.shared.localPort == 49495)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

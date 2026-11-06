@@ -76,6 +76,9 @@ struct InfiniteCanvasView: View {
     @State private var isSimulationActive: Bool = false
     @State private var isMockupPresented: Bool = false
     @State private var isAntigravityPackPresented: Bool = false
+    @State private var isErrorDoctorPresented: Bool = false
+    @State private var isDataDesignerPresented: Bool = false
+    @State private var isCodebaseAuditorPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -225,6 +228,9 @@ struct InfiniteCanvasView: View {
                 onExportMermaid: { exportAsMermaid() },
                 onCopyMermaid: { copyMermaidToClipboard() },
                 onOpenAntigravityPack: { isAntigravityPackPresented = true },
+                onOpenErrorDoctor: { isErrorDoctorPresented = true },
+                onOpenDataDesigner: { isDataDesignerPresented = true },
+                onOpenCodebaseAuditor: { isCodebaseAuditorPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -267,6 +273,15 @@ struct InfiniteCanvasView: View {
                 architectureMermaid: mmd,
                 onDismiss: { isAntigravityPackPresented = false }
             )
+        }
+        .sheet(isPresented: $isErrorDoctorPresented) {
+            VibeErrorDoctorSheet(onDismiss: { isErrorDoctorPresented = false })
+        }
+        .sheet(isPresented: $isDataDesignerPresented) {
+            DataSchemaDesignerSheet(onDismiss: { isDataDesignerPresented = false })
+        }
+        .sheet(isPresented: $isCodebaseAuditorPresented) {
+            CodebaseAuditorSheet(onDismiss: { isCodebaseAuditorPresented = false })
         }
         .sheet(isPresented: $isReferencePickerOpen) {
             CanvasReferencePickerSheet(
