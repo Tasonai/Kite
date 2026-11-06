@@ -301,6 +301,22 @@ enum SelfTest {
         let mcpSchema = SkillSynthesizer.generateMcpToolSchema(skill: SkillSynthesizer.starterSkills[0])
         check("SkillSynthesizer generates SKILL.md with frontmatter and MCP schema", skillMd.contains("bama-swiftui-refactor") && mcpSchema.contains("inputSchema"))
 
+        let tokenMd = TokenBudgeteer.generateTokenBudgetMarkdown(title: "Task Studio", budgets: TokenBudgeteer.starterBudgets)
+        let tokenPrompt = TokenBudgeteer.generatePromptDirective(budgets: TokenBudgeteer.starterBudgets)
+        check("TokenBudgeteer generates token cost spec and Antigravity resource directive", tokenMd.contains("AI TOKEN, LATENCY & COST") && tokenPrompt.contains("ANTIGRAVITY TOKEN & LATENCY BUDGET"))
+
+        let rtMd = RealtimeArchitect.generateRealtimeMarkdown(title: "Task Studio", events: RealtimeArchitect.starterEvents)
+        let sseHook = RealtimeArchitect.generateSseClientSnippet()
+        check("RealtimeArchitect generates streaming spec and useRealtimeStream hook", rtMd.contains("REAL-TIME STREAMING & PROTOCOL") && sseHook.contains("useRealtimeStream"))
+
+        let jobsMd = JobQueueStrategist.generateJobsMarkdown(title: "Task Studio", jobs: JobQueueStrategist.starterJobs)
+        let inngestCode = JobQueueStrategist.generateInngestWorkerSnippet(jobs: JobQueueStrategist.starterJobs)
+        check("JobQueueStrategist generates async jobs spec and Inngest function handlers", jobsMd.contains("BACKGROUND JOBS & ASYNC QUEUES") && inngestCode.contains("inngest.createFunction"))
+
+        let incidentMd = IncidentCommander.generateIncidentMarkdown(title: "Task Studio", actions: IncidentCommander.starterActions)
+        let healthzCode = IncidentCommander.generateHealthCheckRouteSnippet()
+        check("IncidentCommander generates disaster recovery runbook and healthz probe", incidentMd.contains("EMERGENCY INCIDENT & ROLLBACK") && healthzCode.contains("export async function GET"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

@@ -107,6 +107,10 @@ struct InfiniteCanvasView: View {
     @State private var isMonorepoPresented: Bool = false
     @State private var isSEOPresented: Bool = false
     @State private var isSkillPresented: Bool = false
+    @State private var isTokenBudgetPresented: Bool = false
+    @State private var isRealtimePresented: Bool = false
+    @State private var isJobQueuePresented: Bool = false
+    @State private var isIncidentCommanderPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -287,6 +291,10 @@ struct InfiniteCanvasView: View {
                 onOpenMonorepoArchitect: { isMonorepoPresented = true },
                 onOpenSEOStudio: { isSEOPresented = true },
                 onOpenSkillSynthesizer: { isSkillPresented = true },
+                onOpenTokenBudgeteer: { isTokenBudgetPresented = true },
+                onOpenRealtimeArchitect: { isRealtimePresented = true },
+                onOpenJobQueueStrategist: { isJobQueuePresented = true },
+                onOpenIncidentCommander: { isIncidentCommanderPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -508,6 +516,34 @@ struct InfiniteCanvasView: View {
             SkillSheet(
                 title: title,
                 onDismiss: { isSkillPresented = false }
+            )
+        }
+        .sheet(isPresented: $isTokenBudgetPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            TokenBudgetSheet(
+                title: title,
+                onDismiss: { isTokenBudgetPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRealtimePresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            RealtimeSheet(
+                title: title,
+                onDismiss: { isRealtimePresented = false }
+            )
+        }
+        .sheet(isPresented: $isJobQueuePresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            JobQueueSheet(
+                title: title,
+                onDismiss: { isJobQueuePresented = false }
+            )
+        }
+        .sheet(isPresented: $isIncidentCommanderPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            IncidentCommanderSheet(
+                title: title,
+                onDismiss: { isIncidentCommanderPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

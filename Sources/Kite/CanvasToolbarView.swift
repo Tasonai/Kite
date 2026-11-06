@@ -67,6 +67,10 @@ struct CanvasToolbarView: View {
     let onOpenMonorepoArchitect: () -> Void
     let onOpenSEOStudio: () -> Void
     let onOpenSkillSynthesizer: () -> Void
+    let onOpenTokenBudgeteer: () -> Void
+    let onOpenRealtimeArchitect: () -> Void
+    let onOpenJobQueueStrategist: () -> Void
+    let onOpenIncidentCommander: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -314,6 +318,30 @@ struct CanvasToolbarView: View {
                         onOpenSkillSynthesizer()
                     } label: {
                         Label("Синтезатор навыков и MCP (Skills)", systemImage: "puzzlepiece.extension")
+                    }
+
+                    Button {
+                        onOpenTokenBudgeteer()
+                    } label: {
+                        Label("Бюджет токенов и стоимости ИИ", systemImage: "creditcard.and.123")
+                    }
+
+                    Button {
+                        onOpenRealtimeArchitect()
+                    } label: {
+                        Label("Архитектор Real-time и SSE", systemImage: "dot.radiowaves.left.and.right")
+                    }
+
+                    Button {
+                        onOpenJobQueueStrategist()
+                    } label: {
+                        Label("Стратег очередей и Cron (Jobs)", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                    }
+
+                    Button {
+                        onOpenIncidentCommander()
+                    } label: {
+                        Label("План реагирования и откат (Rollback)", systemImage: "cross.case")
                     }
 
                     Divider()

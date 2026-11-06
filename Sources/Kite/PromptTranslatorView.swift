@@ -56,6 +56,10 @@ struct PromptTranslatorView: View {
     @State private var isMonorepoPresented: Bool = false
     @State private var isSEOPresented: Bool = false
     @State private var isSkillPresented: Bool = false
+    @State private var isTokenBudgetPresented: Bool = false
+    @State private var isRealtimePresented: Bool = false
+    @State private var isJobQueuePresented: Bool = false
+    @State private var isIncidentCommanderPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -529,6 +533,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Синтезатор пользовательских навыков SKILL.md и MCP схем")
+
+                            Button {
+                                isTokenBudgetPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "creditcard.and.123")
+                                    Text("Бюджет ИИ")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Бюджет токенов, стоимости и задержки модели")
+
+                            Button {
+                                isRealtimePresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "dot.radiowaves.left.and.right")
+                                    Text("Real-time")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Архитектор SSE и WebSocket потоков")
+
+                            Button {
+                                isJobQueuePresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                                    Text("Очереди")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Стратег фоновых воркеров и cron-задач")
+
+                            Button {
+                                isIncidentCommanderPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cross.case")
+                                    Text("Инциденты")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("План аварийного восстановления и отката")
                         }
                         .padding(.vertical, 2)
                     }
@@ -1017,6 +1069,38 @@ struct PromptTranslatorView: View {
             SkillSheet(
                 title: title,
                 onDismiss: { isSkillPresented = false }
+            )
+        }
+        .sheet(isPresented: $isTokenBudgetPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            TokenBudgetSheet(
+                title: title,
+                onDismiss: { isTokenBudgetPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRealtimePresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            RealtimeSheet(
+                title: title,
+                onDismiss: { isRealtimePresented = false }
+            )
+        }
+        .sheet(isPresented: $isJobQueuePresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            JobQueueSheet(
+                title: title,
+                onDismiss: { isJobQueuePresented = false }
+            )
+        }
+        .sheet(isPresented: $isIncidentCommanderPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            IncidentCommanderSheet(
+                title: title,
+                onDismiss: { isIncidentCommanderPresented = false }
             )
         }
     }
