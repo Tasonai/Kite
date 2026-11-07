@@ -94,6 +94,13 @@ public enum DocStudio {
             "# API DOCUMENTATION & INTERACTIVE PLAYGROUND: \(title.uppercased())",
             "Built for Mintlify, Fumadocs, and Nextra documentation sites.",
             "This specification guides Google DeepMind Antigravity in generating docs and interactive playground components.",
+            "",
+            "## Recommended Directory Structure",
+            "- `docs/guides/getting-started.mdx`: Руководство по быстрому старту",
+            "- `docs/guides/authentication.mdx`: Настройка API-ключей и авторизации",
+            "- `docs/api-reference/generate.mdx`: Спецификация генерации архитектуры",
+            "- `docs/api-reference/projects.mdx`: Управление проектами и воркспейсами",
+            "- `docs/api-reference/eval.mdx`: Запуск регрессионного AI-тестирования",
             ""
         ]
 

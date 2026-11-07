@@ -40,6 +40,13 @@ public enum EmailStudio {
                 recipientCategory: "Авторизация",
                 dynamicVariables: ["magicLinkUrl", "expireMinutes"],
                 previewSnippet: "Нажмите на кнопку ниже, чтобы безопасно войти в систему."
+            ),
+            EmailTemplateConfig(
+                templateName: "Invoice Receipt",
+                subjectLine: "Квитанция об оплате тарифа {{planName}}",
+                recipientCategory: "Платежи",
+                dynamicVariables: ["invoiceId", "amount", "currency", "receiptUrl"],
+                previewSnippet: "Платеж успешно проведен. Спасибо за подписку на Kite."
             )
         ]
     }
