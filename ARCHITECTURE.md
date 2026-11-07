@@ -104,7 +104,11 @@ Sources/Kite/
 ├── VectorStoreSheet.swift         Vector embedding indexes, pgvector DDL, and RAG retrieval sheet
 ├── ComplianceSheet.swift          GDPR Art. 17/20 privacy compliance and data deletion sheet
 ├── MultiTenantSheet.swift         Multi-tenant organization isolation and RBAC roles sheet
-└── StressTestSheet.swift          High-concurrency k6 load testing scenarios sheet
+├── StressTestSheet.swift          High-concurrency k6 load testing scenarios sheet
+├── EmailSheet.swift               Transactional email template studio and React Email sheet
+├── DocStudioSheet.swift           Interactive Mintlify/Fumadocs API documentation and playground sheet
+├── IndexOptimizerSheet.swift      PostgreSQL composite/GIN index optimizer and concurrent DDL sheet
+└── ModelRouterSheet.swift         Gemini 3.8 multi-model orchestrator and latency routing sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -149,7 +153,11 @@ Sources/KiteKit/
 ├── VectorStoreSpecifier.swift     Vector chunking specification and pgvector DDL compiler
 ├── ComplianceGuardian.swift       GDPR/CCPA privacy compliance and data deletion route generator
 ├── MultiTenantArchitect.swift     Multi-tenant organization isolation and RBAC middleware builder
-└── StressTestArchitect.swift      High-throughput stress scenario and executable k6 script compiler
+├── StressTestArchitect.swift      High-throughput stress scenario and executable k6 script compiler
+├── EmailStudio.swift              Transactional email catalog and React Email template synthesizer
+├── DocStudio.swift                Interactive API documentation and curl/TypeScript snippet builder
+├── IndexOptimizer.swift           Database query plan analyzer and concurrent index DDL generator
+└── ModelRouter.swift              Gemini 3.8 intelligent task routing matrix and TS client generator
 ```
 
 ### Quality and Craftsmanship Standards
@@ -157,4 +165,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 95/95 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, incident commander, vector store specifier, compliance guardian, multi-tenant architect, and stress test architect.
+- **Automated Self-Test**: 99/99 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, incident commander, vector store specifier, compliance guardian, multi-tenant architect, stress test architect, email studio, doc studio, index optimizer, and model router.

@@ -75,6 +75,10 @@ struct CanvasToolbarView: View {
     let onOpenComplianceGuardian: () -> Void
     let onOpenMultiTenantArchitect: () -> Void
     let onOpenStressTestArchitect: () -> Void
+    let onOpenEmailStudio: () -> Void
+    let onOpenDocStudio: () -> Void
+    let onOpenIndexOptimizer: () -> Void
+    let onOpenModelRouter: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -370,6 +374,30 @@ struct CanvasToolbarView: View {
                         onOpenStressTestArchitect()
                     } label: {
                         Label("Стресс-тесты k6 (Load)", systemImage: "flame")
+                    }
+
+                    Button {
+                        onOpenEmailStudio()
+                    } label: {
+                        Label("Студия писем (Email)", systemImage: "envelope.fill")
+                    }
+
+                    Button {
+                        onOpenDocStudio()
+                    } label: {
+                        Label("Интерактивная документация (Docs API)", systemImage: "doc.text.magnifyingglass")
+                    }
+
+                    Button {
+                        onOpenIndexOptimizer()
+                    } label: {
+                        Label("Оптимизатор индексов БД (Indexes)", systemImage: "point.filled.topleft.down.curvedto.point.bottomright.up")
+                    }
+
+                    Button {
+                        onOpenModelRouter()
+                    } label: {
+                        Label("Мульти-модельный оркестратор (Gemini 3.8)", systemImage: "cpu.fill")
                     }
 
                     Divider()

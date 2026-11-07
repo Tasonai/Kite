@@ -121,7 +121,7 @@ public enum EvalHarness {
         lines.append("  for (const test of testSuite) {")
         lines.append("    try {")
         lines.append("      const response = await ai.models.generateContent({")
-        lines.append("        model: 'gemini-2.5-flash',")
+        lines.append("        model: 'gemini-3.8-flash',")
         lines.append("        contents: test.input,")
         lines.append("      });")
         lines.append("      const text = response.text || '';")

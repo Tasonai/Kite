@@ -115,6 +115,10 @@ struct InfiniteCanvasView: View {
     @State private var isCompliancePresented: Bool = false
     @State private var isMultiTenantPresented: Bool = false
     @State private var isStressTestPresented: Bool = false
+    @State private var isEmailPresented: Bool = false
+    @State private var isDocStudioPresented: Bool = false
+    @State private var isIndexOptimizerPresented: Bool = false
+    @State private var isModelRouterPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -303,6 +307,10 @@ struct InfiniteCanvasView: View {
                 onOpenComplianceGuardian: { isCompliancePresented = true },
                 onOpenMultiTenantArchitect: { isMultiTenantPresented = true },
                 onOpenStressTestArchitect: { isStressTestPresented = true },
+                onOpenEmailStudio: { isEmailPresented = true },
+                onOpenDocStudio: { isDocStudioPresented = true },
+                onOpenIndexOptimizer: { isIndexOptimizerPresented = true },
+                onOpenModelRouter: { isModelRouterPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -580,6 +588,34 @@ struct InfiniteCanvasView: View {
             StressTestSheet(
                 title: title,
                 onDismiss: { isStressTestPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEmailPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            EmailSheet(
+                title: title,
+                onDismiss: { isEmailPresented = false }
+            )
+        }
+        .sheet(isPresented: $isDocStudioPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            DocStudioSheet(
+                title: title,
+                onDismiss: { isDocStudioPresented = false }
+            )
+        }
+        .sheet(isPresented: $isIndexOptimizerPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            IndexOptimizerSheet(
+                title: title,
+                onDismiss: { isIndexOptimizerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isModelRouterPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            ModelRouterSheet(
+                title: title,
+                onDismiss: { isModelRouterPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

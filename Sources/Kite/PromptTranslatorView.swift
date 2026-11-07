@@ -64,6 +64,10 @@ struct PromptTranslatorView: View {
     @State private var isCompliancePresented: Bool = false
     @State private var isMultiTenantPresented: Bool = false
     @State private var isStressTestPresented: Bool = false
+    @State private var isEmailPresented: Bool = false
+    @State private var isDocStudioPresented: Bool = false
+    @State private var isIndexOptimizerPresented: Bool = false
+    @State private var isModelRouterPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -633,6 +637,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Генератор скриптов нагрузочного тестирования k6")
+
+                            Button {
+                                isEmailPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "envelope.fill")
+                                    Text("Письма")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Студия шаблонов транзакционных писем React Email")
+
+                            Button {
+                                isDocStudioPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "doc.text.magnifyingglass")
+                                    Text("Документация API")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Интерактивная документация и playground запросов")
+
+                            Button {
+                                isIndexOptimizerPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "point.filled.topleft.down.curvedto.point.bottomright.up")
+                                    Text("Индексы БД")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Оптимизатор индексов PostgreSQL и миграций")
+
+                            Button {
+                                isModelRouterPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cpu.fill")
+                                    Text("Роутер Gemini 3.8")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Мульти-модельный оркестратор Gemini 3.8 (Flash, Pro, Ultra)")
                         }
                         .padding(.vertical, 2)
                     }
@@ -1185,6 +1237,38 @@ struct PromptTranslatorView: View {
             StressTestSheet(
                 title: title,
                 onDismiss: { isStressTestPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEmailPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            EmailSheet(
+                title: title,
+                onDismiss: { isEmailPresented = false }
+            )
+        }
+        .sheet(isPresented: $isDocStudioPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            DocStudioSheet(
+                title: title,
+                onDismiss: { isDocStudioPresented = false }
+            )
+        }
+        .sheet(isPresented: $isIndexOptimizerPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            IndexOptimizerSheet(
+                title: title,
+                onDismiss: { isIndexOptimizerPresented = false }
+            )
+        }
+        .sheet(isPresented: $isModelRouterPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            ModelRouterSheet(
+                title: title,
+                onDismiss: { isModelRouterPresented = false }
             )
         }
     }

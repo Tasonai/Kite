@@ -24,7 +24,7 @@ public enum TokenBudgeteer {
         [
             FeatureTokenBudget(
                 featureName: "Инлайн-автодополнение промпта",
-                targetModel: "gemini-2.5-flash",
+                targetModel: "gemini-3.8-flash",
                 maxInputTokens: 800,
                 maxOutputTokens: 120,
                 maxLatencyMs: 400,
@@ -32,7 +32,7 @@ public enum TokenBudgeteer {
             ),
             FeatureTokenBudget(
                 featureName: "Генератор полной архитектуры проекта",
-                targetModel: "gemini-2.5-pro",
+                targetModel: "gemini-3.8-pro",
                 maxInputTokens: 8000,
                 maxOutputTokens: 2000,
                 maxLatencyMs: 3200,
@@ -40,7 +40,7 @@ public enum TokenBudgeteer {
             ),
             FeatureTokenBudget(
                 featureName: "Аудит безопасности и OWASP сканер",
-                targetModel: "gemini-2.5-flash",
+                targetModel: "gemini-3.8-flash",
                 maxInputTokens: 3000,
                 maxOutputTokens: 600,
                 maxLatencyMs: 1200,

@@ -4,10 +4,10 @@ import Foundation
 /// so a retired model name or a busy server does not turn into a canned template.
 public enum GeminiClient {
     /// The model used when the user has not picked one.
-    public static let defaultModel = "gemini-3.5-flash"
+    public static let defaultModel = "gemini-3.8-flash"
 
     /// Tried after the requested model, in this order.
-    static let fallbackModels = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"]
+    static let fallbackModels = ["gemini-3.8-flash", "gemini-3.8-pro", "gemini-3.5-flash"]
 
     /// Model names Google has retired for new keys. They map to the default.
     static let retiredModels: Set<String> = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]

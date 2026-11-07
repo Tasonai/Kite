@@ -333,6 +333,22 @@ enum SelfTest {
         let k6Code = StressTestArchitect.generateK6Script(scenarios: StressTestArchitect.starterScenarios)
         check("StressTestArchitect generates load test spec and executable k6 script", stressMd.contains("STRESS & LOAD TESTING SPECIFICATION") && k6Code.contains("export const options"))
 
+        let emailMd = EmailStudio.generateEmailMarkdown(title: "Task Studio", templates: EmailStudio.starterTemplates)
+        let emailTsx = EmailStudio.generateReactEmailSnippet(title: "Task Studio")
+        check("EmailStudio generates transactional email spec and React Email template", emailMd.contains("TRANSACTIONAL EMAIL & NOTIFICATION SPEC") && emailTsx.contains("WelcomeEmail"))
+
+        let docMd = DocStudio.generateDocMarkdown(title: "Task Studio", endpoints: DocStudio.starterEndpoints)
+        let docCurl = DocStudio.generateCurlSnippet(endpoint: DocStudio.starterEndpoints[0])
+        check("DocStudio generates Mintlify API spec and interactive curl playground", docMd.contains("API DOCUMENTATION & INTERACTIVE PLAYGROUND") && docCurl.contains("curl -X"))
+
+        let indexMd = IndexOptimizer.generateIndexMarkdown(title: "Task Studio", indexes: IndexOptimizer.starterRecommendations)
+        let indexSql = IndexOptimizer.generateSqlMigration(indexes: IndexOptimizer.starterRecommendations)
+        check("IndexOptimizer generates DB index spec and concurrent SQL migration", indexMd.contains("DATABASE INDEXING & QUERY PLAN SPEC") && indexSql.contains("CREATE INDEX CONCURRENTLY"))
+
+        let routerMd = ModelRouter.generateRoutingMarkdown(title: "Task Studio", routes: ModelRouter.starterRoutes)
+        let routerTs = ModelRouter.generateTypeScriptRouter(routes: ModelRouter.starterRoutes)
+        check("ModelRouter generates Gemini 3.8 multi-model routing spec and TS router", routerMd.contains("gemini-3.8-flash") && routerTs.contains("gemini-3.8-ultra"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
