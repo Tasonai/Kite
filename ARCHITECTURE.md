@@ -112,7 +112,11 @@ Sources/Kite/
 ├── StorageGuardSheet.swift        Cloud storage presigned upload rules and security sheet
 ├── CacheStrategistSheet.swift     HTTP/CDN cache-control headers and edge caching sheet
 ├── RpcContractSheet.swift         Type-safe tRPC procedure builder and Zod validation sheet
-└── ExperimentSheet.swift          Deterministic A/B experiment bucketing and cohort sheet
+├── ExperimentSheet.swift          Deterministic A/B experiment bucketing and cohort sheet
+├── RateLimiterSheet.swift         DDoS protection, sliding window rate limits, and RATE_LIMITING.md sheet
+├── EventBusSheet.swift            Domain events, typed pub/sub bus, DLQ, and EVENT_BUS.md sheet
+├── QueryCacheSheet.swift          Two-tier L1/L2 query cache, tag invalidation, and QUERY_CACHE.md sheet
+└── WebhookDispatcherSheet.swift   Outgoing webhook delivery, HMAC-SHA256 signing, and OUTGOING_WEBHOOKS.md sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -165,7 +169,11 @@ Sources/KiteKit/
 ├── StorageGuard.swift             Cloud storage security policies and presigned URL compiler
 ├── CacheStrategist.swift          HTTP caching rules and Next.js edge middleware generator
 ├── RpcContractStudio.swift        Typed RPC procedure catalog and tRPC router synthesizer
-└── ExperimentStudio.swift         Deterministic user bucketing and A/B test spec compiler
+├── ExperimentStudio.swift         Deterministic user bucketing and A/B test spec compiler
+├── RateLimiterStudio.swift        Distributed rate limiting policies and Next.js middleware compiler
+├── EventBusStudio.swift           Typed domain event schemas and pub/sub client synthesizer
+├── QueryCacheStudio.swift         Two-tier query caching wrapper and single-flight compiler
+└── WebhookDispatcherStudio.swift  Outgoing signed webhook delivery worker compiler
 ```
 
 ### Quality and Craftsmanship Standards
@@ -173,4 +181,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 103/103 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, incident commander, vector store specifier, compliance guardian, multi-tenant architect, stress test architect, email studio, doc studio, index optimizer, model router, storage guard, cache strategist, rpc contract studio, and experiment studio.
+- **Automated Self-Test**: 107/107 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, incident commander, vector store specifier, compliance guardian, multi-tenant architect, stress test architect, email studio, doc studio, index optimizer, model router, storage guard, cache strategist, rpc contract studio, experiment studio, rate limiter studio, event bus studio, query cache studio, and webhook dispatcher studio.

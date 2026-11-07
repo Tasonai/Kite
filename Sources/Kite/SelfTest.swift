@@ -365,6 +365,22 @@ enum SelfTest {
         let expClient = ExperimentStudio.generateBucketingClientSnippet(experiments: ExperimentStudio.starterExperiments)
         check("ExperimentStudio generates A/B experiment spec and deterministic bucketer", expMd.contains("A/B TESTING & EXPERIMENT BUCKETING") && expClient.contains("getExperimentVariant"))
 
+        let rateMd = RateLimiterStudio.generateRateLimitMarkdown(title: "Task Studio", rules: RateLimiterStudio.starterRules)
+        let rateMw = RateLimiterStudio.generateRateLimitMiddleware(rules: RateLimiterStudio.starterRules)
+        check("RateLimiterStudio generates DDoS limit spec and Upstash Redis middleware", rateMd.contains("DISTRIBUTED RATE LIMITING") && rateMw.contains("slidingWindow"))
+
+        let busMd = EventBusStudio.generateEventBusMarkdown(title: "Task Studio", events: EventBusStudio.starterEvents)
+        let busClient = EventBusStudio.generateEventBusClientSnippet(events: EventBusStudio.starterEvents)
+        check("EventBusStudio generates domain events spec and typed event bus client", busMd.contains("DISTRIBUTED EVENT BUS") && busClient.contains("DomainEventBus"))
+
+        let cacheQMd = QueryCacheStudio.generateQueryCacheMarkdown(title: "Task Studio", caches: QueryCacheStudio.starterCaches)
+        let cacheQSnippet = QueryCacheStudio.generateCacheAsideSnippet(caches: QueryCacheStudio.starterCaches)
+        check("QueryCacheStudio generates two-tier query cache spec and LRU/Redis wrapper", cacheQMd.contains("DISTRIBUTED TWO-TIER QUERY CACHING") && cacheQSnippet.contains("cachedQuery"))
+
+        let hookMd = WebhookDispatcherStudio.generateDispatcherMarkdown(title: "Task Studio", webhooks: WebhookDispatcherStudio.starterWebhooks)
+        let hookWorker = WebhookDispatcherStudio.generateWorkerSnippet(webhooks: WebhookDispatcherStudio.starterWebhooks)
+        check("WebhookDispatcherStudio generates webhook delivery spec and HMAC-SHA256 signer", hookMd.contains("OUTGOING WEBHOOK DISPATCHER") && hookWorker.contains("createHmac"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

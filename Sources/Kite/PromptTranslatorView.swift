@@ -72,6 +72,10 @@ struct PromptTranslatorView: View {
     @State private var isCacheStrategistPresented: Bool = false
     @State private var isRpcContractPresented: Bool = false
     @State private var isExperimentPresented: Bool = false
+    @State private var isRateLimiterPresented: Bool = false
+    @State private var isEventBusPresented: Bool = false
+    @State private var isQueryCachePresented: Bool = false
+    @State private var isWebhookDispatcherPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -737,6 +741,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Песочница A/B тестирования и бакетирования пользователей")
+
+                            Button {
+                                isRateLimiterPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                                    Text("Лимиты")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Защита от DDoS и алгоритмы Sliding Window / Token Bucket")
+
+                            Button {
+                                isEventBusPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                                    Text("Шина событий")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Доменные события, Zod-типизация и асинхронный Pub/Sub")
+
+                            Button {
+                                isQueryCachePresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "cylinder.split.1x2.fill")
+                                    Text("Кэш запросов")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Двухуровневый кэш запросов L1 Memory + L2 Redis и теги")
+
+                            Button {
+                                isWebhookDispatcherPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "paperplane.fill")
+                                    Text("Вебхуки")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Диспетчер исходящих вебхуков с подписью HMAC-SHA256")
                         }
                         .padding(.vertical, 2)
                     }
@@ -1353,6 +1405,38 @@ struct PromptTranslatorView: View {
             ExperimentSheet(
                 title: title,
                 onDismiss: { isExperimentPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRateLimiterPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            RateLimiterSheet(
+                title: title,
+                onDismiss: { isRateLimiterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEventBusPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            EventBusSheet(
+                title: title,
+                onDismiss: { isEventBusPresented = false }
+            )
+        }
+        .sheet(isPresented: $isQueryCachePresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            QueryCacheSheet(
+                title: title,
+                onDismiss: { isQueryCachePresented = false }
+            )
+        }
+        .sheet(isPresented: $isWebhookDispatcherPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            WebhookDispatcherSheet(
+                title: title,
+                onDismiss: { isWebhookDispatcherPresented = false }
             )
         }
     }

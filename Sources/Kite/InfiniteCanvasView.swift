@@ -123,6 +123,10 @@ struct InfiniteCanvasView: View {
     @State private var isCacheStrategistPresented: Bool = false
     @State private var isRpcContractPresented: Bool = false
     @State private var isExperimentPresented: Bool = false
+    @State private var isRateLimiterPresented: Bool = false
+    @State private var isEventBusPresented: Bool = false
+    @State private var isQueryCachePresented: Bool = false
+    @State private var isWebhookDispatcherPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -319,6 +323,10 @@ struct InfiniteCanvasView: View {
                 onOpenCacheStrategist: { isCacheStrategistPresented = true },
                 onOpenRpcContractStudio: { isRpcContractPresented = true },
                 onOpenExperimentStudio: { isExperimentPresented = true },
+                onOpenRateLimiter: { isRateLimiterPresented = true },
+                onOpenEventBus: { isEventBusPresented = true },
+                onOpenQueryCache: { isQueryCachePresented = true },
+                onOpenWebhookDispatcher: { isWebhookDispatcherPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -652,6 +660,34 @@ struct InfiniteCanvasView: View {
             ExperimentSheet(
                 title: title,
                 onDismiss: { isExperimentPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRateLimiterPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            RateLimiterSheet(
+                title: title,
+                onDismiss: { isRateLimiterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isEventBusPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            EventBusSheet(
+                title: title,
+                onDismiss: { isEventBusPresented = false }
+            )
+        }
+        .sheet(isPresented: $isQueryCachePresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            QueryCacheSheet(
+                title: title,
+                onDismiss: { isQueryCachePresented = false }
+            )
+        }
+        .sheet(isPresented: $isWebhookDispatcherPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            WebhookDispatcherSheet(
+                title: title,
+                onDismiss: { isWebhookDispatcherPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

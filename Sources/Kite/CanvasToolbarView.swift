@@ -83,6 +83,10 @@ struct CanvasToolbarView: View {
     let onOpenCacheStrategist: () -> Void
     let onOpenRpcContractStudio: () -> Void
     let onOpenExperimentStudio: () -> Void
+    let onOpenRateLimiter: () -> Void
+    let onOpenEventBus: () -> Void
+    let onOpenQueryCache: () -> Void
+    let onOpenWebhookDispatcher: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -426,6 +430,30 @@ struct CanvasToolbarView: View {
                         onOpenExperimentStudio()
                     } label: {
                         Label("Песочница A/B тестов (Experiments)", systemImage: "slider.horizontal.2.square")
+                    }
+
+                    Button {
+                        onOpenRateLimiter()
+                    } label: {
+                        Label("Защита от DDoS и лимиты (Rate Limiter)", systemImage: "shield.lefthalf.filled.badge.checkmark")
+                    }
+
+                    Button {
+                        onOpenEventBus()
+                    } label: {
+                        Label("Шина событий и Pub/Sub (Event Bus)", systemImage: "point.3.connected.trianglepath.dotted")
+                    }
+
+                    Button {
+                        onOpenQueryCache()
+                    } label: {
+                        Label("Двухуровневый кэш запросов (Query Cache)", systemImage: "cylinder.split.1x2.fill")
+                    }
+
+                    Button {
+                        onOpenWebhookDispatcher()
+                    } label: {
+                        Label("Диспетчер исходящих вебхуков (Webhooks)", systemImage: "paperplane.fill")
                     }
 
                     Divider()
