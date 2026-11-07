@@ -71,6 +71,10 @@ struct CanvasToolbarView: View {
     let onOpenRealtimeArchitect: () -> Void
     let onOpenJobQueueStrategist: () -> Void
     let onOpenIncidentCommander: () -> Void
+    let onOpenVectorStoreSpecifier: () -> Void
+    let onOpenComplianceGuardian: () -> Void
+    let onOpenMultiTenantArchitect: () -> Void
+    let onOpenStressTestArchitect: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -342,6 +346,30 @@ struct CanvasToolbarView: View {
                         onOpenIncidentCommander()
                     } label: {
                         Label("План реагирования и откат (Rollback)", systemImage: "cross.case")
+                    }
+
+                    Button {
+                        onOpenVectorStoreSpecifier()
+                    } label: {
+                        Label("Векторные БД и RAG (pgvector)", systemImage: "point.3.filled.connected.triangle.path")
+                    }
+
+                    Button {
+                        onOpenComplianceGuardian()
+                    } label: {
+                        Label("Комплаенс и GDPR (Privacy)", systemImage: "hand.raised.square")
+                    }
+
+                    Button {
+                        onOpenMultiTenantArchitect()
+                    } label: {
+                        Label("Мульти-тенантность (RBAC)", systemImage: "building.2.crop.circle")
+                    }
+
+                    Button {
+                        onOpenStressTestArchitect()
+                    } label: {
+                        Label("Стресс-тесты k6 (Load)", systemImage: "flame")
                     }
 
                     Divider()

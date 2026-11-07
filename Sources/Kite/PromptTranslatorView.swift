@@ -60,6 +60,10 @@ struct PromptTranslatorView: View {
     @State private var isRealtimePresented: Bool = false
     @State private var isJobQueuePresented: Bool = false
     @State private var isIncidentCommanderPresented: Bool = false
+    @State private var isVectorStorePresented: Bool = false
+    @State private var isCompliancePresented: Bool = false
+    @State private var isMultiTenantPresented: Bool = false
+    @State private var isStressTestPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -581,6 +585,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("План аварийного восстановления и отката")
+
+                            Button {
+                                isVectorStorePresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "point.3.filled.connected.triangle.path")
+                                    Text("Векторные БД")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Спецификатор векторных индексов и RAG (pgvector)")
+
+                            Button {
+                                isCompliancePresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "hand.raised.square")
+                                    Text("Приватность")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Защитник комплаенса, GDPR и удаление данных")
+
+                            Button {
+                                isMultiTenantPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "building.2.crop.circle")
+                                    Text("Тенантность")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Изоляция организаций и роли RBAC")
+
+                            Button {
+                                isStressTestPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "flame")
+                                    Text("Стресс-тесты")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Генератор скриптов нагрузочного тестирования k6")
                         }
                         .padding(.vertical, 2)
                     }
@@ -1101,6 +1153,38 @@ struct PromptTranslatorView: View {
             IncidentCommanderSheet(
                 title: title,
                 onDismiss: { isIncidentCommanderPresented = false }
+            )
+        }
+        .sheet(isPresented: $isVectorStorePresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            VectorStoreSheet(
+                title: title,
+                onDismiss: { isVectorStorePresented = false }
+            )
+        }
+        .sheet(isPresented: $isCompliancePresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            ComplianceSheet(
+                title: title,
+                onDismiss: { isCompliancePresented = false }
+            )
+        }
+        .sheet(isPresented: $isMultiTenantPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            MultiTenantSheet(
+                title: title,
+                onDismiss: { isMultiTenantPresented = false }
+            )
+        }
+        .sheet(isPresented: $isStressTestPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            StressTestSheet(
+                title: title,
+                onDismiss: { isStressTestPresented = false }
             )
         }
     }

@@ -111,6 +111,10 @@ struct InfiniteCanvasView: View {
     @State private var isRealtimePresented: Bool = false
     @State private var isJobQueuePresented: Bool = false
     @State private var isIncidentCommanderPresented: Bool = false
+    @State private var isVectorStorePresented: Bool = false
+    @State private var isCompliancePresented: Bool = false
+    @State private var isMultiTenantPresented: Bool = false
+    @State private var isStressTestPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -295,6 +299,10 @@ struct InfiniteCanvasView: View {
                 onOpenRealtimeArchitect: { isRealtimePresented = true },
                 onOpenJobQueueStrategist: { isJobQueuePresented = true },
                 onOpenIncidentCommander: { isIncidentCommanderPresented = true },
+                onOpenVectorStoreSpecifier: { isVectorStorePresented = true },
+                onOpenComplianceGuardian: { isCompliancePresented = true },
+                onOpenMultiTenantArchitect: { isMultiTenantPresented = true },
+                onOpenStressTestArchitect: { isStressTestPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -544,6 +552,34 @@ struct InfiniteCanvasView: View {
             IncidentCommanderSheet(
                 title: title,
                 onDismiss: { isIncidentCommanderPresented = false }
+            )
+        }
+        .sheet(isPresented: $isVectorStorePresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            VectorStoreSheet(
+                title: title,
+                onDismiss: { isVectorStorePresented = false }
+            )
+        }
+        .sheet(isPresented: $isCompliancePresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            ComplianceSheet(
+                title: title,
+                onDismiss: { isCompliancePresented = false }
+            )
+        }
+        .sheet(isPresented: $isMultiTenantPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            MultiTenantSheet(
+                title: title,
+                onDismiss: { isMultiTenantPresented = false }
+            )
+        }
+        .sheet(isPresented: $isStressTestPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            StressTestSheet(
+                title: title,
+                onDismiss: { isStressTestPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

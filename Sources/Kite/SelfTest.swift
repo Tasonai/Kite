@@ -317,6 +317,22 @@ enum SelfTest {
         let healthzCode = IncidentCommander.generateHealthCheckRouteSnippet()
         check("IncidentCommander generates disaster recovery runbook and healthz probe", incidentMd.contains("EMERGENCY INCIDENT & ROLLBACK") && healthzCode.contains("export async function GET"))
 
+        let vecMd = VectorStoreSpecifier.generateVectorStoreMarkdown(title: "Task Studio", configs: VectorStoreSpecifier.starterConfigs)
+        let vecDdl = VectorStoreSpecifier.generatePgVectorDDL(configs: VectorStoreSpecifier.starterConfigs)
+        check("VectorStoreSpecifier generates vector RAG spec and pgvector DDL schema", vecMd.contains("VECTOR STORE & RAG RETRIEVAL") && vecDdl.contains("CREATE EXTENSION IF NOT EXISTS vector"))
+
+        let compMd = ComplianceGuardian.generateComplianceMarkdown(title: "Task Studio", policies: ComplianceGuardian.starterPolicies)
+        let delHandler = ComplianceGuardian.generateDeletionHandlerSnippet()
+        check("ComplianceGuardian generates GDPR privacy spec and account deletion route", compMd.contains("PRIVACY & COMPLIANCE SPECIFICATION") && delHandler.contains("export async function POST"))
+
+        let tenMd = MultiTenantArchitect.generateTenancyMarkdown(title: "Task Studio", roles: MultiTenantArchitect.starterRoles)
+        let tenMw = MultiTenantArchitect.generateTenantMiddlewareSnippet()
+        check("MultiTenantArchitect generates tenant RBAC spec and isolation middleware", tenMd.contains("MULTI-TENANT ISOLATION") && tenMw.contains("getTenantContext"))
+
+        let stressMd = StressTestArchitect.generateStressMarkdown(title: "Task Studio", scenarios: StressTestArchitect.starterScenarios)
+        let k6Code = StressTestArchitect.generateK6Script(scenarios: StressTestArchitect.starterScenarios)
+        check("StressTestArchitect generates load test spec and executable k6 script", stressMd.contains("STRESS & LOAD TESTING SPECIFICATION") && k6Code.contains("export const options"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

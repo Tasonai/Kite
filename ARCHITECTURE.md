@@ -100,7 +100,11 @@ Sources/Kite/
 ├── TokenBudgetSheet.swift         AI token, cost, and latency budget management sheet
 ├── RealtimeSheet.swift            SSE and WebSocket streaming with auto-reconnection sheet
 ├── JobQueueSheet.swift            Background jobs, Inngest queues, and cron spec sheet
-└── IncidentCommanderSheet.swift   Disaster recovery runbook, healthz probes, and rollback sheet
+├── IncidentCommanderSheet.swift   Disaster recovery runbook, healthz probes, and rollback sheet
+├── VectorStoreSheet.swift         Vector embedding indexes, pgvector DDL, and RAG retrieval sheet
+├── ComplianceSheet.swift          GDPR Art. 17/20 privacy compliance and data deletion sheet
+├── MultiTenantSheet.swift         Multi-tenant organization isolation and RBAC roles sheet
+└── StressTestSheet.swift          High-concurrency k6 load testing scenarios sheet
 Sources/KiteKit/
 ├── AIPitfalls.swift               Heuristic beginner pitfall detector (auth, payments, media, DB, AI quotas)
 ├── ProjectScaffolder.swift        Full project generator with START_HERE.md and GSD phase architecture
@@ -141,7 +145,11 @@ Sources/KiteKit/
 ├── TokenBudgeteer.swift           AI token, cost, and latency resource constraint compiler
 ├── RealtimeArchitect.swift        Streaming protocol selector and resilient SSE hook synthesizer
 ├── JobQueueStrategist.swift       Background worker catalog and Inngest function compiler
-└── IncidentCommander.swift        Disaster recovery runbook compiler and healthz probe generator
+├── IncidentCommander.swift        Disaster recovery runbook compiler and healthz probe generator
+├── VectorStoreSpecifier.swift     Vector chunking specification and pgvector DDL compiler
+├── ComplianceGuardian.swift       GDPR/CCPA privacy compliance and data deletion route generator
+├── MultiTenantArchitect.swift     Multi-tenant organization isolation and RBAC middleware builder
+└── StressTestArchitect.swift      High-throughput stress scenario and executable k6 script compiler
 ```
 
 ### Quality and Craftsmanship Standards
@@ -149,4 +157,4 @@ Sources/KiteKit/
 - **Apple HIG Grid**: Every dimension, margin, and padding adheres strictly to 0, 1, 2, or multiples of 4 pt.
 - **Zero Emojis**: 100% SF Symbols and system glyphs across UI, code, comments, and commit messages.
 - **Zero Warnings**: Clean release compilation under Swift 6.
-- **Automated Self-Test**: 91/91 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, and incident commander.
+- **Automated Self-Test**: 95/95 regression checks covering search, models, networking, canvas serialization, conflict resolution, pitfalls, starter prompt generation, editor launching, interactive mockups, blueprint packs, Antigravity waves, readiness linter, enhanced Mermaid export, error doctor, schema designer, codebase auditor, instant preview server, API contracts, state flow simulator, sitemap router, git storyteller, seed data generator, secret shield, dependency guard, deploy blueprint generator, context optimizer, component contract matrix, acceptance criteria builder, negative scope firewall, workstream splitter, patch inspector, fallback planner, developer runbook builder, eval harness, feature flag matrix, telemetry specifier, performance budget, threat modeler, migration strategist, localization specifier, webhook simulator, accessibility auditor, monorepo architect, SEO studio, skill synthesizer, token budgeteer, realtime architect, job queue strategist, incident commander, vector store specifier, compliance guardian, multi-tenant architect, and stress test architect.
