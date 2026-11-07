@@ -79,6 +79,10 @@ struct CanvasToolbarView: View {
     let onOpenDocStudio: () -> Void
     let onOpenIndexOptimizer: () -> Void
     let onOpenModelRouter: () -> Void
+    let onOpenStorageGuard: () -> Void
+    let onOpenCacheStrategist: () -> Void
+    let onOpenRpcContractStudio: () -> Void
+    let onOpenExperimentStudio: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -398,6 +402,30 @@ struct CanvasToolbarView: View {
                         onOpenModelRouter()
                     } label: {
                         Label("Мульти-модельный оркестратор (Gemini 3.8)", systemImage: "cpu.fill")
+                    }
+
+                    Button {
+                        onOpenStorageGuard()
+                    } label: {
+                        Label("Страж облачных хранилищ (Storage)", systemImage: "externaldrive.badge.shield")
+                    }
+
+                    Button {
+                        onOpenCacheStrategist()
+                    } label: {
+                        Label("Стратег кэширования (Cache)", systemImage: "bolt.horizontal.circle.fill")
+                    }
+
+                    Button {
+                        onOpenRpcContractStudio()
+                    } label: {
+                        Label("Студия RPC-контрактов (tRPC)", systemImage: "arrow.triangle.swap")
+                    }
+
+                    Button {
+                        onOpenExperimentStudio()
+                    } label: {
+                        Label("Песочница A/B тестов (Experiments)", systemImage: "slider.horizontal.2.square")
                     }
 
                     Divider()

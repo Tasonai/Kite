@@ -68,6 +68,10 @@ struct PromptTranslatorView: View {
     @State private var isDocStudioPresented: Bool = false
     @State private var isIndexOptimizerPresented: Bool = false
     @State private var isModelRouterPresented: Bool = false
+    @State private var isStorageGuardPresented: Bool = false
+    @State private var isCacheStrategistPresented: Bool = false
+    @State private var isRpcContractPresented: Bool = false
+    @State private var isExperimentPresented: Bool = false
     @State private var lastScaffoldedDirectory: URL? = nil
     @State private var isSavedToIdeas: Bool = false
     @State private var isGenerating: Bool = false
@@ -685,6 +689,54 @@ struct PromptTranslatorView: View {
                             }
                             .buttonStyle(.bordered)
                             .help("Мульти-модельный оркестратор Gemini 3.8 (Flash, Pro, Ultra)")
+
+                            Button {
+                                isStorageGuardPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "externaldrive.badge.shield")
+                                    Text("Хранилища")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Страж облачных хранилищ S3, R2 и Presigned URLs")
+
+                            Button {
+                                isCacheStrategistPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "bolt.horizontal.circle.fill")
+                                    Text("Кэширование")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Стратегии HTTP/CDN Cache-Control и SWR")
+
+                            Button {
+                                isRpcContractPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.triangle.swap")
+                                    Text("RPC / tRPC")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Студия типизированных RPC-контрактов с Zod")
+
+                            Button {
+                                isExperimentPresented = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "slider.horizontal.2.square")
+                                    Text("A/B Тесты")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .help("Песочница A/B тестирования и бакетирования пользователей")
                         }
                         .padding(.vertical, 2)
                     }
@@ -1269,6 +1321,38 @@ struct PromptTranslatorView: View {
             ModelRouterSheet(
                 title: title,
                 onDismiss: { isModelRouterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isStorageGuardPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            StorageGuardSheet(
+                title: title,
+                onDismiss: { isStorageGuardPresented = false }
+            )
+        }
+        .sheet(isPresented: $isCacheStrategistPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            CacheStrategistSheet(
+                title: title,
+                onDismiss: { isCacheStrategistPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRpcContractPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            RpcContractSheet(
+                title: title,
+                onDismiss: { isRpcContractPresented = false }
+            )
+        }
+        .sheet(isPresented: $isExperimentPresented) {
+            let effectiveTitle = rawPrompt.split(separator: " ").prefix(4).joined(separator: " ")
+            let title = effectiveTitle.isEmpty ? "Новый проект" : String(effectiveTitle)
+            ExperimentSheet(
+                title: title,
+                onDismiss: { isExperimentPresented = false }
             )
         }
     }

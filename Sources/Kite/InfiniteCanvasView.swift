@@ -119,6 +119,10 @@ struct InfiniteCanvasView: View {
     @State private var isDocStudioPresented: Bool = false
     @State private var isIndexOptimizerPresented: Bool = false
     @State private var isModelRouterPresented: Bool = false
+    @State private var isStorageGuardPresented: Bool = false
+    @State private var isCacheStrategistPresented: Bool = false
+    @State private var isRpcContractPresented: Bool = false
+    @State private var isExperimentPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -311,6 +315,10 @@ struct InfiniteCanvasView: View {
                 onOpenDocStudio: { isDocStudioPresented = true },
                 onOpenIndexOptimizer: { isIndexOptimizerPresented = true },
                 onOpenModelRouter: { isModelRouterPresented = true },
+                onOpenStorageGuard: { isStorageGuardPresented = true },
+                onOpenCacheStrategist: { isCacheStrategistPresented = true },
+                onOpenRpcContractStudio: { isRpcContractPresented = true },
+                onOpenExperimentStudio: { isExperimentPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -616,6 +624,34 @@ struct InfiniteCanvasView: View {
             ModelRouterSheet(
                 title: title,
                 onDismiss: { isModelRouterPresented = false }
+            )
+        }
+        .sheet(isPresented: $isStorageGuardPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            StorageGuardSheet(
+                title: title,
+                onDismiss: { isStorageGuardPresented = false }
+            )
+        }
+        .sheet(isPresented: $isCacheStrategistPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            CacheStrategistSheet(
+                title: title,
+                onDismiss: { isCacheStrategistPresented = false }
+            )
+        }
+        .sheet(isPresented: $isRpcContractPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            RpcContractSheet(
+                title: title,
+                onDismiss: { isRpcContractPresented = false }
+            )
+        }
+        .sheet(isPresented: $isExperimentPresented) {
+            let title = frames.first?.title ?? (items.first?.title ?? "Kite App")
+            ExperimentSheet(
+                title: title,
+                onDismiss: { isExperimentPresented = false }
             )
         }
         .sheet(isPresented: $isReferencePickerOpen) {

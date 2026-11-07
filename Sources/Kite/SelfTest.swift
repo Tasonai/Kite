@@ -349,6 +349,22 @@ enum SelfTest {
         let routerTs = ModelRouter.generateTypeScriptRouter(routes: ModelRouter.starterRoutes)
         check("ModelRouter generates Gemini 3.8 multi-model routing spec and TS router", routerMd.contains("gemini-3.8-flash") && routerTs.contains("gemini-3.8-ultra"))
 
+        let storageMd = StorageGuard.generateStorageMarkdown(title: "Task Studio", policies: StorageGuard.starterPolicies)
+        let storageRoute = StorageGuard.generatePresignedUploadSnippet(policy: StorageGuard.starterPolicies[0])
+        check("StorageGuard generates storage security policy and presigned upload route", storageMd.contains("CLOUD STORAGE SECURITY") && storageRoute.contains("getSignedUrl"))
+
+        let cacheMd = CacheStrategist.generateCacheMarkdown(title: "Task Studio", rules: CacheStrategist.starterRules)
+        let cacheMw = CacheStrategist.generateCacheMiddlewareSnippet(rules: CacheStrategist.starterRules)
+        check("CacheStrategist generates HTTP cache spec and Next.js edge middleware", cacheMd.contains("HTTP, CDN & SERVICE WORKER CACHE STRATEGY") && cacheMw.contains("Cache-Control"))
+
+        let rpcMd = RpcContractStudio.generateRpcMarkdown(title: "Task Studio", procedures: RpcContractStudio.starterProcedures)
+        let rpcRouter = RpcContractStudio.generateTrpcRouterSnippet(procedures: RpcContractStudio.starterProcedures)
+        check("RpcContractStudio generates typed RPC spec and tRPC Zod router", rpcMd.contains("END-TO-END TYPED RPC") && rpcRouter.contains("initTRPC"))
+
+        let expMd = ExperimentStudio.generateExperimentMarkdown(title: "Task Studio", experiments: ExperimentStudio.starterExperiments)
+        let expClient = ExperimentStudio.generateBucketingClientSnippet(experiments: ExperimentStudio.starterExperiments)
+        check("ExperimentStudio generates A/B experiment spec and deterministic bucketer", expMd.contains("A/B TESTING & EXPERIMENT BUCKETING") && expClient.contains("getExperimentVariant"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
