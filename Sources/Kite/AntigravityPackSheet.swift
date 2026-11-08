@@ -13,6 +13,8 @@ struct AntigravityPackSheet: View {
     @State private var isCopied: Bool = false
     @State private var copiedNotice: String? = nil
     @State private var completedTasks: Set<String> = []
+    @State private var watchedDirectoryURL: URL? = nil
+    @State private var autoDetectedCount: Int = 0
 
     private var waves: [AntigravityWave] {
         AntigravityPackGenerator.buildWaves(
@@ -152,6 +154,38 @@ struct AntigravityPackSheet: View {
 
             Divider()
 
+            if let watchedURL = watchedDirectoryURL {
+                HStack(spacing: 12) {
+                    Image(systemName: "waveform.path.ecg")
+                        .foregroundStyle(Color.green)
+                    Text("Live Watcher:")
+                        .font(.caption.bold())
+                    Text(watchedURL.lastPathComponent)
+                        .font(.caption.monospaced())
+                    Text("Обнаружено \(autoDetectedCount) задач")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        rescanDirectory()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Сканировать")
+                        }
+                        .font(.caption2)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.green.opacity(0.08))
+
+                Divider()
+            }
+
             // Main Tab Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -210,6 +244,16 @@ struct AntigravityPackSheet: View {
                     HStack(spacing: 8) {
                         Image(systemName: "folder.badge.plus")
                         Text("Экспорт в проект...")
+                    }
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    selectFolderForWatching()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: watchedDirectoryURL != nil ? "gauge.with.needle.fill" : "folder.badge.gearshape")
+                        Text(watchedDirectoryURL != nil ? "Live Watcher" : "Подключить Watcher...")
                     }
                 }
                 .buttonStyle(.bordered)
@@ -502,6 +546,29 @@ struct AntigravityPackSheet: View {
         }
     }
 
+    private func selectFolderForWatching() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Подключить"
+        panel.message = "Выберите корневую папку проекта для отслеживания прогресса"
+        if panel.runModal() == .OK, let folder = panel.url {
+            watchedDirectoryURL = folder
+            rescanDirectory()
+        }
+    }
+
+    private func rescanDirectory() {
+        guard let folder = watchedDirectoryURL else { return }
+        let snapshot = ProjectWatcherService.analyzeDirectory(at: folder, waves: waves)
+        for key in snapshot.completedTaskKeys {
+            completedTasks.insert(key)
+        }
+        autoDetectedCount = snapshot.completedTaskKeys.count
+        notifyCopied("Обнаружено \(autoDetectedCount) готовых задач (\(snapshot.overallPercentage)% проекта)")
+    }
+
     private func exportToProjectFolder() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -516,7 +583,9 @@ struct AntigravityPackSheet: View {
                 try indexing.write(to: folder.appendingPathComponent("INDEXING.md"), atomically: true, encoding: .utf8)
                 let routing = ModelRouter.generateRoutingMarkdown(title: title, routes: ModelRouter.starterRoutes)
                 try routing.write(to: folder.appendingPathComponent("MODEL_ROUTING.md"), atomically: true, encoding: .utf8)
-                notifyCopied("Манифесты сохранены в папку проекта")
+                watchedDirectoryURL = folder
+                rescanDirectory()
+                notifyCopied("Манифесты сохранены и подключен Live Watcher")
             } catch {
                 notifyCopied("Ошибка экспорта: \(error.localizedDescription)")
             }

@@ -173,6 +173,17 @@ enum SelfTest {
         )
         check("CanvasAutoArchitect synthesizes production topology with 100% health score", autoArch.frames.count == 5 && autoArch.connections.count == 9 && autoArchReport.healthScore == 100)
 
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: tempDir.appendingPathComponent("prisma"), withIntermediateDirectories: true)
+        try? "model User { id String @id }".write(to: tempDir.appendingPathComponent("prisma/schema.prisma"), atomically: true, encoding: .utf8)
+        try? FileManager.default.createDirectory(at: tempDir.appendingPathComponent("src/api"), withIntermediateDirectories: true)
+        try? "export const api = {}".write(to: tempDir.appendingPathComponent("src/api/client.ts"), atomically: true, encoding: .utf8)
+
+        let sampleWaves = AntigravityPackGenerator.buildWaves(title: "Test", concept: "Prisma and API", platform: "Web", style: "Minimal", architectureMermaid: nil)
+        let watcherSnapshot = ProjectWatcherService.analyzeDirectory(at: tempDir, waves: sampleWaves)
+        try? FileManager.default.removeItem(at: tempDir)
+        check("ProjectWatcherService detects created wave artifacts and auto-progresses checklist", !watcherSnapshot.completedTaskKeys.isEmpty && (watcherSnapshot.wavePercentages[1] ?? 0) > 0)
+
         let diag = VibeErrorDoctor.diagnose(rawLog: "Cannot find module '@supabase/supabase-js' from /src/api.ts:24")
         check("VibeErrorDoctor diagnoses missing dependency and produces surgical prompt", diag.category == .missingDependency && diag.targetFile == "api.ts" && diag.lineNumber == 24)
 
