@@ -329,6 +329,7 @@ struct InfiniteCanvasView: View {
                 onOpenQueryCache: { isQueryCachePresented = true },
                 onOpenWebhookDispatcher: { isWebhookDispatcherPresented = true },
                 onOpenTopologyValidator: { isTopologyValidatorPresented = true },
+                onSynthesizeArchitecture: { synthesizeArchitecture() },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -1296,6 +1297,28 @@ struct InfiniteCanvasView: View {
         )
         frames.append(newFrame)
         showToast("Фрейм добавлен на холст")
+    }
+
+    private func synthesizeArchitecture() {
+        let activeIdea = items.first
+        let title = activeIdea?.title ?? "Kite Microservice App"
+        let concept = activeIdea?.concept ?? "Production Full-Stack Architecture"
+        let platform = activeIdea?.platform ?? "Web"
+        let style = activeIdea?.style ?? "Apple Minimal"
+
+        let generated = CanvasAutoArchitect.synthesize(
+            title: title,
+            concept: concept,
+            platform: platform,
+            style: style
+        )
+
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) {
+            frames = generated.frames
+            stickies = generated.stickies
+            connections = generated.connections
+        }
+        showToast("Топология микросервисов синтезирована из идеи")
     }
 
     private func applyCoArchitect() {

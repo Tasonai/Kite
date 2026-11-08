@@ -166,6 +166,13 @@ enum SelfTest {
         let topologyReport = CanvasTopologyValidator.validate(nodes: sampleNodes, connections: sampleTopologyConns)
         check("CanvasTopologyValidator detects direct DB access and generates audit report", !topologyReport.isSecure && topologyReport.issues.contains { $0.severity == .critical })
 
+        let autoArch = CanvasAutoArchitect.synthesize(title: "Payment Gateway", concept: "Card processing and invoicing", platform: "Web", style: "Minimal")
+        let autoArchReport = CanvasTopologyValidator.validate(
+            nodes: autoArch.stickies.map { TopologyNodeDescriptor(id: "sticky-\($0.id.uuidString)", title: $0.text, role: CanvasTopologyValidator.inferRole(title: $0.text)) },
+            connections: autoArch.connections
+        )
+        check("CanvasAutoArchitect synthesizes production topology with 100% health score", autoArch.frames.count == 5 && autoArch.connections.count == 9 && autoArchReport.healthScore == 100)
+
         let diag = VibeErrorDoctor.diagnose(rawLog: "Cannot find module '@supabase/supabase-js' from /src/api.ts:24")
         check("VibeErrorDoctor diagnoses missing dependency and produces surgical prompt", diag.category == .missingDependency && diag.targetFile == "api.ts" && diag.lineNumber == 24)
 

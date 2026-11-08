@@ -88,6 +88,7 @@ struct CanvasToolbarView: View {
     let onOpenQueryCache: () -> Void
     let onOpenWebhookDispatcher: () -> Void
     let onOpenTopologyValidator: () -> Void
+    let onSynthesizeArchitecture: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -123,6 +124,12 @@ struct CanvasToolbarView: View {
                         onAIAutoLayout()
                     } label: {
                         Label("AI-Раскладка секций", systemImage: "wand.and.stars")
+                    }
+
+                    Button {
+                        onSynthesizeArchitecture()
+                    } label: {
+                        Label("Синтезировать топологию из идеи", systemImage: "sparkles.rectangle.stack")
                     }
 
                     Button {

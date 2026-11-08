@@ -65,17 +65,21 @@ public enum CanvasTopologyValidator {
     public static func inferRole(title: String) -> String {
         let lower = title.lowercased()
         if lower.contains("db") || lower.contains("database") || lower.contains("postgres") ||
-           lower.contains("redis") || lower.contains("mongo") || lower.contains("sql") || lower.contains("storage") {
+           lower.contains("redis") || lower.contains("mongo") || lower.contains("sql") || lower.contains("storage") ||
+           lower.contains("база") || lower.contains("бд") || lower.contains("хранилище") {
             return "database"
         }
         if lower.contains("ui") || lower.contains("frontend") || lower.contains("client") ||
-           lower.contains("mobile") || lower.contains("web") || lower.contains("app") || lower.contains("view") {
+           lower.contains("mobile") || lower.contains("web") || lower.contains("app") || lower.contains("view") ||
+           lower.contains("клиент") || lower.contains("интерфейс") || lower.contains("экран") || lower.contains("состояни") {
             return "client"
         }
-        if lower.contains("gateway") || lower.contains("proxy") || lower.contains("ingress") || lower.contains("router") {
+        if lower.contains("gateway") || lower.contains("proxy") || lower.contains("ingress") || lower.contains("router") ||
+           lower.contains("шлюз") || lower.contains("роутер") {
             return "gateway"
         }
-        if lower.contains("queue") || lower.contains("kafka") || lower.contains("bus") || lower.contains("event") {
+        if lower.contains("queue") || lower.contains("kafka") || lower.contains("bus") || lower.contains("event") ||
+           lower.contains("очередь") || lower.contains("событи") {
             return "eventbus"
         }
         return "service"
