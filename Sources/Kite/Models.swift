@@ -25,8 +25,8 @@ final class Item {
 /// The sidebar pages. Snapshot mode walks through every case.
 enum SidebarItem: String, CaseIterable, Identifiable {
     case all, inProgress, completed, starred
-    case aiChat, translator, skills, winSync
-    case canvas, designLab, inspirations, styles
+    case canvas, translator, aiChat, skills
+    case designLab, inspirations, styles, winSync
 
     var id: String { rawValue }
 
@@ -36,14 +36,14 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .inProgress: "В разработке"
         case .completed: "Готово"
         case .starred: "Избранное"
-        case .aiChat: "AI-Архитектор"
+        case .canvas: "Холст топологии"
         case .translator: "Промпт-переводчик"
+        case .aiChat: "AI-Советник"
         case .skills: "База скиллов"
-        case .winSync: "Синхронизация P2P"
-        case .canvas: "Холст идей"
         case .designLab: "Лаборатория дизайна"
         case .inspirations: "Вдохновение"
         case .styles: "Стили и токены"
+        case .winSync: "Синхронизация P2P"
         }
     }
 
@@ -53,22 +53,106 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .inProgress: "bolt.fill"
         case .completed: "checkmark.circle.fill"
         case .starred: "star.fill"
-        case .aiChat: "sparkles"
-        case .translator: "wand.and.stars"
-        case .skills: "cpu"
-        case .winSync: "arrow.triangle.2.circlepath"
         case .canvas: "rectangle.split.3x3"
+        case .translator: "wand.and.stars"
+        case .aiChat: "sparkles"
+        case .skills: "cpu"
         case .designLab: "slider.horizontal.3"
         case .inspirations: "photo.stack"
         case .styles: "paintpalette.fill"
+        case .winSync: "arrow.triangle.2.circlepath"
         }
     }
 
     var sectionTitle: String {
         switch self {
-        case .all, .inProgress, .completed, .starred: "Идеи и проекты"
-        case .aiChat, .translator, .skills, .winSync: "Студия Antigravity"
-        case .canvas, .designLab, .inspirations, .styles: "Дизайн и референсы"
+        case .all, .inProgress, .completed, .starred: "Проекты и бэклог"
+        case .canvas, .translator, .aiChat, .skills: "Архитектура и синтез"
+        case .designLab, .inspirations, .styles, .winSync: "Дизайн и интеграции"
+        }
+    }
+}
+
+public enum EngineeringStudioSheet: String, Identifiable, Sendable, CaseIterable {
+    // Wave 1: Schema & Data
+    case dataSchema
+    case modelRouter
+    case indexOptimizer
+    case seedData
+    case vectorStore
+    case migrationStrategist
+
+    // Wave 2: Services & API
+    case apiContracts
+    case rpcContracts
+    case eventBus
+    case jobQueue
+    case rateLimiter
+    case queryCache
+    case realtime
+    case webhook
+    case webhookDispatcher
+
+    // Wave 3: UI & Design
+    case tokenSandbox
+    case stateFlow
+    case sitemap
+    case accessibility
+    case seoStudio
+    case interactiveMockup
+
+    // Wave 4: QA, Security & Ops
+    case antigravityPack
+    case topologyValidator
+    case errorDoctor
+    case threatModeler
+    case secretShield
+    case evalHarness
+    case gitStory
+    case deployBlueprint
+    case incidentCommander
+    case stressTest
+    case runbook
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .dataSchema: "Схема данных и БД"
+        case .modelRouter: "Маршрутизатор моделей AI"
+        case .indexOptimizer: "Оптимизатор индексов SQL"
+        case .seedData: "Генератор тестовых данных"
+        case .vectorStore: "Векторное хранилище RAG"
+        case .migrationStrategist: "Миграции Expand & Contract"
+
+        case .apiContracts: "API-контракты и Mock-сервер"
+        case .rpcContracts: "Типизированный RPC / tRPC"
+        case .eventBus: "Распределенная шина событий"
+        case .jobQueue: "Очереди фоновых задач"
+        case .rateLimiter: "Защита от DDoS и Rate Limiter"
+        case .queryCache: "Двухуровневый кэш запросов"
+        case .realtime: "Потоковый Realtime WebSockets"
+        case .webhook: "Симулятор вебхуков"
+        case .webhookDispatcher: "Диспетчер исходящих вебхуков"
+
+        case .tokenSandbox: "Песочница дизайн-токенов"
+        case .stateFlow: "Стейт-машина интерфейса"
+        case .sitemap: "Карта экранов и роутер"
+        case .accessibility: "Аудит доступности WCAG"
+        case .seoStudio: "SEO и метаданные Next.js"
+        case .interactiveMockup: "Интерактивный HTML-макет"
+
+        case .antigravityPack: "Пакет Antigravity и Wave Runner"
+        case .topologyValidator: "Валидатор топологии холста"
+        case .errorDoctor: "Доктор сбоев терминала"
+        case .threatModeler: "Моделирование угроз OWASP"
+        case .secretShield: "Защита от утечки секретов"
+        case .evalHarness: "Регрессионные тесты и эвалы"
+        case .gitStory: "Conventional Commits и PR"
+        case .deployBlueprint: "Blueprints деплоя Vercel/Docker"
+        case .incidentCommander: "План аварийного восстановления"
+        case .stressTest: "Нагрузочные тесты k6"
+        case .runbook: "Runbook разработчика"
         }
     }
 }
@@ -79,6 +163,7 @@ final class AppModel {
     let container: ModelContainer
     var sidebar: SidebarItem? = .all
     var selection: PersistentIdentifier?
+    var activeStudioSheet: EngineeringStudioSheet? = nil
     /// Settings reopens on the last tab. Test and snapshot runs leave it alone.
     var settingsTab: SettingsTab = SettingsTab(rawValue: UserDefaults.standard.string(forKey: "settings.tab") ?? "") ?? .general {
         didSet { if !Store.isOverridden { UserDefaults.standard.set(settingsTab.rawValue, forKey: "settings.tab") } }

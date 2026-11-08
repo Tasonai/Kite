@@ -52,6 +52,55 @@ struct KiteApp: App {
                 }
                 .keyboardShortcut("k", modifiers: [.command, .shift])
             }
+            CommandMenu("Инженерия") {
+                Section("Архитектура и синтез") {
+                    Button("Холст топологии") { model.sidebar = .canvas }
+                        .keyboardShortcut("1", modifiers: [.command, .option])
+                    Button("Промпт-переводчик") { model.sidebar = .translator }
+                        .keyboardShortcut("2", modifiers: [.command, .option])
+                    Button("AI-Советник") { model.sidebar = .aiChat }
+                        .keyboardShortcut("3", modifiers: [.command, .option])
+                    Button("База скиллов") { model.sidebar = .skills }
+                        .keyboardShortcut("4", modifiers: [.command, .option])
+                }
+
+                Divider()
+
+                Section("Волна 1: Схема и Модели") {
+                    Button("Схема данных и БД...") { model.activeStudioSheet = .dataSchema }
+                        .keyboardShortcut("d", modifiers: [.command, .shift])
+                    Button("Маршрутизатор моделей AI...") { model.activeStudioSheet = .modelRouter }
+                        .keyboardShortcut("m", modifiers: [.command, .shift])
+                    Button("Оптимизатор индексов SQL...") { model.activeStudioSheet = .indexOptimizer }
+                }
+
+                Section("Волна 2: Сервисы и API") {
+                    Button("API-контракты и Mock-сервер...") { model.activeStudioSheet = .apiContracts }
+                        .keyboardShortcut("c", modifiers: [.command, .shift])
+                    Button("Типизированный RPC / tRPC...") { model.activeStudioSheet = .rpcContracts }
+                    Button("Шина событий (EventBus)...") { model.activeStudioSheet = .eventBus }
+                    Button("Очереди фоновых задач...") { model.activeStudioSheet = .jobQueue }
+                    Button("Rate Limiter и защита...") { model.activeStudioSheet = .rateLimiter }
+                }
+
+                Section("Волна 3: UI и Токены") {
+                    Button("Песочница дизайн-токенов...") { model.activeStudioSheet = .tokenSandbox }
+                    Button("Стейт-машина интерфейса...") { model.activeStudioSheet = .stateFlow }
+                    Button("Карта экранов и роутер...") { model.activeStudioSheet = .sitemap }
+                    Button("Аудит доступности WCAG...") { model.activeStudioSheet = .accessibility }
+                }
+
+                Section("Волна 4: QA, Безопасность и Релиз") {
+                    Button("Пакет Antigravity и Wave Runner...") { model.activeStudioSheet = .antigravityPack }
+                        .keyboardShortcut("w", modifiers: [.command, .shift])
+                    Button("Валидатор топологии холста...") { model.activeStudioSheet = .topologyValidator }
+                        .keyboardShortcut("t", modifiers: [.command, .shift])
+                    Button("Доктор сбоев терминала...") { model.activeStudioSheet = .errorDoctor }
+                        .keyboardShortcut("e", modifiers: [.command, .shift])
+                    Button("Моделирование угроз OWASP...") { model.activeStudioSheet = .threatModeler }
+                    Button("Blueprints деплоя...") { model.activeStudioSheet = .deployBlueprint }
+                }
+            }
         }
 
         MenuBarExtra("Kite", systemImage: "paperplane") {

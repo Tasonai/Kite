@@ -6,6 +6,14 @@ import AppKit
 struct ContentView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
+    @Query private var allItems: [Item]
+
+    private var currentItem: Item? {
+        if let sel = model.selection {
+            return allItems.first(where: { $0.id == sel })
+        }
+        return allItems.first
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -42,6 +50,9 @@ struct ContentView: View {
                 }
             }
         }
+        .sheet(item: Bindable(model).activeStudioSheet) { studio in
+            engineeringStudioView(for: studio)
+        }
         .task {
             SeedData.insertIfRequested(into: model)
             SelfTest.runIfRequested(model: model)
@@ -52,20 +63,20 @@ struct ContentView: View {
     private var sidebar: some View {
         @Bindable var model = model
         return List(selection: $model.sidebar) {
-            Section("Идеи и проекты") {
+            Section("Проекты и бэклог") {
                 ForEach([SidebarItem.all, .inProgress, .completed, .starred]) { page in
                     sidebarRow(page)
                 }
             }
 
-            Section("Студия Antigravity") {
-                ForEach([SidebarItem.aiChat, .translator, .skills, .winSync]) { page in
+            Section("Архитектура и синтез") {
+                ForEach([SidebarItem.canvas, .translator, .aiChat, .skills]) { page in
                     sidebarRow(page)
                 }
             }
 
-            Section("Дизайн и референсы") {
-                ForEach([SidebarItem.canvas, .designLab, .inspirations, .styles]) { page in
+            Section("Дизайн и интеграции") {
+                ForEach([SidebarItem.designLab, .inspirations, .styles, .winSync]) { page in
                     sidebarRow(page)
                 }
             }
@@ -85,6 +96,112 @@ struct ContentView: View {
                 .frame(width: 16, alignment: .center)
         }
         .tag(page)
+    }
+
+    @ViewBuilder
+    private func engineeringStudioView(for studio: EngineeringStudioSheet) -> some View {
+        let item = currentItem
+        let title = (item?.title.isEmpty == false) ? item!.title : "Проект"
+        let concept = item?.concept ?? ""
+        let platform = item?.platform ?? "Web"
+        let style = item?.style ?? "Editorial & Swiss Modern"
+
+        switch studio {
+        case .antigravityPack:
+            AntigravityPackSheet(
+                title: title,
+                concept: concept,
+                platform: platform,
+                style: style,
+                architectureMermaid: nil,
+                onDismiss: { model.activeStudioSheet = nil }
+            )
+        case .dataSchema:
+            DataSchemaDesignerSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .apiContracts:
+            APIContractSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .modelRouter:
+            ModelRouterSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .indexOptimizer:
+            IndexOptimizerSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .seedData:
+            SeedDataSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .vectorStore:
+            VectorStoreSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .migrationStrategist:
+            MigrationStrategistSheet(onDismiss: { model.activeStudioSheet = nil })
+
+        case .rpcContracts:
+            RpcContractSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .eventBus:
+            EventBusSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .jobQueue:
+            JobQueueSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .rateLimiter:
+            RateLimiterSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .queryCache:
+            QueryCacheSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .realtime:
+            RealtimeSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .webhook:
+            WebhookSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .webhookDispatcher:
+            WebhookDispatcherSheet(onDismiss: { model.activeStudioSheet = nil })
+
+        case .tokenSandbox:
+            DesignTokenSandboxSheet(initialStyle: style, onDismiss: { model.activeStudioSheet = nil })
+        case .stateFlow:
+            StateFlowSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .sitemap:
+            SitemapRouterSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .accessibility:
+            AccessibilitySheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        case .seoStudio:
+            SEOSheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        case .interactiveMockup:
+            InteractiveMockupSheet(
+                title: title,
+                concept: concept,
+                platform: platform,
+                style: style,
+                onDismiss: { model.activeStudioSheet = nil }
+            )
+
+        case .topologyValidator:
+            TopologyValidatorSheet(
+                title: title,
+                report: CanvasTopologyValidator.validate(nodes: [], connections: []),
+                onDismiss: { model.activeStudioSheet = nil }
+            )
+        case .errorDoctor:
+            VibeErrorDoctorSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .threatModeler:
+            ThreatModelerSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .secretShield:
+            SecretShieldSheet(onDismiss: { model.activeStudioSheet = nil })
+        case .evalHarness:
+            EvalHarnessSheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        case .gitStory:
+            GitStorytellerSheet(
+                title: title,
+                concept: concept,
+                platform: platform,
+                style: style,
+                onDismiss: { model.activeStudioSheet = nil }
+            )
+        case .deployBlueprint:
+            DeployBlueprintSheet(
+                title: title,
+                platform: platform,
+                onDismiss: { model.activeStudioSheet = nil }
+            )
+        case .incidentCommander:
+            IncidentCommanderSheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        case .stressTest:
+            StressTestSheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        case .runbook:
+            RunbookSheet(title: title, onDismiss: { model.activeStudioSheet = nil })
+        }
     }
 }
 
