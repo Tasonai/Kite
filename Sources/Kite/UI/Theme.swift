@@ -31,6 +31,8 @@ struct Theme: Identifiable, Hashable {
     var onAccent: Color { darkText ? Color(hex: 0x16161C) : .white }
 
     static let all: [Theme] = [
+        Theme(id: "monochrome", name: "Monochrome", shades: .init(light: 0xC7C7CC, base: 0x7C7C84, deep: 0x55555C)),
+        Theme(id: "graphite", name: "Graphite", shades: .init(light: 0xC7C7CC, base: 0x7C7C84, deep: 0x55555C)),
         Theme(id: "system", name: "System", shades: nil),
         Theme(id: "blue", name: "Blue", shades: .init(light: 0x7CC0FF, base: 0x0A84FF, deep: 0x0064D2)),
         Theme(id: "indigo", name: "Indigo", shades: .init(light: 0xA5ADFF, base: 0x5E6AD2, deep: 0x4650B8)),
@@ -41,7 +43,6 @@ struct Theme: Identifiable, Hashable {
         Theme(id: "yellow", name: "Yellow", shades: .init(light: 0xFFE17A, base: 0xF5B800, deep: 0x946800), darkText: true),
         Theme(id: "mint", name: "Mint", shades: .init(light: 0x8EEBC4, base: 0x2BC48A, deep: 0x0F7A55), darkText: true),
         Theme(id: "teal", name: "Teal", shades: .init(light: 0x8BE9F5, base: 0x06B6D4, deep: 0x0E7490), darkText: true),
-        Theme(id: "graphite", name: "Graphite", shades: .init(light: 0xC7C7CC, base: 0x7C7C84, deep: 0x55555C)),
     ]
 }
 
@@ -51,9 +52,8 @@ struct Theme: Identifiable, Hashable {
 final class ThemeStore {
     static let shared = ThemeStore()
 
-    /// The accent the app ships with. Keep "system", so the app follows the
-    /// accent people chose for their Mac.
-    static let defaultID = "system"
+    /// The accent the app ships with: Apple HIG Monochrome.
+    static let defaultID = "monochrome"
 
     /// The app's brand color, or nil. Like Apple's own apps, the brand shows
     /// only while the Mac's accent is Multicolor (System Settings >
@@ -63,6 +63,18 @@ final class ThemeStore {
 
     var themeID: String {
         didSet { UserDefaults.standard.set(themeID, forKey: "appearance.accent") }
+    }
+
+    var appearanceMode: String {
+        didSet { UserDefaults.standard.set(appearanceMode, forKey: "appearance.mode") }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch appearanceMode {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
     }
 
     /// True while the Mac's accent is Multicolor.
@@ -79,6 +91,7 @@ final class ThemeStore {
     private init() {
         themeID = ProcessInfo.processInfo.environment["APP_ACCENT"]
             ?? UserDefaults.standard.string(forKey: "appearance.accent") ?? Self.defaultID
+        appearanceMode = UserDefaults.standard.string(forKey: "appearance.mode") ?? "system"
         NotificationCenter.default.addObserver(forName: NSColor.systemColorsDidChangeNotification,
                                                object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.macIsMulticolor = ThemeStore.readMulticolor() }
@@ -109,7 +122,9 @@ private struct Themed: ViewModifier {
     private var store = ThemeStore.shared
 
     func body(content: Content) -> some View {
-        content.tint(store.theme.tint)
+        content
+            .tint(store.theme.tint)
+            .preferredColorScheme(store.colorScheme)
     }
 }
 
