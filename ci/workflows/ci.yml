@@ -1,0 +1,37 @@
+name: Kite macOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Quality Gate & Verification
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Apple HIG & Zero Emojis Standards
+        run: |
+          zsh tools/quality_gate.sh
+
+      - name: Run Release Preflight Distribution Audit
+        run: |
+          python3 tools/kite-cli dist-check
+
+      - name: Run P2P Mesh Test Suite
+        run: |
+          python3 tools/kite-cli test-mesh --stress
+
+      - name: Run Design Token Grid Compliance Audit
+        run: |
+          python3 tools/kite-cli watch-tokens --once
