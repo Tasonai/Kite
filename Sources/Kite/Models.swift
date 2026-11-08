@@ -289,6 +289,13 @@ final class AppModel {
         guard let payload = try? JSONDecoder().decode(CanvasExportModel.self, from: data) else {
             return false
         }
+        if payload.replace == true {
+            canvasFrames = payload.frames
+            canvasStickies = payload.stickies
+            canvasReferenceCards = payload.referenceCards
+            canvasConnections = payload.connections
+            return true
+        }
         for frame in payload.frames {
             if !canvasFrames.contains(where: { $0.title == frame.title || $0.id == frame.id }) {
                 canvasFrames.append(frame)

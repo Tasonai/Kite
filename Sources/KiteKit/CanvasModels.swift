@@ -204,6 +204,7 @@ public struct CanvasExportModel: Codable, Sendable {
     public var stickies: [CanvasSticky]
     public var referenceCards: [CanvasReferenceCard]
     public var connections: [CanvasConnection]
+    public var replace: Bool?
 
     public init(
         version: Int = 1,
@@ -211,7 +212,8 @@ public struct CanvasExportModel: Codable, Sendable {
         frames: [CanvasFrame] = [],
         stickies: [CanvasSticky] = [],
         referenceCards: [CanvasReferenceCard] = [],
-        connections: [CanvasConnection] = []
+        connections: [CanvasConnection] = [],
+        replace: Bool? = false
     ) {
         self.version = version
         self.exportedAt = exportedAt
@@ -219,10 +221,11 @@ public struct CanvasExportModel: Codable, Sendable {
         self.stickies = stickies
         self.referenceCards = referenceCards
         self.connections = connections
+        self.replace = replace
     }
 
     enum CodingKeys: String, CodingKey {
-        case version, exportedAt, frames, stickies, referenceCards, connections
+        case version, exportedAt, frames, stickies, referenceCards, connections, replace
     }
 
     public init(from decoder: Decoder) throws {
@@ -233,5 +236,6 @@ public struct CanvasExportModel: Codable, Sendable {
         self.stickies = (try? container.decode([CanvasSticky].self, forKey: .stickies)) ?? []
         self.referenceCards = (try? container.decode([CanvasReferenceCard].self, forKey: .referenceCards)) ?? []
         self.connections = (try? container.decode([CanvasConnection].self, forKey: .connections)) ?? []
+        self.replace = try? container.decode(Bool.self, forKey: .replace)
     }
 }
