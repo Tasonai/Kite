@@ -50,6 +50,42 @@ public struct CanvasSticky: Identifiable, Sendable, Equatable, Codable {
     }
 }
 
+public enum CanvasConnectionProtocol: String, Sendable, CaseIterable, Codable {
+    case rest = "REST"
+    case trpc = "tRPC"
+    case grpc = "gRPC"
+    case websocket = "WebSocket"
+    case eventbus = "EventBus"
+    case graphql = "GraphQL"
+    case sql = "SQL"
+    case queue = "Queue"
+
+    public var colorHex: String {
+        switch self {
+        case .rest: return "#3B82F6"
+        case .trpc: return "#8B5CF6"
+        case .grpc: return "#10B981"
+        case .websocket: return "#EC4899"
+        case .eventbus: return "#F59E0B"
+        case .graphql: return "#E11D48"
+        case .sql: return "#64748B"
+        case .queue: return "#14B8A6"
+        }
+    }
+
+    public static func color(for label: String) -> String {
+        let lower = label.lowercased()
+        if lower.contains("trpc") { return CanvasConnectionProtocol.trpc.colorHex }
+        if lower.contains("grpc") { return CanvasConnectionProtocol.grpc.colorHex }
+        if lower.contains("ws") || lower.contains("socket") || lower.contains("stream") { return CanvasConnectionProtocol.websocket.colorHex }
+        if lower.contains("event") || lower.contains("bus") || lower.contains("kafka") { return CanvasConnectionProtocol.eventbus.colorHex }
+        if lower.contains("graphql") || lower.contains("gql") { return CanvasConnectionProtocol.graphql.colorHex }
+        if lower.contains("sql") || lower.contains("db") || lower.contains("query") { return CanvasConnectionProtocol.sql.colorHex }
+        if lower.contains("queue") || lower.contains("inngest") || lower.contains("job") { return CanvasConnectionProtocol.queue.colorHex }
+        return CanvasConnectionProtocol.rest.colorHex
+    }
+}
+
 public struct CanvasConnection: Identifiable, Sendable, Equatable, Codable {
     public let id: UUID
     public let fromId: String

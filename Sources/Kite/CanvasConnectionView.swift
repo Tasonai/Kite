@@ -182,9 +182,9 @@ struct CanvasConnectionView: View {
                     }
 
                     Menu("Изменить протокол") {
-                        ForEach(["Calls", "HTTP / REST", "SSE Stream", "gRPC", "WAL Query", "Depends On", "Audits"], id: \.self) { proto in
-                            Button(proto) {
-                                onSetProtocol(proto)
+                        ForEach(CanvasConnectionProtocol.allCases, id: \.self) { proto in
+                            Button(proto.rawValue) {
+                                onSetProtocol(proto.rawValue)
                             }
                         }
                     }

@@ -87,6 +87,7 @@ struct CanvasToolbarView: View {
     let onOpenEventBus: () -> Void
     let onOpenQueryCache: () -> Void
     let onOpenWebhookDispatcher: () -> Void
+    let onOpenTopologyValidator: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
 
@@ -140,6 +141,12 @@ struct CanvasToolbarView: View {
                         onRoadmapHUD()
                     } label: {
                         Label("Дорожная карта (волны выполнения)", systemImage: "chart.bar.xaxis")
+                    }
+
+                    Button {
+                        onOpenTopologyValidator()
+                    } label: {
+                        Label("Валидатор топологии (smells & locks)", systemImage: "point.3.connected.trianglepath.dotted")
                     }
 
                     Divider()
@@ -618,6 +625,20 @@ struct CanvasToolbarView: View {
                 .buttonStyle(.bordered)
                 .fixedSize()
                 .help("Собрать токено-эффективный пакет волн (Waves) и спецификацию для Antigravity")
+
+                // Topology Validator Button
+                Button {
+                    onOpenTopologyValidator()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "point.3.connected.trianglepath.dotted")
+                        Text("Топология")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .help("Проверить топологию связей на циклические блокировки и утечки доступа к БД")
 
                 // LAN Peers Discovery Popover Button
                 Button {

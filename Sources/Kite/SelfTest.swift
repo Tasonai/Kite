@@ -154,6 +154,18 @@ enum SelfTest {
         let mmdExport = CanvasExporter.exportMermaid(items: [], connections: [sampleConn], frames: [sampleFrame], itemPositions: [:])
         check("CanvasExporter includes subgraphs and connection protocol badges in Mermaid", mmdExport.contains("subgraph") && mmdExport.contains("-->|HTTP/REST|"))
 
+        let sampleNodes = [
+            TopologyNodeDescriptor(id: "ui_client", title: "Web Client UI", role: "client"),
+            TopologyNodeDescriptor(id: "db_postgres", title: "Production Postgres DB", role: "database"),
+            TopologyNodeDescriptor(id: "svc_backend", title: "Auth Service", role: "service")
+        ]
+        let sampleTopologyConns = [
+            CanvasConnection(fromId: "ui_client", toId: "db_postgres", label: "Direct SQL"),
+            CanvasConnection(fromId: "ui_client", toId: "svc_backend", label: "REST")
+        ]
+        let topologyReport = CanvasTopologyValidator.validate(nodes: sampleNodes, connections: sampleTopologyConns)
+        check("CanvasTopologyValidator detects direct DB access and generates audit report", !topologyReport.isSecure && topologyReport.issues.contains { $0.severity == .critical })
+
         let diag = VibeErrorDoctor.diagnose(rawLog: "Cannot find module '@supabase/supabase-js' from /src/api.ts:24")
         check("VibeErrorDoctor diagnoses missing dependency and produces surgical prompt", diag.category == .missingDependency && diag.targetFile == "api.ts" && diag.lineNumber == 24)
 

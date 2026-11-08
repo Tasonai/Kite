@@ -127,6 +127,7 @@ struct InfiniteCanvasView: View {
     @State private var isEventBusPresented: Bool = false
     @State private var isQueryCachePresented: Bool = false
     @State private var isWebhookDispatcherPresented: Bool = false
+    @State private var isTopologyValidatorPresented: Bool = false
 
     // Notification toast
     @State private var exportToast: String? = nil
@@ -327,6 +328,7 @@ struct InfiniteCanvasView: View {
                 onOpenEventBus: { isEventBusPresented = true },
                 onOpenQueryCache: { isQueryCachePresented = true },
                 onOpenWebhookDispatcher: { isWebhookDispatcherPresented = true },
+                onOpenTopologyValidator: { isTopologyValidatorPresented = true },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },
                 onResetZoom: {
@@ -690,6 +692,22 @@ struct InfiniteCanvasView: View {
                 onDismiss: { isWebhookDispatcherPresented = false }
             )
         }
+        .sheet(isPresented: $isTopologyValidatorPresented) {
+            let descriptors = items.map { item in
+                TopologyNodeDescriptor(
+                    id: item.uuid.uuidString,
+                    title: item.title,
+                    role: CanvasTopologyValidator.inferRole(title: item.title)
+                )
+            }
+            let report = CanvasTopologyValidator.validate(nodes: descriptors, connections: connections)
+            let title = frames.first?.title ?? (items.first?.title ?? "Архитектура")
+            TopologyValidatorSheet(
+                title: title,
+                report: report,
+                onDismiss: { isTopologyValidatorPresented = false }
+            )
+        }
         .sheet(isPresented: $isReferencePickerOpen) {
             CanvasReferencePickerSheet(
                 onSelect: { card in
@@ -962,13 +980,13 @@ struct InfiniteCanvasView: View {
                     CanvasConnection(
                         fromId: src,
                         toId: nodeId,
-                        label: "Связь",
-                        colorHex: "#3B82F6"
+                        label: "tRPC",
+                        colorHex: CanvasConnectionProtocol.trpc.colorHex
                     )
                 )
                 connectingSourceId = nil
                 isConnectingMode = false
-                showToast("Связь установлена")
+                showToast("Связь установлена (tRPC)")
             }
         } else {
             if NSEvent.modifierFlags.contains(.shift) || NSEvent.modifierFlags.contains(.command) {
@@ -1020,6 +1038,7 @@ struct InfiniteCanvasView: View {
                 onSetProtocol: { proto in
                     if let idx = connections.firstIndex(where: { $0.id == conn.id }) {
                         connections[idx].label = proto
+                        connections[idx].colorHex = CanvasConnectionProtocol.color(for: proto)
                     }
                 }
             )
