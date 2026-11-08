@@ -12,6 +12,7 @@ struct AntigravityPackSheet: View {
     @State private var selectedTabIndex: Int = 0
     @State private var isCopied: Bool = false
     @State private var copiedNotice: String? = nil
+    @State private var completedTasks: Set<String> = []
 
     private var waves: [AntigravityWave] {
         AntigravityPackGenerator.buildWaves(
@@ -203,6 +204,16 @@ struct AntigravityPackSheet: View {
                 }
                 .buttonStyle(.bordered)
 
+                Button {
+                    exportToProjectFolder()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "folder.badge.plus")
+                        Text("Экспорт в проект...")
+                    }
+                }
+                .buttonStyle(.bordered)
+
                 Spacer()
 
                 Button("Закрыть") {
@@ -229,12 +240,28 @@ struct AntigravityPackSheet: View {
 
     @ViewBuilder
     private func waveDetailView(_ wave: AntigravityWave) -> some View {
+        let waveTasks = wave.scope
+        let completedInWave = waveTasks.filter { completedTasks.contains("\($0)_\(wave.id)") }.count
+
         VStack(alignment: .leading, spacing: 16) {
             // Header card
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(wave.title)
-                        .font(.title3.bold())
+                    HStack(spacing: 8) {
+                        Text(wave.title)
+                            .font(.title3.bold())
+
+                        if completedInWave == waveTasks.count && !waveTasks.isEmpty {
+                            Text("Завершена")
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(Color.green.opacity(0.16))
+                                .foregroundStyle(Color.green)
+                                .clipShape(Capsule())
+                        }
+                    }
+
                     Text(wave.subtitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -243,14 +270,20 @@ struct AntigravityPackSheet: View {
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Image(systemName: "gauge.with.dots.needle.bottom.50percent")
-                    Text(wave.estimatedTokens)
+                    Text("\(completedInWave)/\(waveTasks.count)")
+                        .font(.caption2.bold())
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "gauge.with.dots.needle.bottom.50percent")
+                        Text(wave.estimatedTokens)
+                    }
+                    .font(.caption.bold())
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.12))
+                    .clipShape(Capsule())
                 }
-                .font(.caption.bold())
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.12))
-                .clipShape(Capsule())
             }
             .padding(12)
             .background(Color(nsColor: .controlBackgroundColor))
@@ -258,22 +291,38 @@ struct AntigravityPackSheet: View {
 
             // Two-column Scope and Negative Constraints
             HStack(alignment: .top, spacing: 12) {
-                // Allowed Scope
+                // Allowed Scope with Interactive Checkboxes
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(Color.green)
-                        Text("Что входит в эту волну")
+                        Image(systemName: "checklist")
+                            .foregroundStyle(Color.accentColor)
+                        Text("Критерии готовности (клик для отметки)")
                             .font(.caption.bold())
                     }
 
                     ForEach(wave.scope, id: \.self) { item in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("-")
-                                .foregroundStyle(.secondary)
-                            Text(item)
-                                .font(.caption)
+                        let taskKey = "\(item)_\(wave.id)"
+                        let isDone = completedTasks.contains(taskKey)
+
+                        Button {
+                            if isDone {
+                                completedTasks.remove(taskKey)
+                            } else {
+                                completedTasks.insert(taskKey)
+                            }
+                        } label: {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(isDone ? Color.green : Color.secondary)
+                                    .font(.caption)
+
+                                Text(item)
+                                    .font(.caption)
+                                    .foregroundStyle(isDone ? .secondary : .primary)
+                                    .strikethrough(isDone, color: .secondary)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(12)
@@ -450,6 +499,27 @@ struct AntigravityPackSheet: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             isCopied = false
             copiedNotice = nil
+        }
+    }
+
+    private func exportToProjectFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Выбрать папку"
+        panel.message = "Выберите корневую папку проекта для экспорта манифестов"
+        if panel.runModal() == .OK, let folder = panel.url {
+            do {
+                try antigravityMDContent.write(to: folder.appendingPathComponent("ANTIGRAVITY.md"), atomically: true, encoding: .utf8)
+                let indexing = IndexOptimizer.generateIndexMarkdown(title: title, indexes: IndexOptimizer.starterRecommendations)
+                try indexing.write(to: folder.appendingPathComponent("INDEXING.md"), atomically: true, encoding: .utf8)
+                let routing = ModelRouter.generateRoutingMarkdown(title: title, routes: ModelRouter.starterRoutes)
+                try routing.write(to: folder.appendingPathComponent("MODEL_ROUTING.md"), atomically: true, encoding: .utf8)
+                notifyCopied("Манифесты сохранены в папку проекта")
+            } catch {
+                notifyCopied("Ошибка экспорта: \(error.localizedDescription)")
+            }
         }
     }
 }
