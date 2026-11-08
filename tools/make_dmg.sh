@@ -34,6 +34,7 @@ rm -f "$dmg_path" "$tmp_dmg" "$zip_path"
 
 hdiutil create -volname "$name" -srcfolder "$stage_dir" -ov -format UDRW "$tmp_dmg" -quiet
 hdiutil convert "$tmp_dmg" -format UDZO -imagekey zlib-level=9 -o "$dmg_path" -quiet
+rm -f "$tmp_dmg"
 
 echo "3. Creating ZIP release archive..."
 ditto -c -k --keepParent "$app" "$zip_path"
