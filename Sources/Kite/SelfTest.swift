@@ -485,6 +485,22 @@ enum SelfTest {
         let vscodeUrl = IDEBridgeHub.shared.createEditorDeepLink(filePath: "/workspace/App.swift", line: 32, column: 1, editor: "vscode")
         check("IDEBridgeHub tracks active file state and generates editor deep links", ideStatus.path == "Sources/Kite/ContentView.swift" && ideStatus.line == 42 && cursorUrl?.absoluteString.hasPrefix("cursor://file/") == true && vscodeUrl?.absoluteString.hasPrefix("vscode://file/") == true)
 
+        let mockFrames = [
+            CanvasFrame(id: UUID(), title: "Primary Database (Postgres)", x: 64, y: 64, width: 256, height: 160),
+            CanvasFrame(id: UUID(), title: "Session Cache (Redis)", x: 384, y: 64, width: 256, height: 160),
+            CanvasFrame(id: UUID(), title: "API Gateway (Ingress)", x: 704, y: 64, width: 256, height: 160)
+        ]
+        let composeYaml = SandboxEngine.synthesizeDockerCompose(from: mockFrames)
+        check("SandboxEngine synthesizes valid Docker Compose specification from canvas topology", composeYaml.contains("version: '3.8'") && composeYaml.contains("postgres:16-alpine") && composeYaml.contains("kite-mesh-net"))
+
+        let sampleTasks = MultiAgentOrchestrator.synthesizeDefaultWorkflow(for: "Enterprise Architecture")
+        let agentWaves = MultiAgentOrchestrator.partitionIntoWaves(tasks: sampleTasks)
+        check("MultiAgentOrchestrator resolves task dependencies into 4 parallel execution waves", agentWaves.count == 4 && agentWaves.first?.tasks.first?.role == .architect && agentWaves.last?.tasks.first?.role == .siteReliability)
+
+        let benchFail = BenchmarkProfile(targetRps: 500.0, achievedRps: 350.0, p99LatencyMs: 420.0, errorRate: 0.025, bottleneckNodeId: "auth-service")
+        let patches = SelfHealingEngine.diagnoseBottleneck(benchmark: benchFail, frames: mockFrames)
+        check("SelfHealingEngine diagnoses SLA bottlenecks and synthesizes architectural remediation patches", patches.count == 3 && patches.contains(where: { $0.action == .injectCacheLayer }) && patches.contains(where: { $0.action == .addRateLimiter }) && patches.contains(where: { $0.action == .scaleHorizontal }))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
