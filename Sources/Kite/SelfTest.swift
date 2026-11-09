@@ -1,5 +1,6 @@
 import AppKit
 import SwiftData
+import CryptoKit
 import KiteKit
 
 /// Self-test for agents: runs the app's real functions on a test store,
@@ -433,6 +434,35 @@ enum SelfTest {
         let erdSql = ERDSchemaGenerator.generatePostgresSql(schema: erdSchema)
         let erdPrisma = ERDSchemaGenerator.generatePrismaSchema(schema: erdSchema)
         check("ERDSchemaGenerator produces valid PostgreSQL DDL and Prisma models", erdSql.contains("FOREIGN KEY (tenant_id) REFERENCES tenants(id)") && erdPrisma.contains("model Users"))
+
+        var hlc1 = HybridLogicalClock(physicalMillis: 1000, logicalCounter: 0, clientId: "node-a")
+        var hlc2 = HybridLogicalClock(physicalMillis: 1000, logicalCounter: 0, clientId: "node-b")
+        hlc1.tick()
+        hlc2.update(with: hlc1)
+        var regA = LWWRegister(value: "Initial State", clock: hlc1)
+        let regB = LWWRegister(value: "Concurrent Update", clock: hlc2)
+        regA.merge(with: regB)
+        check("HybridLogicalClock and LWWRegister guarantee deterministic causal ordering and conflict convergence", regA.value == "Concurrent Update" && hlc2 > hlc1)
+
+        var docA = CanvasCRDTDocument(documentId: "doc-1", clientId: "client-a")
+        var docB = CanvasCRDTDocument(documentId: "doc-1", clientId: "client-b")
+        let sharedFrameId = UUID()
+        docA.setFrame(CanvasFrame(id: sharedFrameId, title: "Auth Cluster V1", x: 64, y: 64, width: 256, height: 128))
+        docB.setFrame(CanvasFrame(id: sharedFrameId, title: "Auth Cluster V2", x: 128, y: 128, width: 256, height: 128))
+        var docACopy = docA
+        var docBCopy = docB
+        docACopy.merge(with: docB)
+        docBCopy.merge(with: docA)
+        let frameA = docACopy.frames[sharedFrameId.uuidString]?.value
+        let frameB = docBCopy.frames[sharedFrameId.uuidString]?.value
+        check("CanvasCRDTDocument converges identically regardless of merge order", frameA?.title == frameB?.title && frameA?.x == frameB?.x && frameA != nil)
+
+        let symKey = SymmetricKey(size: .bits256)
+        let testPayload = Data("{\"presence\": \"active\", \"collaborators\": 4}".utf8)
+        let encryptedEnv = try? EncryptedSyncEnvelope.encrypt(payload: testPayload, symmetricKey: symKey, senderClientId: "peer-99")
+        let decryptedData = encryptedEnv != nil ? try? encryptedEnv!.decrypt(symmetricKey: symKey) : nil
+        let decryptedStr = decryptedData != nil ? String(data: decryptedData!, encoding: .utf8) : nil
+        check("EncryptedSyncEnvelope encrypts and decrypts payload using ChaCha20-Poly1305", decryptedStr?.contains("presence") == true && encryptedEnv?.ciphertextBase64.isEmpty == false)
 
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
