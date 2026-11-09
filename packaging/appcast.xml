@@ -6,13 +6,13 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
-      <title>Version 1.4.0</title>
-      <sparkle:releaseNotesLink>https://github.com/Tasonai/Kite/releases/tag/v1.4.0</sparkle:releaseNotesLink>
-      <pubDate>Mon, 09 Nov 2026 03:12:38 +0000</pubDate>
-      <enclosure url="https://github.com/Tasonai/Kite/releases/download/v1.4.0/Kite-1.4.0-macOS.dmg"
-                 sparkle:version="1.4.0"
-                 sparkle:shortVersionString="1.4.0"
-                 length="5853072"
+      <title>Version 1.5.0</title>
+      <sparkle:releaseNotesLink>https://github.com/Tasonai/Kite/releases/tag/v1.5.0</sparkle:releaseNotesLink>
+      <pubDate>Mon, 09 Nov 2026 09:24:58 +0000</pubDate>
+      <enclosure url="https://github.com/Tasonai/Kite/releases/download/v1.5.0/Kite-1.5.0-macOS.dmg"
+                 sparkle:version="1.5.0"
+                 sparkle:shortVersionString="1.5.0"
+                 length="6032754"
                  type="application/x-apple-diskimage" />
     </item>
   </channel>
