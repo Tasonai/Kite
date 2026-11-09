@@ -464,6 +464,27 @@ enum SelfTest {
         let decryptedStr = decryptedData != nil ? String(data: decryptedData!, encoding: .utf8) : nil
         check("EncryptedSyncEnvelope encrypts and decrypts payload using ChaCha20-Poly1305", decryptedStr?.contains("presence") == true && encryptedEnv?.ciphertextBase64.isEmpty == false)
 
+        let mockFiles: [String: String] = [
+            "App/Views/UserProfileView.swift": "import SwiftUI\nimport Repositories\nimport Database",
+            "App/Domain/Services/UserService.swift": "import Foundation\nimport Repositories",
+            "App/Data/Repositories/UserRepository.swift": "import Foundation\nimport Database"
+        ]
+        let driftViolations = ArchitecturalDriftGuard.evaluate(files: mockFiles)
+        let mermaidTopology = ArchitecturalDriftGuard.generateMermaidTopology(violations: driftViolations)
+        let hasExpectedViolation = driftViolations.contains(where: { $0.ruleName == "PresentationToDataBypass" && $0.sourceLayer == "Presentation" })
+        check("ArchitecturalDriftGuard enforces layer boundaries and detects presentation-to-data bypass", hasExpectedViolation && mermaidTopology.contains("graph TD") && mermaidTopology.contains("VIOLATION"))
+
+        let healthyNode = NodeTelemetry(nodeId: "api-gw", rps: 300, p99LatencyMs: 45, errorRate: 0.001)
+        let degradedNode = NodeTelemetry(nodeId: "auth-svc", rps: 150, p99LatencyMs: 380, errorRate: 0.002)
+        let failingNode = NodeTelemetry(nodeId: "billing-db", rps: 40, p99LatencyMs: 1400, errorRate: 0.07)
+        check("NodeTelemetry calculates SLA health status and hex token colors accurately", healthyNode.status == .healthy && healthyNode.status.colorHex == "#2ECC71" && degradedNode.status == .degraded && degradedNode.status.colorHex == "#F39C12" && failingNode.status == .failing && failingNode.status.colorHex == "#E74C3C")
+
+        IDEBridgeHub.shared.updateActiveFile(path: "Sources/Kite/ContentView.swift", line: 42, editor: "cursor")
+        let ideStatus = IDEBridgeHub.shared.currentActiveFile
+        let cursorUrl = IDEBridgeHub.shared.createEditorDeepLink(filePath: "/workspace/App.swift", line: 16, column: 8, editor: "cursor")
+        let vscodeUrl = IDEBridgeHub.shared.createEditorDeepLink(filePath: "/workspace/App.swift", line: 32, column: 1, editor: "vscode")
+        check("IDEBridgeHub tracks active file state and generates editor deep links", ideStatus.path == "Sources/Kite/ContentView.swift" && ideStatus.line == 42 && cursorUrl?.absoluteString.hasPrefix("cursor://file/") == true && vscodeUrl?.absoluteString.hasPrefix("vscode://file/") == true)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

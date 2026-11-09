@@ -216,6 +216,65 @@ public final class KiteSyncServer: @unchecked Sendable {
             let res = "{\"status\":\(ok ? "\"ok\"" : "\"error\"")}"
             sendResponse(connection: connection, body: Data(res.utf8))
 
+        case ("POST", "/api/ide/active"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let filePath = json["filePath"] as? String {
+                let line = json["line"] as? Int
+                let editor = json["editor"] as? String ?? "ide"
+                IDEBridgeHub.shared.updateActiveFile(path: filePath, line: line, editor: editor)
+                broadcast(event: "ide_active_file", payload: ["filePath": filePath, "line": line ?? 0, "editor": editor])
+                let res = "{\"status\":\"ok\",\"filePath\":\"\(filePath)\"}"
+                sendResponse(connection: connection, body: Data(res.utf8))
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid payload\"}".utf8))
+            }
+
+        case ("POST", "/api/ide/navigate"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let filePath = json["filePath"] as? String {
+                let line = json["line"] as? Int ?? 1
+                let column = json["column"] as? Int ?? 1
+                let editor = json["editor"] as? String ?? "vscode"
+                broadcast(event: "ide_navigate", payload: ["filePath": filePath, "line": line, "column": column, "editor": editor])
+                let res = "{\"status\":\"ok\",\"navigated\":true}"
+                sendResponse(connection: connection, body: Data(res.utf8))
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid payload\"}".utf8))
+            }
+
+        case ("GET", "/api/ide/status"):
+            let current = IDEBridgeHub.shared.currentActiveFile
+            let path = current.path ?? ""
+            let line = current.line ?? 0
+            let res = "{\"status\":\"online\",\"activeFilePath\":\"\(path)\",\"activeLine\":\(line)}"
+            sendResponse(connection: connection, body: Data(res.utf8))
+
+        case ("GET", "/api/telemetry"):
+            let list = IDEBridgeHub.shared.allTelemetries()
+            if let data = try? JSONEncoder().encode(list) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("[]".utf8))
+            }
+
+        case ("POST", "/api/telemetry"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let nodeId = json["nodeId"] as? String {
+                let rps = (json["rps"] as? NSNumber)?.doubleValue ?? 0.0
+                let p99 = (json["p99LatencyMs"] as? NSNumber)?.doubleValue ?? 0.0
+                let errorRate = (json["errorRate"] as? NSNumber)?.doubleValue ?? 0.0
+                let item = NodeTelemetry(nodeId: nodeId, rps: rps, p99LatencyMs: p99, errorRate: errorRate)
+                IDEBridgeHub.shared.setTelemetry(item)
+                broadcast(event: "telemetry_updated", payload: ["nodeId": nodeId, "status": item.status.rawValue, "rps": rps, "p99LatencyMs": p99, "errorRate": errorRate])
+                if let data = try? JSONEncoder().encode(item) {
+                    sendResponse(connection: connection, body: data)
+                } else {
+                    sendResponse(connection: connection, body: Data("{\"status\":\"ok\"}".utf8))
+                }
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid telemetry data\"}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
