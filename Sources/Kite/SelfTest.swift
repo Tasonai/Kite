@@ -411,6 +411,29 @@ enum SelfTest {
         let hookWorker = WebhookDispatcherStudio.generateWorkerSnippet(webhooks: WebhookDispatcherStudio.starterWebhooks)
         check("WebhookDispatcherStudio generates webhook delivery spec and HMAC-SHA256 signer", hookMd.contains("OUTGOING WEBHOOK DISPATCHER") && hookWorker.contains("createHmac"))
 
+        // Phase 2: High-Density Canvas Engine, Spatial Indexing & ERD Models
+        let quadTree = SpatialQuadTree(boundary: SpatialRect(x: 0, y: 0, width: 2000, height: 2000), capacity: 4)
+        for i in 0..<20 {
+            let item = SpatialItem(id: "node_\(i)", bounds: SpatialRect(x: Double(i * 50), y: Double(i * 50), width: 40, height: 40))
+            quadTree.insert(item)
+        }
+        let inFrustum = quadTree.queryFrustum(viewport: SpatialRect(x: 0, y: 0, width: 200, height: 200), margin: 50)
+        let outsideQuery = quadTree.query(range: SpatialRect(x: 1800, y: 1800, width: 100, height: 100))
+        check("SpatialQuadTree partitions canvas elements and executes frustum culling", inFrustum.count > 0 && outsideQuery.isEmpty && quadTree.count == 20)
+
+        let parentFrame = CanvasFrame(id: UUID(), title: "Parent System", x: 96, y: 96, width: 512, height: 384)
+        let childFrame = CanvasFrame(id: UUID(), title: "Nested Service", x: 120, y: 120, width: 200, height: 160, parentId: parentFrame.id.uuidString)
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        let encodedData = try? encoder.encode(childFrame)
+        let decodedFrame = encodedData != nil ? try? decoder.decode(CanvasFrame.self, from: encodedData!) : nil
+        check("CanvasFrame preserves hierarchical parentId in serialization", decodedFrame?.parentId == parentFrame.id.uuidString && decodedFrame?.title == "Nested Service")
+
+        let erdSchema = ERDSchema(tables: ERDSchemaGenerator.starterTables, relationships: ERDSchemaGenerator.starterRelationships)
+        let erdSql = ERDSchemaGenerator.generatePostgresSql(schema: erdSchema)
+        let erdPrisma = ERDSchemaGenerator.generatePrismaSchema(schema: erdSchema)
+        check("ERDSchemaGenerator produces valid PostgreSQL DDL and Prisma models", erdSql.contains("FOREIGN KEY (tenant_id) REFERENCES tenants(id)") && erdPrisma.contains("model Users"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

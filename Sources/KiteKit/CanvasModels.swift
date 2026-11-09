@@ -129,8 +129,9 @@ public struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
     public var y: CGFloat
     public var width: CGFloat
     public var height: CGFloat
+    public var parentId: String?
 
-    public init(id: UUID = UUID(), title: String, colorHex: String = "#3B82F6", x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+    public init(id: UUID = UUID(), title: String, colorHex: String = "#3B82F6", x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, parentId: String? = nil) {
         self.id = id
         self.title = title
         self.colorHex = colorHex
@@ -138,6 +139,7 @@ public struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
         self.y = y
         self.width = width
         self.height = height
+        self.parentId = parentId
     }
 
     public var rect: CGRect {
@@ -145,7 +147,7 @@ public struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, colorHex, x, y, width, height
+        case id, title, colorHex, x, y, width, height, parentId
     }
 
     public init(from decoder: Decoder) throws {
@@ -163,6 +165,21 @@ public struct CanvasFrame: Identifiable, Sendable, Equatable, Codable {
         self.y = (try? container.decode(CGFloat.self, forKey: .y)) ?? 100
         self.width = (try? container.decode(CGFloat.self, forKey: .width)) ?? 340
         self.height = (try? container.decode(CGFloat.self, forKey: .height)) ?? 420
+        self.parentId = try? container.decode(String.self, forKey: .parentId)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(colorHex, forKey: .colorHex)
+        try container.encode(x, forKey: .x)
+        try container.encode(y, forKey: .y)
+        try container.encode(width, forKey: .width)
+        try container.encode(height, forKey: .height)
+        if let parentId = parentId {
+            try container.encode(parentId, forKey: .parentId)
+        }
     }
 }
 
