@@ -391,6 +391,94 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/audit/trail"):
+            let leaves = MerkleAuditEngine.shared.allLeaves()
+            let root = MerkleAuditEngine.shared.computeMerkleRoot()
+            let payload: [String: Any] = [
+                "rootHash": root.rootHash,
+                "leafCount": root.leafCount,
+                "height": root.height,
+                "generatedAt": root.generatedAtIso,
+                "leaves": leaves.map { l in
+                    [
+                        "index": l.index,
+                        "action": l.action.rawValue,
+                        "actor": l.actor.email,
+                        "entityId": l.entityId,
+                        "leafHash": l.leafHash,
+                        "previousHash": l.previousHash
+                    ]
+                }
+            ]
+            if let data = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/audit/record"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let actionRaw = json["action"] as? String,
+               let action = AuditActionType(rawValue: actionRaw),
+               let entityId = json["entityId"] as? String,
+               let entityType = json["entityType"] as? String {
+                let payloadJson = json["payload"] as? String ?? "{}"
+                let leaf = MerkleAuditEngine.shared.recordAction(
+                    action: action,
+                    entityId: entityId,
+                    entityType: entityType,
+                    payloadJson: payloadJson
+                )
+                if let data = try? JSONEncoder().encode(leaf) {
+                    sendResponse(connection: connection, body: data)
+                } else {
+                    sendResponse(connection: connection, body: Data("{\"isSuccess\":true}".utf8))
+                }
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid audit record payload\"}".utf8))
+            }
+
+        case ("POST", "/api/audit/verify"):
+            var leafIndex = 0
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let idx = json["leafIndex"] as? Int {
+                leafIndex = idx
+            }
+            if let proof = MerkleAuditEngine.shared.generateInclusionProof(forLeafIndex: leafIndex),
+               let data = try? JSONEncoder().encode(proof) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, status: "404 Not Found", body: Data("{\"error\":\"Proof generation failed\"}".utf8))
+            }
+
+        case ("GET", "/api/iam/session"):
+            let actor = MerkleAuditEngine.shared.getCurrentActor()
+            if let data = try? JSONEncoder().encode(actor) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/audit/rfc"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let rfcId = json["rfcId"] as? String,
+               let approve = json["approve"] as? Bool {
+                let result = MerkleAuditEngine.shared.signOffRFC(rfcId: rfcId, approve: approve)
+                if result.success, let item = result.item, let data = try? JSONEncoder().encode(item) {
+                    sendResponse(connection: connection, body: data)
+                } else {
+                    let errMsg = result.error ?? "Operation failed"
+                    sendResponse(connection: connection, status: "403 Forbidden", body: Data("{\"error\":\"\(errMsg)\"}".utf8))
+                }
+            } else {
+                let rfcs = MerkleAuditEngine.shared.allRFCs()
+                if let data = try? JSONEncoder().encode(rfcs) {
+                    sendResponse(connection: connection, body: data)
+                } else {
+                    sendResponse(connection: connection, body: Data("[]".utf8))
+                }
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

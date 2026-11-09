@@ -571,6 +571,34 @@ enum SelfTest {
         let prPayload = WorktreeSyncEngine.shared.synthesizePullRequest(sessionId: "selftest-session")
         check("WorktreeSyncEngine synthesizes complete PR markdown with Mermaid topology and verification checklist", prPayload.mermaidDiagram.contains("graph TD") && prPayload.markdownBody.contains("Modified Architecture Components") && prPayload.affectedNodes.count == 3)
 
+        // Phase 10: Enterprise IAM & Cryptographic Merkle Audit Trail
+        let leaf1 = MerkleAuditEngine.shared.recordAction(
+            action: .nodeCreated,
+            entityId: "node-payment-gateway",
+            entityType: "api-service",
+            payloadJson: "{\"name\":\"Payment Gateway\",\"port\":8080}"
+        )
+        let leaf2 = MerkleAuditEngine.shared.recordAction(
+            action: .connectorLinked,
+            entityId: "conn-pg-db",
+            entityType: "connector",
+            payloadJson: "{\"from\":\"node-payment-gateway\",\"to\":\"node-billing-db\"}"
+        )
+        check("MerkleAuditEngine records append-only audit leaves linked with SHA-256 hash chain", leaf2.previousHash == leaf1.leafHash && leaf2.index == leaf1.index + 1 && leaf2.leafHash.count == 64)
+
+        let root = MerkleAuditEngine.shared.computeMerkleRoot()
+        check("MerkleAuditEngine computes deterministic binary Merkle Tree root", !root.rootHash.isEmpty && root.leafCount >= 3 && root.height >= 2)
+
+        let proofOpt = MerkleAuditEngine.shared.generateInclusionProof(forLeafIndex: leaf1.index)
+        let proofValid = proofOpt != nil && proofOpt!.isVerified && proofOpt!.rootHash == root.rootHash
+        check("MerkleAuditEngine generates and cryptographically validates Merkle inclusion proof", proofValid)
+
+        let unauthorizedActor = AuditActor(userId: "usr-guest", email: "intern@enterprise.corp", role: .contributor)
+        let rejectAttempt = MerkleAuditEngine.shared.signOffRFC(rfcId: "RFC-2026-08", approve: true, actor: unauthorizedActor)
+        let authorizedActor = AuditActor(userId: "usr-vp-eng", email: "vp@enterprise.corp", role: .architectureOwner)
+        let approveAttempt = MerkleAuditEngine.shared.signOffRFC(rfcId: "RFC-2026-08", approve: true, actor: authorizedActor)
+        check("MerkleAuditEngine enforces enterprise role-based authorization for RFC sign-offs", !rejectAttempt.success && approveAttempt.success && approveAttempt.item?.status == .approved)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
