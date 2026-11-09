@@ -348,6 +348,49 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid plugin execution request\"}".utf8))
             }
 
+        case ("GET", "/api/worktree/status"):
+            let session = WorktreeSyncEngine.shared.getSession()
+            if let data = try? JSONEncoder().encode(session) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/worktree/sync"):
+            var nodesList: [(id: String, name: String, type: String)] = [
+                (id: "node-1", name: "Orders API", type: "api-service"),
+                (id: "node-2", name: "Orders DB", type: "postgres-database"),
+                (id: "node-3", name: "Order Events", type: "kafka-stream")
+            ]
+            var branch: String? = nil
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                branch = json["branch"] as? String
+                if let customNodes = json["nodes"] as? [[String: String]] {
+                    nodesList = customNodes.compactMap { n in
+                        guard let id = n["id"], let name = n["name"], let type = n["type"] else { return nil }
+                        return (id: id, name: name, type: type)
+                    }
+                }
+            }
+            let syncResult = WorktreeSyncEngine.shared.executeSync(branchName: branch, nodes: nodesList)
+            if let data = try? JSONEncoder().encode(syncResult) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{\"isSuccess\":true}".utf8))
+            }
+
+        case ("POST", "/api/worktree/pr"):
+            var title: String? = nil
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                title = json["title"] as? String
+            }
+            let pr = WorktreeSyncEngine.shared.synthesizePullRequest(customTitle: title)
+            if let data = try? JSONEncoder().encode(pr) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

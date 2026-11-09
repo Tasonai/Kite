@@ -552,6 +552,25 @@ enum SelfTest {
         let wasmPassResult = WasmPluginEngine.shared.executePlugin(id: "kite-plugin-kafka", inputContext: validContext)
         check("WasmPluginEngine executes sandboxed validation in sub-50ms SLA with zero violations", wasmPassResult.isSuccess && wasmPassResult.violations.isEmpty && wasmPassResult.executionTimeMs < 50.0)
 
+        // Phase 9: Bidirectional CodeGen & Git Worktree Sync
+        let worktreeSampleNodes = [
+            (id: "n-api", name: "Billing API", type: "api-service"),
+            (id: "n-db", name: "Billing DB", type: "postgres-database"),
+            (id: "n-stream", name: "Payment Stream", type: "kafka-stream")
+        ]
+        let generatedArtifacts = WorktreeSyncEngine.shared.synthesizeArtifacts(for: worktreeSampleNodes)
+        check("WorktreeSyncEngine synthesizes route, schema, and worker artifacts from canvas nodes", generatedArtifacts.count == 3 && generatedArtifacts.contains(where: { $0.language == CodeArtifactLanguage.typescript }) && generatedArtifacts.contains(where: { $0.language == CodeArtifactLanguage.sql }))
+
+        let commitMsg = WorktreeSyncEngine.shared.formatCommitMessage(artifacts: generatedArtifacts, branchName: "kite/feature/billing")
+        let allHaveHashes = generatedArtifacts.allSatisfy { $0.contentSha256.count == 64 }
+        check("WorktreeSyncEngine formats deterministic SHA-256 digests and Conventional Commit messages", allHaveHashes && commitMsg.contains("feat(arch): sync 3 architecture artifacts") && commitMsg.contains("Billing API"))
+
+        let syncResult = WorktreeSyncEngine.shared.executeSync(sessionId: "selftest-session", branchName: "kite/feature/billing", nodes: worktreeSampleNodes)
+        check("WorktreeSyncEngine executes isolated background worktree synchronization within sub-second SLA", syncResult.isSuccess && syncResult.filesCount == 3 && syncResult.durationMs < 1000.0 && !syncResult.commitHash.isEmpty)
+
+        let prPayload = WorktreeSyncEngine.shared.synthesizePullRequest(sessionId: "selftest-session")
+        check("WorktreeSyncEngine synthesizes complete PR markdown with Mermaid topology and verification checklist", prPayload.mermaidDiagram.contains("graph TD") && prPayload.markdownBody.contains("Modified Architecture Components") && prPayload.affectedNodes.count == 3)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
