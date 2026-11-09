@@ -275,6 +275,57 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid telemetry data\"}".utf8))
             }
 
+        case ("POST", "/api/relay/create"):
+            let roomToken = RoomSecurityKeyDeriver.generateRoomToken()
+            let res = """
+            {"status":"ok","roomId":"\(roomToken)","joinUrl":"kite://join?room=\(roomToken)","isEncrypted":true}
+            """
+            sendResponse(connection: connection, body: Data(res.utf8))
+
+        case ("GET", "/api/relay/status"):
+            let stats = WebRTCMeshManager.shared.statistics()
+            let peers = WebRTCMeshManager.shared.activePeers()
+            struct RelayStatusResponse: Codable {
+                let stats: MeshSyncStatistics
+                let peers: [MeshPeerNode]
+                let isOnline: Bool
+            }
+            let resp = RelayStatusResponse(stats: stats, peers: peers, isOnline: true)
+            if let data = try? JSONEncoder().encode(resp) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{\"isOnline\":true}".utf8))
+            }
+
+        case ("POST", "/api/relay/signal"):
+            if let msg = try? JSONDecoder().decode(SignalingMessage.self, from: bodyData) {
+                RelayStationHub.shared.routeMessage(msg)
+                broadcast(event: "relay_signal_routed", payload: ["type": msg.type.rawValue, "roomId": msg.roomId, "sender": msg.senderPeerId])
+                sendResponse(connection: connection, body: Data("{\"status\":\"ok\",\"routed\":true}".utf8))
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid signaling message\"}".utf8))
+            }
+
+        case ("GET", let p) where p.starts(with: "/api/relay/messages"):
+            // Extract peerId from query parameter
+            var peerId = ""
+            if let queryIndex = p.firstIndex(of: "?") {
+                let queryString = String(p[p.index(after: queryIndex)...])
+                let pairs = queryString.components(separatedBy: "&")
+                for pair in pairs {
+                    let kv = pair.components(separatedBy: "=")
+                    if kv.count == 2 && kv[0] == "peerId" {
+                        peerId = kv[1]
+                    }
+                }
+            }
+            let msgs = RelayStationHub.shared.popMessages(for: peerId)
+            if let data = try? JSONEncoder().encode(msgs) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("[]".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

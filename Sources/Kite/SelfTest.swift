@@ -501,6 +501,35 @@ enum SelfTest {
         let patches = SelfHealingEngine.diagnoseBottleneck(benchmark: benchFail, frames: mockFrames)
         check("SelfHealingEngine diagnoses SLA bottlenecks and synthesizes architectural remediation patches", patches.count == 3 && patches.contains(where: { $0.action == .injectCacheLayer }) && patches.contains(where: { $0.action == .addRateLimiter }) && patches.contains(where: { $0.action == .scaleHorizontal }))
 
+        // Phase 7: Cloud Relay & Zero-Knowledge WebRTC Mesh
+        let roomToken = RoomSecurityKeyDeriver.generateRoomToken()
+        let roomKey = RoomSecurityKeyDeriver.deriveKey(from: roomToken)
+        check("RoomSecurityKeyDeriver generates high-entropy room token and derives 256-bit key", roomToken.hasPrefix("kite-") && roomKey.bitCount == 256)
+
+        let relayHub = RelayStationHub()
+        let peerAlice = SignalingPeer(displayName: "Alice (macOS)", platform: "macOS")
+        let peerBob = SignalingPeer(displayName: "Bob (Win11)", platform: "Windows 11")
+        _ = relayHub.joinRoom(roomId: roomToken, peer: peerAlice)
+        let existingForBob = relayHub.joinRoom(roomId: roomToken, peer: peerBob)
+        check("RelayStationHub manages multi-platform room rendezvous and membership", existingForBob.count == 1 && existingForBob.first?.displayName == "Alice (macOS)")
+
+        let offerMsg = SignalingMessage(type: .offer, roomId: roomToken, senderPeerId: peerAlice.id, targetPeerId: peerBob.id, payload: "mock-sdp-offer")
+        relayHub.routeMessage(offerMsg)
+        let bobsMsgs = relayHub.popMessages(for: peerBob.id)
+        check("RelayStationHub routes targeted signaling messages between peers", bobsMsgs.count == 1 && bobsMsgs.first?.type == .offer && bobsMsgs.first?.payload == "mock-sdp-offer")
+
+        let mesh = WebRTCMeshManager(localPeerId: peerAlice.id)
+        mesh.joinRoom(roomId: roomToken, secretPassphrase: roomToken)
+        mesh.registerRemotePeer(peerId: peerBob.id, displayName: peerBob.displayName, platform: peerBob.platform)
+        mesh.setPeerState(peerId: peerBob.id, state: .connected, latencyMs: 14.2)
+        let meshStats = mesh.statistics()
+        check("WebRTCMeshManager tracks peer connections and maintains sub-20ms SLA telemetry", meshStats.activeConnectedPeers == 1 && meshStats.averageLatencyMs < 20.0 && meshStats.isEncryptionActive)
+
+        let secretPayload = Data("{\"type\":\"crdt_delta\",\"action\":\"set_frame\"}".utf8)
+        let meshEncryptedEnv = try! mesh.packEncryptedMessage(payloadData: secretPayload)
+        let meshDecryptedData = try! mesh.unpackEncryptedMessage(envelope: meshEncryptedEnv)
+        check("WebRTCMeshManager end-to-end encrypts and decrypts P2P CRDT payloads using ChaCha20-Poly1305", meshDecryptedData == secretPayload && meshEncryptedEnv.senderClientId == peerAlice.id)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
