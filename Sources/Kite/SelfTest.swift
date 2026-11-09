@@ -530,6 +530,28 @@ enum SelfTest {
         let meshDecryptedData = try! mesh.unpackEncryptedMessage(envelope: meshEncryptedEnv)
         check("WebRTCMeshManager end-to-end encrypts and decrypts P2P CRDT payloads using ChaCha20-Poly1305", meshDecryptedData == secretPayload && meshEncryptedEnv.senderClientId == peerAlice.id)
 
+        // Phase 8: WASM & Plugin Extensibility Engine
+        let validWasm = WasmModuleValidator.generateMinimalWasmStub()
+        let invalidWasm: [UInt8] = [0x7f, 0x45, 0x4c, 0x46] // ELF header
+        check("WasmModuleValidator verifies WASM magic header and rejects non-WASM binaries", WasmModuleValidator.validateBinary(bytes: validWasm) && !WasmModuleValidator.validateBinary(bytes: invalidWasm))
+
+        let plugins = WasmPluginEngine.shared.allPlugins()
+        check("WasmPluginEngine registers built-in streaming and analytics plugins", plugins.count >= 2 && plugins.contains(where: { $0.id == "kite-plugin-kafka" }))
+
+        let invalidContext: [String: Any] = [
+            "protocol": "kafka-topic",
+            "properties": ["topicName": "user-signups"] // Missing schemaRegistry
+        ]
+        let wasmFailResult = WasmPluginEngine.shared.executePlugin(id: "kite-plugin-kafka", inputContext: invalidContext)
+        check("WasmPluginEngine enforces protocol validation rules and detects missing properties", !wasmFailResult.isSuccess && wasmFailResult.violations.count == 1 && wasmFailResult.executionTimeMs < 50.0)
+
+        let validContext: [String: Any] = [
+            "protocol": "kafka-topic",
+            "properties": ["topicName": "user-signups", "schemaRegistry": "https://registry.kite.internal:8081"]
+        ]
+        let wasmPassResult = WasmPluginEngine.shared.executePlugin(id: "kite-plugin-kafka", inputContext: validContext)
+        check("WasmPluginEngine executes sandboxed validation in sub-50ms SLA with zero violations", wasmPassResult.isSuccess && wasmPassResult.violations.isEmpty && wasmPassResult.executionTimeMs < 50.0)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

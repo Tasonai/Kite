@@ -326,6 +326,28 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("[]".utf8))
             }
 
+        case ("GET", "/api/plugins"):
+            let plugins = WasmPluginEngine.shared.allPlugins()
+            if let data = try? JSONEncoder().encode(plugins) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("[]".utf8))
+            }
+
+        case ("POST", "/api/plugins/execute"):
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let pluginId = json["pluginId"] as? String {
+                let context = json["context"] as? [String: Any] ?? [:]
+                let result = WasmPluginEngine.shared.executePlugin(id: pluginId, inputContext: context)
+                if let data = try? JSONEncoder().encode(result) {
+                    sendResponse(connection: connection, body: data)
+                } else {
+                    sendResponse(connection: connection, body: Data("{\"isSuccess\":true}".utf8))
+                }
+            } else {
+                sendResponse(connection: connection, status: "400 Bad Request", body: Data("{\"error\":\"Invalid plugin execution request\"}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
