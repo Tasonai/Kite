@@ -585,6 +585,46 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/local-ai/status"):
+            let status = LocalAiCoPilotEngine.shared.getEngineStatus()
+            if let data = try? JSONEncoder().encode(status) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/local-ai/critique"):
+            let sampleNodes = [
+                (id: "node-1", name: "Checkout Service", type: "api-service"),
+                (id: "node-2", name: "Inventory Service", type: "api-service"),
+                (id: "node-3", name: "Orders DB", type: "postgres-database")
+            ]
+            let sampleConns = [
+                (fromId: "node-1", toId: "node-3", protocolType: "postgresql"),
+                (fromId: "node-2", toId: "node-3", protocolType: "postgresql"),
+                (fromId: "node-1", toId: "node-2", protocolType: "http"),
+                (fromId: "node-2", toId: "node-1", protocolType: "http")
+            ]
+            let result = LocalAiCoPilotEngine.shared.analyzeTopology(nodes: sampleNodes, connections: sampleConns)
+            if let data = try? JSONEncoder().encode(result) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/local-ai/chat"):
+            var prompt = "How do I make my architecture resilient?"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let p = json["prompt"] as? String {
+                prompt = p
+            }
+            let result = LocalAiCoPilotEngine.shared.chatLocal(prompt: prompt)
+            if let data = try? JSONEncoder().encode(result) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

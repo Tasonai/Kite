@@ -655,6 +655,32 @@ enum SelfTest {
         let chaosSpec = SecurityChaosEngine.shared.generateChaosExperiment(type: .networkLatency, targetNodeName: "Orders Service", durationSec: 45)
         check("SecurityChaosEngine synthesizes executable Chaos Mesh manifests and automated rollback runbook", chaosSpec.yamlManifest.contains("NetworkChaos") && chaosSpec.yamlManifest.contains("250ms") && chaosSpec.rollbackRunbook.contains("kubectl delete -f"))
 
+        // Phase 13: Sovereign Local AI Co-Pilot (Apple MLX & DirectML)
+        let aiStatus = LocalAiCoPilotEngine.shared.getEngineStatus()
+        check("LocalAiCoPilotEngine detects local hardware acceleration engine and reports active status", aiStatus.isAirGappedEnforced && aiStatus.allocatedMemoryMb > 0)
+
+        let spofNodes = [
+            (id: "n-api1", name: "Billing API", type: "api-service"),
+            (id: "n-api2", name: "Auth API", type: "api-service"),
+            (id: "n-db", name: "PostgreSQL Master", type: "postgres-database")
+        ]
+        let spofConns = [
+            (fromId: "n-api1", toId: "n-db", protocolType: "postgresql"),
+            (fromId: "n-api2", toId: "n-db", protocolType: "postgresql")
+        ]
+        let spofCritique = LocalAiCoPilotEngine.shared.analyzeTopology(nodes: spofNodes, connections: spofConns)
+        check("LocalAiCoPilotEngine detects single point of failure (SPOF) in unreplicated database architecture", spofCritique.critiques.contains(where: { $0.ruleId == "ARCH-SPOF-001" }) && spofCritique.critiques.first?.severity == "critical")
+
+        let circularConns = [
+            (fromId: "n-api1", toId: "n-api2", protocolType: "http"),
+            (fromId: "n-api2", toId: "n-api1", protocolType: "http")
+        ]
+        let circularCritique = LocalAiCoPilotEngine.shared.analyzeTopology(nodes: spofNodes, connections: circularConns)
+        check("LocalAiCoPilotEngine detects distributed monolith circular synchronous dependency", circularCritique.critiques.contains(where: { $0.ruleId == "ARCH-MONO-002" }))
+
+        let chatResult = LocalAiCoPilotEngine.shared.chatLocal(prompt: "How to decouple?")
+        check("LocalAiCoPilotEngine executes on-device Socratic critique within sub-100ms air-gapped SLA", chatResult.durationMs < 100.0 && chatResult.isAirGapped && chatResult.adviceMarkdown.contains("Local MLX Neural Engine"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
