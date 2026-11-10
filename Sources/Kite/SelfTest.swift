@@ -681,6 +681,27 @@ enum SelfTest {
         let chatResult = LocalAiCoPilotEngine.shared.chatLocal(prompt: "How to decouple?")
         check("LocalAiCoPilotEngine executes on-device Socratic critique within sub-100ms air-gapped SLA", chatResult.durationMs < 100.0 && chatResult.isAirGapped && chatResult.adviceMarkdown.contains("Local MLX Neural Engine"))
 
+        // Phase 14: 4D Time-Travel Canvas Replay & Incident Post-Mortem
+        let timelineSnaps = TimeTravelReplayEngine.shared.getTimeline()
+        let retrievedSnap = TimeTravelReplayEngine.shared.getSnapshot(id: "snap-v1.0.0")
+        check("TimeTravelReplayEngine queries historical timeline and reconstructs point-in-time snapshot", timelineSnaps.count >= 3 && retrievedSnap != nil && retrievedSnap?.nodeCount == 3)
+
+        let customNodeA = ReplayCanvasNode(id: "node-worker", name: "Async Worker", type: "api-service", x: 600, y: 100)
+        let recordedSnap = TimeTravelReplayEngine.shared.recordSnapshot(
+            id: "snap-v1.4.0",
+            author: "qa@kite.internal",
+            message: "Add background worker node",
+            nodes: [customNodeA],
+            connectors: []
+        )
+        check("TimeTravelReplayEngine commits and indexes point-in-time architecture mutations", recordedSnap.id == "snap-v1.4.0" && recordedSnap.nodeCount == 1 && TimeTravelReplayEngine.shared.getSnapshot(id: "snap-v1.4.0") != nil)
+
+        let diffResult = TimeTravelReplayEngine.shared.computeDiff(fromId: "snap-v1.0.0", toId: "snap-v1.2.0")
+        check("TimeTravelReplayEngine calculates temporal delta diff across nodes, modifications, and connectors", diffResult.addedNodes.count == 2 && diffResult.addedConnectors.count == 2 && diffResult.summary.contains("Temporal diff"))
+
+        let incidentCorrelation = TimeTravelReplayEngine.shared.correlateIncident(incidentId: "INC-7102")
+        check("TimeTravelReplayEngine correlates production incident telemetry with architecture mutations and suggests remediation", incidentCorrelation.incident.id == "INC-7102" && incidentCorrelation.suspectedSnapshot?.id == "snap-v1.2.0" && incidentCorrelation.confidenceScore > 0.8 && !incidentCorrelation.recommendations.isEmpty)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

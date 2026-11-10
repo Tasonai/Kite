@@ -625,6 +625,76 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/timetravel/timeline"):
+            let timeline = TimeTravelReplayEngine.shared.getTimeline()
+            let incidents = TimeTravelReplayEngine.shared.getIncidents()
+            let response: [String: Any] = [
+                "snapshots": timeline.map { [
+                    "id": $0.id,
+                    "timestamp": $0.timestamp,
+                    "author": $0.author,
+                    "message": $0.message,
+                    "nodeCount": $0.nodeCount,
+                    "connectorCount": $0.connectorCount,
+                    "incidentIds": $0.incidentIds
+                ]},
+                "incidents": incidents.map { [
+                    "id": $0.id,
+                    "title": $0.title,
+                    "severity": $0.severity,
+                    "service": $0.service,
+                    "timestamp": $0.timestamp,
+                    "status": $0.status,
+                    "mttrMinutes": $0.mttrMinutes,
+                    "suspectedSnapshotId": $0.suspectedSnapshotId as Any
+                ]}
+            ]
+            if let data = try? JSONSerialization.data(withJSONObject: response, options: [.prettyPrinted]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/timetravel/snapshot"):
+            var snapshotId = "snap-v1.0.0"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let sid = json["snapshotId"] as? String {
+                snapshotId = sid
+            }
+            if let snapshot = TimeTravelReplayEngine.shared.getSnapshot(id: snapshotId),
+               let data = try? JSONEncoder().encode(snapshot) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, status: "404 Not Found", body: Data("{\"error\": \"Snapshot not found\"}".utf8))
+            }
+
+        case ("POST", "/api/timetravel/diff"):
+            var fromId = "snap-v1.0.0"
+            var toId = "snap-v1.3.0"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let f = json["fromId"] as? String { fromId = f }
+                if let t = json["toId"] as? String { toId = t }
+            }
+            let diff = TimeTravelReplayEngine.shared.computeDiff(fromId: fromId, toId: toId)
+            if let data = try? JSONEncoder().encode(diff) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/timetravel/correlate"):
+            var incidentId = "INC-7102"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let iid = json["incidentId"] as? String {
+                incidentId = iid
+            }
+            let correlation = TimeTravelReplayEngine.shared.correlateIncident(incidentId: incidentId)
+            if let data = try? JSONEncoder().encode(correlation) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
