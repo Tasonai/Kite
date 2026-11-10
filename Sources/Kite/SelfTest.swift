@@ -599,6 +599,36 @@ enum SelfTest {
         let approveAttempt = MerkleAuditEngine.shared.signOffRFC(rfcId: "RFC-2026-08", approve: true, actor: authorizedActor)
         check("MerkleAuditEngine enforces enterprise role-based authorization for RFC sign-offs", !rejectAttempt.success && approveAttempt.success && approveAttempt.item?.status == .approved)
 
+        // Phase 11: Multi-Cloud Terraform & OpenTofu Bi-directional Engine
+        let tfTestNodes = [
+            (id: "n-db", name: "Core DB", type: "postgres-database"),
+            (id: "n-api", name: "Auth Service", type: "api-service"),
+            (id: "n-s3", name: "User Media", type: "s3-storage")
+        ]
+        let awsBundle = TerraformIaCEngine.shared.synthesizeHcl(provider: .aws, nodes: tfTestNodes)
+        let azBundle = TerraformIaCEngine.shared.synthesizeHcl(provider: .azure, nodes: tfTestNodes)
+        let gcpBundle = TerraformIaCEngine.shared.synthesizeHcl(provider: .gcp, nodes: tfTestNodes)
+        check("TerraformIaCEngine synthesizes valid AWS, Azure, and GCP Terraform/OpenTofu HCL modules", awsBundle.mainTf.contains("aws_db_instance") && azBundle.mainTf.contains("azurerm_kubernetes_cluster") && gcpBundle.mainTf.contains("google_sql_database_instance"))
+
+        check("TerraformIaCEngine detects missing security boundaries and estimates monthly cloud infrastructure cost", awsBundle.estimatedMonthlyCostUsd > 50.0 && !awsBundle.securityWarnings.isEmpty)
+
+        let mockTfState = """
+        {
+          "version": 4,
+          "terraform_version": "1.5.7",
+          "resources": [
+            { "type": "aws_vpc", "name": "main_vpc" },
+            { "type": "aws_db_instance", "name": "primary_postgres" },
+            { "type": "aws_ecs_service", "name": "gateway_svc" }
+          ]
+        }
+        """
+        let importResult = TerraformIaCEngine.shared.reverseEngineerState(jsonState: mockTfState)
+        check("TerraformIaCEngine reverse-engineers Terraform JSON state into visual architecture nodes and frames", importResult.isSuccess && importResult.nodesCount == 3 && importResult.providerDetected == .aws)
+
+        let planDiff = TerraformIaCEngine.shared.calculatePlan(targetNodes: tfTestNodes, activeResources: ["core_db"])
+        check("TerraformIaCEngine calculates dry-run execution plan differences and infrastructure drift delta", planDiff.driftDetected && planDiff.resourcesToAdd.contains("auth_service") && planDiff.resourcesToModify.contains("core_db"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

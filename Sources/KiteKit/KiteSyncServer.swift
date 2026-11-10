@@ -479,6 +479,52 @@ public final class KiteSyncServer: @unchecked Sendable {
                 }
             }
 
+        case ("GET", "/api/tf/export"):
+            let sampleNodes = [
+                (id: "node-1", name: "Billing Database", type: "postgres-database"),
+                (id: "node-2", name: "Payment Processor", type: "api-service"),
+                (id: "node-3", name: "Invoices Bucket", type: "s3-storage")
+            ]
+            let bundle = TerraformIaCEngine.shared.synthesizeHcl(provider: .aws, nodes: sampleNodes)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/tf/import"):
+            var stateStr = "{}"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let rawState = json["jsonState"] as? String {
+                stateStr = rawState
+            } else if let raw = String(data: bodyData, encoding: .utf8), !raw.isEmpty {
+                stateStr = raw
+            }
+            let importRes = TerraformIaCEngine.shared.reverseEngineerState(jsonState: stateStr)
+            if let data = try? JSONEncoder().encode(importRes) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{\"isSuccess\":false}".utf8))
+            }
+
+        case ("POST", "/api/tf/plan"):
+            let targetNodes = [
+                (id: "node-1", name: "Billing Database", type: "postgres-database"),
+                (id: "node-2", name: "Payment Processor", type: "api-service"),
+                (id: "node-3", name: "Invoices Bucket", type: "s3-storage")
+            ]
+            var activeRes: [String] = []
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let list = json["activeResources"] as? [String] {
+                activeRes = list
+            }
+            let planDiff = TerraformIaCEngine.shared.calculatePlan(targetNodes: targetNodes, activeResources: activeRes)
+            if let data = try? JSONEncoder().encode(planDiff) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
