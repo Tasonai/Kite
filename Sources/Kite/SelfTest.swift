@@ -629,6 +629,32 @@ enum SelfTest {
         let planDiff = TerraformIaCEngine.shared.calculatePlan(targetNodes: tfTestNodes, activeResources: ["core_db"])
         check("TerraformIaCEngine calculates dry-run execution plan differences and infrastructure drift delta", planDiff.driftDetected && planDiff.resourcesToAdd.contains("auth_service") && planDiff.resourcesToModify.contains("core_db"))
 
+        // Phase 12: Architectural Security Red Team & Chaos Injection
+        let vulnerableNodes = [
+            (id: "n-web", name: "Web UI", type: "web-frontend"),
+            (id: "n-db", name: "User DB", type: "postgres-database")
+        ]
+        let directConn = [(fromId: "n-web", toId: "n-db", protocolType: "postgresql")]
+        let secAudit = SecurityChaosEngine.shared.auditTopology(nodes: vulnerableNodes, connections: directConn)
+        check("SecurityChaosEngine identifies STRIDE elevation of privilege and tampering threats on canvas topology", secAudit.threats.contains(where: { $0.category == .elevationOfPrivilege }) && secAudit.threats.contains(where: { $0.category == .tampering }))
+
+        check("SecurityChaosEngine computes accurate threat scorecard penalty and health rating", secAudit.healthScore < 80 && secAudit.criticalCount >= 2 && secAudit.strideBreakdown["tampering"] == 1)
+
+        let blastNodes = [
+            (id: "n-gw", name: "Edge Gateway", type: "api-gateway"),
+            (id: "n-svc", name: "Orders Service", type: "api-service"),
+            (id: "n-db", name: "Orders DB", type: "postgres-database")
+        ]
+        let blastConns = [
+            (fromId: "n-gw", toId: "n-svc", protocolType: "https"),
+            (fromId: "n-svc", toId: "n-db", protocolType: "postgresql")
+        ]
+        let blastReport = SecurityChaosEngine.shared.calculateBlastRadius(targetNodeId: "n-svc", nodes: blastNodes, connections: blastConns)
+        check("SecurityChaosEngine calculates upstream and downstream dynamic blast radius with impact rating", blastReport.affectedUpstreamNodes.contains("Edge Gateway") && blastReport.affectedDownstreamNodes.contains("Orders DB") && blastReport.totalImpactPercentage == 100.0)
+
+        let chaosSpec = SecurityChaosEngine.shared.generateChaosExperiment(type: .networkLatency, targetNodeName: "Orders Service", durationSec: 45)
+        check("SecurityChaosEngine synthesizes executable Chaos Mesh manifests and automated rollback runbook", chaosSpec.yamlManifest.contains("NetworkChaos") && chaosSpec.yamlManifest.contains("250ms") && chaosSpec.rollbackRunbook.contains("kubectl delete -f"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

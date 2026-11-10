@@ -525,6 +525,66 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/security/audit"):
+            let sampleNodes = [
+                (id: "node-1", name: "Customer Portal", type: "web-frontend"),
+                (id: "node-2", name: "Orders DB", type: "postgres-database"),
+                (id: "node-3", name: "Order Events", type: "kafka-stream")
+            ]
+            let sampleConns = [
+                (fromId: "node-1", toId: "node-2", protocolType: "postgresql")
+            ]
+            let scorecard = SecurityChaosEngine.shared.auditTopology(nodes: sampleNodes, connections: sampleConns)
+            if let data = try? JSONEncoder().encode(scorecard) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/security/blast-radius"):
+            let sampleNodes = [
+                (id: "node-1", name: "Customer Portal", type: "web-frontend"),
+                (id: "node-2", name: "API Gateway", type: "api-gateway"),
+                (id: "node-3", name: "Orders DB", type: "postgres-database")
+            ]
+            let sampleConns = [
+                (fromId: "node-1", toId: "node-2", protocolType: "https"),
+                (fromId: "node-2", toId: "node-3", protocolType: "postgresql")
+            ]
+            var targetId = "node-2"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let tid = json["targetNodeId"] as? String {
+                targetId = tid
+            }
+            let report = SecurityChaosEngine.shared.calculateBlastRadius(targetNodeId: targetId, nodes: sampleNodes, connections: sampleConns)
+            if let data = try? JSONEncoder().encode(report) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/chaos/generate"):
+            var type: ChaosExperimentType = .podKill
+            var target = "orders-service"
+            var duration = 60
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let rawType = json["type"] as? String, let t = ChaosExperimentType(rawValue: rawType) {
+                    type = t
+                }
+                if let tgt = json["targetNodeName"] as? String {
+                    target = tgt
+                }
+                if let d = json["durationSec"] as? Int {
+                    duration = d
+                }
+            }
+            let spec = SecurityChaosEngine.shared.generateChaosExperiment(type: type, targetNodeName: target, durationSec: duration)
+            if let data = try? JSONEncoder().encode(spec) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
