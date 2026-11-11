@@ -791,6 +791,20 @@ enum SelfTest {
         let formalSpec = FormalVerificationEngine.shared.synthesizeFormalSpec(moduleName: "OrdersConsensusSpec", quorumSize: 3)
         check("FormalVerificationEngine synthesizes valid TLA+ module, TLC config, and Alloy relational model", formalSpec.tlaPlusSpec.contains("---- MODULE OrdersConsensusSpec ----") && formalSpec.tlcConfig.contains("CHECK_DEADLOCK TRUE") && formalSpec.alloyModel.contains("fact QuorumIntersection"))
 
+        // Phase 22: Post-Quantum Cryptography (NIST ML-KEM & ML-DSA) Mesh Engine
+        let pqcInitial = PostQuantumCryptoEngine()
+        let initialCbom = pqcInitial.auditCbom()
+        check("PostQuantumCryptoEngine audits CycloneDX CBOM and flags Shor-vulnerable RSA/ECDSA primitives", initialCbom.totalPrimitives == 4 && initialCbom.shorVulnerableCount == 2 && initialCbom.readinessScorePercent == 50.0)
+
+        let rotResult = pqcInitial.rotateToHybridPqc()
+        check("PostQuantumCryptoEngine rotates vulnerable primitives to NIST FIPS 203 X25519MLKEM768 and FIPS 204 ML-DSA-65", rotResult.upgradedCount == 2 && rotResult.allQuantumSafe && rotResult.newEpoch == 2)
+
+        let postCbom = pqcInitial.auditCbom()
+        check("PostQuantumCryptoEngine achieves 100% quantum-safe readiness after hybrid epoch rotation", postCbom.shorVulnerableCount == 0 && postCbom.readinessScorePercent == 100.0)
+
+        let envoyPqc = pqcInitial.generateEnvoyPqcConfig(clusterName: "payments-core")
+        check("PostQuantumCryptoEngine synthesizes Envoy PQ-TLS 1.3 SDS config with X25519MLKEM768 and mldsa65", envoyPqc.envoySdsYaml.contains("X25519MLKEM768") && envoyPqc.envoySdsYaml.contains("mldsa65") && envoyPqc.cbomJson.contains("\"bomFormat\": \"CycloneDX\""))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

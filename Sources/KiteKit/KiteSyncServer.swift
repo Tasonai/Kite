@@ -941,6 +941,35 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/pqc/cbom"):
+            let cbom = PostQuantumCryptoEngine.shared.auditCbom()
+            if let data = try? JSONEncoder().encode(cbom) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/pqc/rotate"):
+            let rot = PostQuantumCryptoEngine.shared.rotateToHybridPqc()
+            if let data = try? JSONEncoder().encode(rot) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/pqc/tls-config"):
+            var clusterName = "kite-mesh-upstream"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let c = json["clusterName"] as? String {
+                clusterName = c
+            }
+            let cfg = PostQuantumCryptoEngine.shared.generateEnvoyPqcConfig(clusterName: clusterName)
+            if let data = try? JSONEncoder().encode(cfg) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
