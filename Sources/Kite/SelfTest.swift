@@ -832,6 +832,19 @@ enum SelfTest {
         let argoSpec = AutoRemediationEngine.shared.generateArgoRolloutSpec(serviceName: "ledger-writer")
         check("AutoRemediationEngine synthesizes Argo Rollouts canary spec and Prometheus AnalysisTemplate", argoSpec.rolloutYaml.contains("kind: Rollout") && argoSpec.analysisTemplateYaml.contains("kind: AnalysisTemplate") && argoSpec.canaryStepsCount == 4)
 
+        // Phase 25: Cross-Organization Zero-Trust Federation & B2B Contract Catalog
+        let trustDomains = FederationCatalogEngine.shared.getTrustDomains()
+        check("FederationCatalogEngine maintains SPIFFE/SPIRE cross-org mTLS trust domains", trustDomains.count == 3 && trustDomains.allSatisfy { $0.mtlsVerified && $0.spiffeTrustDomain.hasPrefix("spiffe://") })
+
+        let compatContract = FederationCatalogEngine.shared.verifyBoundaryContract(contractId: "settlement-events-v2", removeRequiredField: false)
+        check("FederationCatalogEngine validates backward-compatible B2B AsyncAPI boundary schema", compatContract.backwardCompatible && compatContract.breakingChanges.isEmpty)
+
+        let breakingContract = FederationCatalogEngine.shared.verifyBoundaryContract(contractId: "settlement-events-v2", removeRequiredField: true)
+        check("FederationCatalogEngine flags breaking B2B field removal across federated partner boundary", !breakingContract.backwardCompatible && breakingContract.breakingChanges.count == 2)
+
+        let fedCatalog = FederationCatalogEngine.shared.generateFederationCatalog(systemName: "kite-clearing-hub")
+        check("FederationCatalogEngine synthesizes Backstage System/API catalog and SPIRE ClusterFederatedTrustDomain", fedCatalog.catalogInfoYaml.contains("apiVersion: backstage.io/v1alpha1") && fedCatalog.spireFederationYaml.contains("kind: ClusterFederatedTrustDomain") && fedCatalog.federatedDomainsCount == 3)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

@@ -1049,6 +1049,47 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/federation/trust-domains"):
+            let domains = FederationCatalogEngine.shared.getTrustDomains()
+            if let data = try? JSONEncoder().encode(["trustDomains": domains]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/federation/verify-contract"):
+            var contractId = "settlement-events-v2"
+            var partner = "spiffe://clearing-partner.eu"
+            var removeField = false
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let c = json["contractId"] as? String { contractId = c }
+                if let p = json["partnerTrustDomain"] as? String { partner = p }
+                if let r = json["removeRequiredField"] as? Bool { removeField = r }
+            }
+            let verifyRes = FederationCatalogEngine.shared.verifyBoundaryContract(
+                contractId: contractId,
+                partnerTrustDomain: partner,
+                removeRequiredField: removeField
+            )
+            if let data = try? JSONEncoder().encode(verifyRes) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/federation/catalog"):
+            var sysName = "kite-enterprise-platform"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let s = json["systemName"] as? String {
+                sysName = s
+            }
+            let cat = FederationCatalogEngine.shared.generateFederationCatalog(systemName: sysName)
+            if let data = try? JSONEncoder().encode(cat) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
