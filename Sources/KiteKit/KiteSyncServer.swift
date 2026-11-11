@@ -695,6 +695,39 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/cluster/status"):
+            let status = AirGappedClusterEngine.shared.getClusterStatus()
+            if let data = try? JSONEncoder().encode(status) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/cluster/elect"):
+            var candidateId: String? = nil
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                candidateId = json["candidateId"] as? String
+            }
+            let result = AirGappedClusterEngine.shared.triggerLeaderElection(candidateId: candidateId)
+            if let data = try? JSONEncoder().encode(result) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/cluster/manifest"):
+            var replicas = 3
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let r = json["replicas"] as? Int {
+                replicas = r
+            }
+            let manifest = AirGappedClusterEngine.shared.generateOperatorManifest(replicas: replicas)
+            if let data = try? JSONEncoder().encode(manifest) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

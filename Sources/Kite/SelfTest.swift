@@ -702,6 +702,18 @@ enum SelfTest {
         let incidentCorrelation = TimeTravelReplayEngine.shared.correlateIncident(incidentId: "INC-7102")
         check("TimeTravelReplayEngine correlates production incident telemetry with architecture mutations and suggests remediation", incidentCorrelation.incident.id == "INC-7102" && incidentCorrelation.suspectedSnapshot?.id == "snap-v1.2.0" && incidentCorrelation.confidenceScore > 0.8 && !incidentCorrelation.recommendations.isEmpty)
 
+        // Phase 15: Sovereign Air-Gapped High-Availability Cluster
+        let clusterStatus = AirGappedClusterEngine.shared.getClusterStatus()
+        check("AirGappedClusterEngine monitors cluster nodes, evaluates quorum, and enforces air-gap boundaries", clusterStatus.totalNodes == 3 && clusterStatus.isQuorumAchieved && clusterStatus.airGappedVerified && clusterStatus.quorumCount == 2)
+
+        let election = AirGappedClusterEngine.shared.triggerLeaderElection(candidateId: "kite-node-2")
+        check("AirGappedClusterEngine executes distributed Raft consensus leader election and term incrementation", election.success && election.term >= 2 && election.electedLeaderId == "kite-node-2" && election.votesReceived >= election.quorumNeeded)
+
+        let k8sManifest = AirGappedClusterEngine.shared.generateOperatorManifest(replicas: 5)
+        check("AirGappedClusterEngine synthesizes Kubernetes CRD and operator manager deployment manifests", k8sManifest.crdYaml.contains("kitestations.kite.sh") && k8sManifest.operatorDeploymentYaml.contains("kite-operator"))
+
+        check("AirGappedClusterEngine generates high-availability StatefulSet with anti-affinity and Helm values", k8sManifest.statefulSetYaml.contains("podAntiAffinity") && k8sManifest.helmValuesYaml.contains("enforceZeroEgress: true") && k8sManifest.statefulSetYaml.contains("replicas: 5"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
