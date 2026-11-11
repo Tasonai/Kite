@@ -885,6 +885,18 @@ enum SelfTest {
         let polBundle = PolicyAsCodeEngine.shared.synthesizePolicyBundle(namespace: "kite.authz.v1")
         check("PolicyAsCodeEngine synthesizes OPA Rego v1 module and AWS Cedar policy set", polBundle.opaRegoModule.contains("import rego.v1") && polBundle.cedarPolicySet.contains("forbid (") && polBundle.cedarPolicySet.contains("permit ("))
 
+        // Phase 29: Distributed OpenTelemetry Span Waterfall & Tail-Sampling Pipeline
+        let otelSpans = OtelTracingEngine.shared.getTraceSpans()
+        check("OtelTracingEngine reconstructs W3C traceparent parent-child distributed span tree", otelSpans.count == 4 && otelSpans.first?.parentSpanId == nil && otelSpans.last?.serviceName == "inventory-postgres")
+
+        let critPath = OtelTracingEngine.shared.analyzeCriticalPath()
+        check("OtelTracingEngine attributes Critical Path self-time and flags N+1 SQL cascade", critPath.bottleneckService == "inventory-postgres" && critPath.bottleneckSelfTimeMs == 148.0 && critPath.nPlusOneDetected)
+
+        check("OtelTracingEngine separates orchestrator wait-time from leaf execution self-time", critPath.totalDurationMs == 210.0 && critPath.waterfallSummary.contains(where: { $0.contains("checkout-api") && $0.contains("self=22.0ms") }))
+
+        let otelCfg = OtelTracingEngine.shared.synthesizeCollectorConfig(clusterEnv: "prod-eu-central", tailSampleLatencyThresholdMs: 120)
+        check("OtelTracingEngine synthesizes OpenTelemetry Collector tail-sampling and PII redaction pipeline", otelCfg.otelCollectorYaml.contains("tail_sampling:") && otelCfg.otelCollectorYaml.contains("threshold_ms: 120") && otelCfg.otelCollectorYaml.contains("attributes/pii_redact:"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

@@ -1175,6 +1175,41 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/otel/traces"):
+            let spans = OtelTracingEngine.shared.getTraceSpans()
+            if let data = try? JSONEncoder().encode(["spans": spans]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/otel/critical-path"):
+            var tid = OtelTracingEngine.defaultTraceId
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let t = json["traceId"] as? String {
+                tid = t
+            }
+            let attr = OtelTracingEngine.shared.analyzeCriticalPath(traceId: tid)
+            if let data = try? JSONEncoder().encode(attr) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/otel/collector-config"):
+            var env = "prod-eu-central"
+            var thresh = 150
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let e = json["clusterEnv"] as? String { env = e }
+                if let th = json["tailSampleLatencyThresholdMs"] as? Int { thresh = th }
+            }
+            let cfg = OtelTracingEngine.shared.synthesizeCollectorConfig(clusterEnv: env, tailSampleLatencyThresholdMs: thresh)
+            if let data = try? JSONEncoder().encode(cfg) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
