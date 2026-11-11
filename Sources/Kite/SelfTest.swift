@@ -845,6 +845,20 @@ enum SelfTest {
         let fedCatalog = FederationCatalogEngine.shared.generateFederationCatalog(systemName: "kite-clearing-hub")
         check("FederationCatalogEngine synthesizes Backstage System/API catalog and SPIRE ClusterFederatedTrustDomain", fedCatalog.catalogInfoYaml.contains("apiVersion: backstage.io/v1alpha1") && fedCatalog.spireFederationYaml.contains("kind: ClusterFederatedTrustDomain") && fedCatalog.federatedDomainsCount == 3)
 
+        // Phase 26: Native Hyperscale & Governance Inspector UI
+        let cockpitSnap = HyperscaleCockpitAggregator.shared.captureSnapshot()
+        check("HyperscaleCockpitAggregator unifies 3D Z-strata, eBPF flows, and WASI PoP mesh telemetry", cockpitSnap.strataCount == 5 && cockpitSnap.spatialNodesCount == 5 && cockpitSnap.ebpfFlowsCount >= 4 && cockpitSnap.healthyEdgePopsCount == 6)
+
+        check("HyperscaleCockpitAggregator aggregates active-active DR, FinOps arbitrage, and green grid metrics", cockpitSnap.drRegionsCount == 3 && cockpitSnap.monthlyArbitrageSavingsUsd > 5500.0 && cockpitSnap.optimalGreenRegion == "eu-north-1")
+
+        check("HyperscaleCockpitAggregator surfaces TLA+ verification, PQC CBOM, SLO gate, MAPE-K, and SPIFFE counts", cockpitSnap.formalVerified && cockpitSnap.formalStatesExplored == 1312 && cockpitSnap.frozenSloServicesCount == 1 && cockpitSnap.remediationPlaybooksCount == 3 && cockpitSnap.spiffeTrustDomainsCount == 3)
+
+        check("SidebarItem exposes native Hyperscale & 3D workspace with SF Symbol glyph", SidebarItem.hyperscale.title == "Гиперскейл и 3D" && SidebarItem.hyperscale.symbol == "cube.transparent.fill")
+
+        model.activeStudioSheet = .hyperscaleInspector
+        check("EngineeringStudioSheet binds Hyperscale Inspector modal sheet state on AppModel", model.activeStudioSheet == .hyperscaleInspector && EngineeringStudioSheet.hyperscaleInspector.title == "Инспектор Гиперскейла и 3D")
+        model.activeStudioSheet = nil
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

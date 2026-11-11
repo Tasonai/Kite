@@ -30,6 +30,8 @@ struct ContentView: View {
                 WindowsSyncView()
             case .canvas:
                 InfiniteCanvasView()
+            case .hyperscale:
+                HyperscaleInspectorView()
             case .designLab:
                 DesignLabView()
             case .inspirations:
@@ -70,7 +72,7 @@ struct ContentView: View {
             }
 
             Section("Архитектура и синтез") {
-                ForEach([SidebarItem.canvas, .translator, .aiChat, .skills]) { page in
+                ForEach([SidebarItem.canvas, .hyperscale, .translator, .aiChat, .skills]) { page in
                     sidebarRow(page)
                 }
             }
@@ -173,6 +175,8 @@ struct ContentView: View {
                 report: CanvasTopologyValidator.validate(nodes: [], connections: []),
                 onDismiss: { model.activeStudioSheet = nil }
             )
+        case .hyperscaleInspector:
+            HyperscaleInspectorView(onDismiss: { model.activeStudioSheet = nil })
         case .errorDoctor:
             VibeErrorDoctorSheet(onDismiss: { model.activeStudioSheet = nil })
         case .threatModeler:

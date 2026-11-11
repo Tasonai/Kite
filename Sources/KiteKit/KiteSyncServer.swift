@@ -1090,6 +1090,14 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/hyperscale/cockpit"):
+            let snap = HyperscaleCockpitAggregator.shared.captureSnapshot()
+            if let data = try? JSONEncoder().encode(snap) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

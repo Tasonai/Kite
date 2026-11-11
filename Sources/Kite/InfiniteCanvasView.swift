@@ -329,6 +329,7 @@ struct InfiniteCanvasView: View {
                 onOpenQueryCache: { isQueryCachePresented = true },
                 onOpenWebhookDispatcher: { isWebhookDispatcherPresented = true },
                 onOpenTopologyValidator: { isTopologyValidatorPresented = true },
+                onOpenHyperscaleInspector: { model.activeStudioSheet = .hyperscaleInspector },
                 onSynthesizeArchitecture: { synthesizeArchitecture() },
                 onCopyPNG: { copyPNGToClipboard() },
                 onOpenMockup: { isMockupPresented = true },

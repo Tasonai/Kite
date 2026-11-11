@@ -88,6 +88,7 @@ struct CanvasToolbarView: View {
     let onOpenQueryCache: () -> Void
     let onOpenWebhookDispatcher: () -> Void
     let onOpenTopologyValidator: () -> Void
+    var onOpenHyperscaleInspector: () -> Void = {}
     let onSynthesizeArchitecture: () -> Void
     let onCopyPNG: () -> Void
     let onOpenMockup: () -> Void
@@ -646,6 +647,20 @@ struct CanvasToolbarView: View {
                 .buttonStyle(.bordered)
                 .fixedSize()
                 .help("Проверить топологию связей на циклические блокировки и утечки доступа к БД")
+
+                // Hyperscale & 3D Inspector Button
+                Button {
+                    onOpenHyperscaleInspector()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cube.transparent.fill")
+                        Text("3D / eBPF")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .help("Открыть инспектор 3D-топологии Z-страт, eBPF, WASI, FinOps/DR, TLA+ и постквантового шифрования")
 
                 // LAN Peers Discovery Popover Button
                 Button {

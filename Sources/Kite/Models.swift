@@ -25,7 +25,7 @@ final class Item {
 /// The sidebar pages. Snapshot mode walks through every case.
 enum SidebarItem: String, CaseIterable, Identifiable {
     case all, inProgress, completed, starred
-    case canvas, translator, aiChat, skills
+    case canvas, hyperscale, translator, aiChat, skills
     case designLab, inspirations, styles, winSync
 
     var id: String { rawValue }
@@ -37,6 +37,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .completed: "Готово"
         case .starred: "Избранное"
         case .canvas: "Холст топологии"
+        case .hyperscale: "Гиперскейл и 3D"
         case .translator: "Промпт-переводчик"
         case .aiChat: "AI-Советник"
         case .skills: "База скиллов"
@@ -54,6 +55,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .completed: "checkmark.circle.fill"
         case .starred: "star.fill"
         case .canvas: "rectangle.split.3x3"
+        case .hyperscale: "cube.transparent.fill"
         case .translator: "wand.and.stars"
         case .aiChat: "sparkles"
         case .skills: "cpu"
@@ -67,7 +69,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var sectionTitle: String {
         switch self {
         case .all, .inProgress, .completed, .starred: "Проекты и бэклог"
-        case .canvas, .translator, .aiChat, .skills: "Архитектура и синтез"
+        case .canvas, .hyperscale, .translator, .aiChat, .skills: "Архитектура и синтез"
         case .designLab, .inspirations, .styles, .winSync: "Дизайн и интеграции"
         }
     }
@@ -103,6 +105,7 @@ public enum EngineeringStudioSheet: String, Identifiable, Sendable, CaseIterable
 
     // Wave 4: QA, Security & Ops
     case antigravityPack
+    case hyperscaleInspector
     case topologyValidator
     case errorDoctor
     case threatModeler
@@ -143,6 +146,7 @@ public enum EngineeringStudioSheet: String, Identifiable, Sendable, CaseIterable
         case .interactiveMockup: "Интерактивный HTML-макет"
 
         case .antigravityPack: "Пакет Antigravity и Wave Runner"
+        case .hyperscaleInspector: "Инспектор Гиперскейла и 3D"
         case .topologyValidator: "Валидатор топологии холста"
         case .errorDoctor: "Доктор сбоев терминала"
         case .threatModeler: "Моделирование угроз OWASP"
