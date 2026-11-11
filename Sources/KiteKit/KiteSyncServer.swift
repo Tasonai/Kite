@@ -842,6 +842,40 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/finops/report"):
+            let workloads = FinOpsCarbonEngine.shared.getWorkloads()
+            if let data = try? JSONEncoder().encode(["workloads": workloads]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/finops/arbitrage"):
+            var spot = true
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let s = json["allowSpotForStateless"] as? Bool {
+                spot = s
+            }
+            let report = FinOpsCarbonEngine.shared.computeArbitrage(allowSpotForStateless: spot)
+            if let data = try? JSONEncoder().encode(report) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/finops/green-schedule"):
+            var maxCarbon = 80
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let mc = json["maxCarbonThresholdGco2"] as? Int {
+                maxCarbon = mc
+            }
+            let bundle = FinOpsCarbonEngine.shared.generateGreenSchedule(maxCarbonThresholdGco2: maxCarbon)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

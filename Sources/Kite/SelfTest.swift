@@ -753,6 +753,18 @@ enum SelfTest {
         let drRunbook = DisasterRecoveryEngine.shared.generateFailoverRunbook(targetRpoSeconds: 0.5, targetRtoSeconds: 20.0)
         check("DisasterRecoveryEngine synthesizes Route53 failover policy and STONITH fencing runbook", drRunbook.dnsTrafficPolicyJson.contains("GeoLatencyFailoverSwitch") && drRunbook.runbookMarkdown.contains("STONITH"))
 
+        // Phase 19: FinOps Cloud Cost Arbitrage & Carbon-Aware Green Scheduler
+        let finopsWorkloads = FinOpsCarbonEngine.shared.getWorkloads()
+        check("FinOpsCarbonEngine catalogs multi-cloud compute spend and regional grid carbon intensity", finopsWorkloads.count == 3 && finopsWorkloads.reduce(0.0, { $0 + $1.monthlyCostUsd }) == 12900.0)
+
+        let arbReport = FinOpsCarbonEngine.shared.computeArbitrage(allowSpotForStateless: true)
+        check("FinOpsCarbonEngine computes ARM64 Graviton/Axion right-sizing and Spot arbitrage savings", arbReport.totalMonthlySavingsUsd > 5500.0 && arbReport.savingsPercent > 40.0 && arbReport.recommendations.count == 2)
+
+        let greenSchedule = FinOpsCarbonEngine.shared.generateGreenSchedule(maxCarbonThresholdGco2: 60)
+        check("FinOpsCarbonEngine identifies hydro/nuclear low-carbon region and calculates CO2 reduction", greenSchedule.optimalLowCarbonRegion == "eu-north-1" && greenSchedule.optimalCarbonGco2PerKwh == 28 && greenSchedule.carbonReductionPercent > 80.0)
+
+        check("FinOpsCarbonEngine synthesizes Karpenter ARM64 NodePool and KEDA carbon-aware scaler YAML", greenSchedule.karpenterNodePoolYaml.contains("karpenter.sh/v1") && greenSchedule.kedaCarbonScalerYaml.contains("carbon-aware-grid"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
