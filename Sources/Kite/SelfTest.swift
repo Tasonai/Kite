@@ -765,6 +765,19 @@ enum SelfTest {
 
         check("FinOpsCarbonEngine synthesizes Karpenter ARM64 NodePool and KEDA carbon-aware scaler YAML", greenSchedule.karpenterNodePoolYaml.contains("karpenter.sh/v1") && greenSchedule.kedaCarbonScalerYaml.contains("carbon-aware-grid"))
 
+        // Phase 20: 3D Spatial Architecture Topology & Immersive Scene Graph
+        let scene3D = Spatial3DTopologyEngine.shared.getScene()
+        check("Spatial3DTopologyEngine stratifies architecture topology across 5 semantic Z-elevation planes", scene3D.strataCount == 5 && scene3D.nodes.count == 5 && scene3D.edges.count == 4)
+
+        let rayHit = Spatial3DTopologyEngine.shared.raycastPick(originX: 0.0, originY: 0.0, originZ: 50.0, dirX: 0.0, dirY: 0.0, dirZ: -1.0)
+        check("Spatial3DTopologyEngine resolves analytic 3D ray-sphere intersection picking accurately", rayHit.hit && rayHit.nodeId == "node-orders" && rayHit.distance > 100.0)
+
+        let relaxed3D = Spatial3DTopologyEngine.shared.computeForceDirectedLayout(iterations: 8)
+        check("Spatial3DTopologyEngine relaxes 3D spring-repulsion coordinates while preserving Z-strata", relaxed3D.nodes.first(where: { $0.id == "node-pg" })?.z == -160.0 && relaxed3D.nodes.first(where: { $0.id == "node-cdn" })?.z == 0.0)
+
+        let gltfExport = Spatial3DTopologyEngine.shared.exportGltfScene()
+        check("Spatial3DTopologyEngine exports standards-compliant glTF 2.0 scene graph JSON", gltfExport.formatVersion == "glTF-2.0" && gltfExport.nodeCount == 5 && gltfExport.gltfJson.contains("\"version\": \"2.0\""))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

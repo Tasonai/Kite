@@ -876,6 +876,35 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/spatial3d/scene"):
+            let scene = Spatial3DTopologyEngine.shared.getScene()
+            if let data = try? JSONEncoder().encode(scene) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/spatial3d/layout"):
+            var iters = 12
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let i = json["iterations"] as? Int {
+                iters = i
+            }
+            let scene = Spatial3DTopologyEngine.shared.computeForceDirectedLayout(iterations: iters)
+            if let data = try? JSONEncoder().encode(scene) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/spatial3d/export"):
+            let gltf = Spatial3DTopologyEngine.shared.exportGltfScene()
+            if let data = try? JSONEncoder().encode(gltf) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
