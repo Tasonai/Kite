@@ -778,6 +778,19 @@ enum SelfTest {
         let gltfExport = Spatial3DTopologyEngine.shared.exportGltfScene()
         check("Spatial3DTopologyEngine exports standards-compliant glTF 2.0 scene graph JSON", gltfExport.formatVersion == "glTF-2.0" && gltfExport.nodeCount == 5 && gltfExport.gltfJson.contains("\"version\": \"2.0\""))
 
+        // Phase 21: TLA+ & Alloy Formal Architecture Verification Engine
+        let formalInvs = FormalVerificationEngine.shared.getInvariants()
+        check("FormalVerificationEngine catalogs safety and liveness temporal invariants", formalInvs.count == 4 && formalInvs.contains(where: { $0.category == "safety" }) && formalInvs.contains(where: { $0.category == "liveness" }))
+
+        let cleanCheck = FormalVerificationEngine.shared.runBoundedModelCheck(maxDepth: 10, injectSplitBrainFault: false)
+        check("FormalVerificationEngine verifies bounded state-space freedom from split-brain and deadlock", cleanCheck.verified && cleanCheck.distinctStatesExplored == 1640 && cleanCheck.counterexampleTrace.isEmpty)
+
+        let faultCheck = FormalVerificationEngine.shared.runBoundedModelCheck(maxDepth: 10, injectSplitBrainFault: true)
+        check("FormalVerificationEngine produces minimal counterexample trace under injected partition fault", !faultCheck.verified && faultCheck.violatedInvariantId == "inv-split-brain" && faultCheck.counterexampleTrace.count == 3)
+
+        let formalSpec = FormalVerificationEngine.shared.synthesizeFormalSpec(moduleName: "OrdersConsensusSpec", quorumSize: 3)
+        check("FormalVerificationEngine synthesizes valid TLA+ module, TLC config, and Alloy relational model", formalSpec.tlaPlusSpec.contains("---- MODULE OrdersConsensusSpec ----") && formalSpec.tlcConfig.contains("CHECK_DEADLOCK TRUE") && formalSpec.alloyModel.contains("fact QuorumIntersection"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

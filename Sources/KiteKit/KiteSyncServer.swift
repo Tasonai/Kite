@@ -905,6 +905,42 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/formal/invariants"):
+            let invs = FormalVerificationEngine.shared.getInvariants()
+            if let data = try? JSONEncoder().encode(["invariants": invs]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/formal/model-check"):
+            var depth = 8
+            var injectFault = false
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let d = json["maxDepth"] as? Int { depth = d }
+                if let f = json["injectSplitBrainFault"] as? Bool { injectFault = f }
+            }
+            let report = FormalVerificationEngine.shared.runBoundedModelCheck(maxDepth: depth, injectSplitBrainFault: injectFault)
+            if let data = try? JSONEncoder().encode(report) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/formal/tla-spec"):
+            var modName = "KiteArchitectureSpec"
+            var quorum = 3
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let m = json["moduleName"] as? String { modName = m }
+                if let q = json["quorumSize"] as? Int { quorum = q }
+            }
+            let spec = FormalVerificationEngine.shared.synthesizeFormalSpec(moduleName: modName, quorumSize: quorum)
+            if let data = try? JSONEncoder().encode(spec) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
