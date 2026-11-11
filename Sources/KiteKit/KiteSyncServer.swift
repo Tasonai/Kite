@@ -766,6 +766,44 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/edge-mesh/pops"):
+            let pops = WasmEdgeMeshEngine.shared.getGlobalPops()
+            if let data = try? JSONEncoder().encode(["pops": pops]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/edge-mesh/route"):
+            var lat = 52.5200
+            var lon = 13.4050
+            var consistency = "bounded-staleness-50ms"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let l = json["latitude"] as? Double { lat = l }
+                if let g = json["longitude"] as? Double { lon = g }
+                if let c = json["consistencyTier"] as? String { consistency = c }
+            }
+            let decision = WasmEdgeMeshEngine.shared.computeOptimalRoute(clientLatitude: lat, clientLongitude: lon, consistencyTier: consistency)
+            if let data = try? JSONEncoder().encode(decision) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/edge-mesh/bundle"):
+            var worker = "kite-auth-edge-gate"
+            var mem = 64
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let w = json["workerName"] as? String { worker = w }
+                if let m = json["memoryLimitMb"] as? Int { mem = m }
+            }
+            let bundle = WasmEdgeMeshEngine.shared.generateEdgeBundle(workerName: worker, memoryLimitMb: mem)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

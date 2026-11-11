@@ -728,6 +728,19 @@ enum SelfTest {
         let ebpfPolicy = EbpfTelemetryEngine.shared.generateEbpfPolicy(namespace: "defense-core", blockRogueEgress: true)
         check("EbpfTelemetryEngine synthesizes Tetragon TracingPolicy, CiliumNetworkPolicy, and sockops C probe", ebpfPolicy.tetragonTracingPolicyYaml.contains("TracingPolicyNamespaced") && ebpfPolicy.ciliumNetworkPolicyYaml.contains("egressDeny") && ebpfPolicy.ebpfSockopsProbeC.contains("BPF_MAP_TYPE_RINGBUF"))
 
+        // Phase 17: Sovereign WebAssembly Edge Workers & Global PoP Mesh
+        let globalPops = WasmEdgeMeshEngine.shared.getGlobalPops()
+        check("WasmEdgeMeshEngine maintains sub-millisecond cold-start WASI Preview 2 global PoP mesh", globalPops.count == 6 && globalPops.allSatisfy { $0.coldStartMs < 0.5 && $0.isHealthy })
+
+        let euRoute = WasmEdgeMeshEngine.shared.computeOptimalRoute(clientLatitude: 52.5200, clientLongitude: 13.4050)
+        let apacRoute = WasmEdgeMeshEngine.shared.computeOptimalRoute(clientLatitude: 35.6762, clientLongitude: 139.6503)
+        check("WasmEdgeMeshEngine computes Haversine geo-routing decisions to nearest primary and failover PoP", euRoute.primaryPop == "FRA" && apacRoute.primaryPop == "NRT" && euRoute.estimatedRttMs < 15.0)
+
+        let edgeBundle = WasmEdgeMeshEngine.shared.generateEdgeBundle(workerName: "kite-jwt-verifier", memoryLimitMb: 32)
+        check("WasmEdgeMeshEngine synthesizes WASI Preview 2 WIT interface and Spin capability sandbox", edgeBundle.wasiTarget == "wasm32-wasip2" && edgeBundle.witInterface.contains("wasi:http/incoming-handler@0.2.0") && edgeBundle.spinManifestToml.contains("allowed_outbound_hosts = []"))
+
+        check("WasmEdgeMeshEngine enforces strict linear memory cap and CPU budget in Wrangler manifest", edgeBundle.wranglerConfigToml.contains("memory_mb = 32") && edgeBundle.wranglerConfigToml.contains("cpu_ms = 10"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
