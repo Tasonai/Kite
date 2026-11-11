@@ -1136,6 +1136,45 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/policy/rules"):
+            let rules = PolicyAsCodeEngine.shared.getRules()
+            if let data = try? JSONEncoder().encode(["rules": rules]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/policy/evaluate"):
+            var role = "treasury-operator"
+            var act = "ledger:ApproveSettlement"
+            var resType = "SettlementBatch"
+            var mfa = true
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let r = json["principalRole"] as? String { role = r }
+                if let a = json["action"] as? String { act = a }
+                if let t = json["resourceType"] as? String { resType = t }
+                if let m = json["mfaVerified"] as? Bool { mfa = m }
+            }
+            let verdict = PolicyAsCodeEngine.shared.evaluateAccess(principalRole: role, action: act, resourceType: resType, mfaVerified: mfa)
+            if let data = try? JSONEncoder().encode(verdict) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/policy/bundle"):
+            var ns = "kite.authz.v1"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let n = json["namespace"] as? String {
+                ns = n
+            }
+            let polBundle = PolicyAsCodeEngine.shared.synthesizePolicyBundle(namespace: ns)
+            if let data = try? JSONEncoder().encode(polBundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

@@ -872,6 +872,19 @@ enum SelfTest {
         let loadBundle = LoadTestingEngine.shared.synthesizeLoadScripts(serviceId: "checkout-api", targetVus: 250, durationSec: 120)
         check("LoadTestingEngine synthesizes Grafana k6 ramping-vus script and Python Locust HttpUser swarm", loadBundle.k6ScriptJs.contains("executor: 'ramping-vus'") && loadBundle.k6ScriptJs.contains("p(99)<95") && loadBundle.locustFilePy.contains("class KiteSyntheticSwarmUser(HttpUser):"))
 
+        // Phase 28: Policy-as-Code Authorization Engine (OPA Rego & AWS Cedar)
+        let polRules = PolicyAsCodeEngine.shared.getRules()
+        check("PolicyAsCodeEngine catalogs fine-grained ABAC/ReBAC permit and forbid authorization rules", polRules.count == 4 && polRules.contains(where: { $0.effect == "forbid" }) && polRules.contains(where: { $0.effect == "permit" }))
+
+        let permitDecision = PolicyAsCodeEngine.shared.evaluateAccess(principalRole: "treasury-operator", action: "ledger:ApproveSettlement", resourceType: "SettlementBatch", mfaVerified: true)
+        check("PolicyAsCodeEngine grants permit when principal role and WebAuthn MFA predicate match", permitDecision.allowed && permitDecision.matchedRuleId == "pol-permit-treasury-settle" && !permitDecision.denyOverridesTriggered)
+
+        let forbidDecision = PolicyAsCodeEngine.shared.evaluateAccess(principalRole: "treasury-operator", action: "ledger:ApproveSettlement", resourceType: "SettlementBatch", mfaVerified: false)
+        check("PolicyAsCodeEngine enforces explicit forbid-overrides-permit when MFA condition fails", !forbidDecision.allowed && forbidDecision.denyOverridesTriggered && forbidDecision.matchedRuleId == "pol-forbid-unverified-mfa")
+
+        let polBundle = PolicyAsCodeEngine.shared.synthesizePolicyBundle(namespace: "kite.authz.v1")
+        check("PolicyAsCodeEngine synthesizes OPA Rego v1 module and AWS Cedar policy set", polBundle.opaRegoModule.contains("import rego.v1") && polBundle.cedarPolicySet.contains("forbid (") && polBundle.cedarPolicySet.contains("permit ("))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
