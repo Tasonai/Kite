@@ -728,6 +728,44 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/ebpf/flows"):
+            let flows = EbpfTelemetryEngine.shared.getKernelFlows()
+            if let data = try? JSONEncoder().encode(["flows": flows]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/ebpf/shadow-audit"):
+            var declared: [DeclaredCanvasEdge]? = nil
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let rawEdges = json["declaredEdges"] as? [[String: String]] {
+                declared = rawEdges.compactMap { item in
+                    guard let s = item["source"], let d = item["destination"] else { return nil }
+                    return DeclaredCanvasEdge(source: s, destination: d)
+                }
+            }
+            let report = EbpfTelemetryEngine.shared.auditShadowDependencies(declaredEdges: declared)
+            if let data = try? JSONEncoder().encode(report) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/ebpf/policy"):
+            var ns = "kite-prod"
+            var blockEgress = true
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let n = json["namespace"] as? String { ns = n }
+                if let b = json["blockRogueEgress"] as? Bool { blockEgress = b }
+            }
+            let bundle = EbpfTelemetryEngine.shared.generateEbpfPolicy(namespace: ns, blockRogueEgress: blockEgress)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

@@ -714,6 +714,20 @@ enum SelfTest {
 
         check("AirGappedClusterEngine generates high-availability StatefulSet with anti-affinity and Helm values", k8sManifest.statefulSetYaml.contains("podAntiAffinity") && k8sManifest.helmValuesYaml.contains("enforceZeroEgress: true") && k8sManifest.statefulSetYaml.contains("replicas: 5"))
 
+        // Phase 16: eBPF Kernel Telemetry & Zero-Instrumentation Service Map
+        let kernelFlows = EbpfTelemetryEngine.shared.getKernelFlows()
+        check("EbpfTelemetryEngine captures zero-sidecar L4/L7 kernel socket flows and RTT metrics", kernelFlows.count >= 4 && kernelFlows.contains(where: { $0.wireProtocol == .grpc && $0.tcpRttMs > 0 }))
+
+        let shadowAudit = EbpfTelemetryEngine.shared.auditShadowDependencies()
+        check("EbpfTelemetryEngine discovers undocumented shadow APIs and unauthorized WAN egress", shadowAudit.undocumentedEdgesCount == 1 && shadowAudit.rogueEgressCount == 1 && shadowAudit.complianceScore == 55)
+
+        let customFlow = KernelSocketFlow(id: "flow-kprobe-05", sourceWorkload: "worker", destinationWorkload: "redis-cache", destinationPort: 6379, wireProtocol: .redisResp, tcpRttMs: 0.18, tlsHandshakeMs: 0.90, p99WireLatencyMs: 0.85, packetRetransmitRate: 0.0, bytesPerSecond: 512_000)
+        EbpfTelemetryEngine.shared.recordKernelFlow(customFlow)
+        check("EbpfTelemetryEngine indexes live sockops ring-buffer events deterministically", EbpfTelemetryEngine.shared.getKernelFlows().contains(where: { $0.id == "flow-kprobe-05" }))
+
+        let ebpfPolicy = EbpfTelemetryEngine.shared.generateEbpfPolicy(namespace: "defense-core", blockRogueEgress: true)
+        check("EbpfTelemetryEngine synthesizes Tetragon TracingPolicy, CiliumNetworkPolicy, and sockops C probe", ebpfPolicy.tetragonTracingPolicyYaml.contains("TracingPolicyNamespaced") && ebpfPolicy.ciliumNetworkPolicyYaml.contains("egressDeny") && ebpfPolicy.ebpfSockopsProbeC.contains("BPF_MAP_TYPE_RINGBUF"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
