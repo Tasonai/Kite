@@ -1098,6 +1098,44 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/loadtest/profiles"):
+            let profiles = LoadTestingEngine.shared.getProfiles()
+            if let data = try? JSONEncoder().encode(["profiles": profiles]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/loadtest/usl-model"):
+            var svc = "checkout-api"
+            var conc = 16
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let s = json["serviceId"] as? String { svc = s }
+                if let n = json["concurrencyN"] as? Int { conc = n }
+            }
+            let usl = LoadTestingEngine.shared.evaluateUslModel(serviceId: svc, concurrencyN: conc)
+            if let data = try? JSONEncoder().encode(usl) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/loadtest/scripts"):
+            var svc = "checkout-api"
+            var vus = 200
+            var dur = 120
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let s = json["serviceId"] as? String { svc = s }
+                if let v = json["targetVus"] as? Int { vus = v }
+                if let d = json["durationSec"] as? Int { dur = d }
+            }
+            let bundle = LoadTestingEngine.shared.synthesizeLoadScripts(serviceId: svc, targetVus: vus, durationSec: dur)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

@@ -859,6 +859,19 @@ enum SelfTest {
         check("EngineeringStudioSheet binds Hyperscale Inspector modal sheet state on AppModel", model.activeStudioSheet == .hyperscaleInspector && EngineeringStudioSheet.hyperscaleInspector.title == "Инспектор Гиперскейла и 3D")
         model.activeStudioSheet = nil
 
+        // Phase 27: Synthetic Load & Performance Engineering Engine (k6, Locust & USL)
+        let loadProfiles = LoadTestingEngine.shared.getProfiles()
+        check("LoadTestingEngine catalogs baseline RPS, USL contention/coherency, and P99 SLA targets", loadProfiles.count == 3 && loadProfiles.contains(where: { $0.serviceId == "checkout-api" }))
+
+        let uslHealthy = LoadTestingEngine.shared.evaluateUslModel(serviceId: "checkout-api", concurrencyN: 16)
+        check("LoadTestingEngine computes Gunther USL capacity factor, Little's Law depth, and optimal knee", uslHealthy.optimalConcurrencyKnee == 25 && !uslHealthy.isRetrogradeRegion && uslHealthy.projectedThroughputRps > 3200.0 && uslHealthy.littlesLawInFlightRequests > 300.0)
+
+        let uslRetrograde = LoadTestingEngine.shared.evaluateUslModel(serviceId: "ledger-writer", concurrencyN: 32)
+        check("LoadTestingEngine detects retrograde coherency thrashing beyond optimal concurrency knee", uslRetrograde.optimalConcurrencyKnee == 15 && uslRetrograde.isRetrogradeRegion)
+
+        let loadBundle = LoadTestingEngine.shared.synthesizeLoadScripts(serviceId: "checkout-api", targetVus: 250, durationSec: 120)
+        check("LoadTestingEngine synthesizes Grafana k6 ramping-vus script and Python Locust HttpUser swarm", loadBundle.k6ScriptJs.contains("executor: 'ramping-vus'") && loadBundle.k6ScriptJs.contains("p(99)<95") && loadBundle.locustFilePy.contains("class KiteSyntheticSwarmUser(HttpUser):"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
