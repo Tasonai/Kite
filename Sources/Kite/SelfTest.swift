@@ -910,6 +910,19 @@ enum SelfTest {
         let admBundle = SupplyChainProvenanceEngine.shared.synthesizeAdmissionBundle(namespace: "kite-prod")
         check("SupplyChainProvenanceEngine synthesizes Sigstore ClusterImagePolicy, SPDX 3.0 SBOM, and in-toto v1 statement", admBundle.clusterImagePolicyYaml.contains("kind: ClusterImagePolicy") && admBundle.spdx3SbomJson.contains("3.0.1") && admBundle.inTotoStatementJson.contains("slsa.dev/provenance/v1"))
 
+        // Phase 31: Sovereign Data Residency, PII Lineage & Differential Privacy Engine
+        let lineageFlows = DataResidencyPrivacyEngine.shared.getLineageFlows()
+        check("DataResidencyPrivacyEngine catalogs GDPR PII, PCI CHD, and sovereign jurisdiction lineage flows", lineageFlows.count == 4 && lineageFlows.contains(where: { $0.classification == "GDPR_PII" && $0.sourceJurisdiction == "EU-EEA" }))
+
+        let schremsStrict = DataResidencyPrivacyEngine.shared.auditResidencyCompliance(enforceStrictSchremsII: true)
+        check("DataResidencyPrivacyEngine flags unpseudonymized EU-EEA GDPR_PII cross-border transfer to us-east-1", !schremsStrict.gdprCompliant && schremsStrict.violationsCount == 1 && schremsStrict.violations.first?.contains("Schrems II") == true)
+
+        let schremsRelaxed = DataResidencyPrivacyEngine.shared.auditResidencyCompliance(enforceStrictSchremsII: false)
+        check("DataResidencyPrivacyEngine allows tokenized PCI_CHD within Swiss sovereign vault", schremsRelaxed.gdprCompliant && schremsRelaxed.violationsCount == 0)
+
+        let dpBundle = DataResidencyPrivacyEngine.shared.calibrateDifferentialPrivacy(epsilon: 0.5, delta: 1e-5, sensitivity: 1.0)
+        check("DataResidencyPrivacyEngine calibrates Laplace/Gaussian DP noise scales and PostgreSQL RLS masking DDL", dpBundle.laplaceScaleB == 2.0 && dpBundle.gaussianSigma > 9.6 && dpBundle.postgresRlsMaskingSql.contains("ENABLE ROW LEVEL SECURITY") && dpBundle.postgresRlsMaskingSql.contains("dp_gaussian_noise"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

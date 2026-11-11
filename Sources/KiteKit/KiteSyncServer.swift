@@ -1245,6 +1245,43 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/privacy/lineage"):
+            let flows = DataResidencyPrivacyEngine.shared.getLineageFlows()
+            if let data = try? JSONEncoder().encode(["flows": flows]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/privacy/audit-residency"):
+            var strict = true
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let s = json["enforceStrictSchremsII"] as? Bool {
+                strict = s
+            }
+            let audit = DataResidencyPrivacyEngine.shared.auditResidencyCompliance(enforceStrictSchremsII: strict)
+            if let data = try? JSONEncoder().encode(audit) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/privacy/dp-budget"):
+            var eps = 0.5
+            var del = 1e-5
+            var sens = 1.0
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let e = (json["epsilon"] as? NSNumber)?.doubleValue { eps = e }
+                if let d = (json["delta"] as? NSNumber)?.doubleValue { del = d }
+                if let s = (json["sensitivity"] as? NSNumber)?.doubleValue { sens = s }
+            }
+            let dp = DataResidencyPrivacyEngine.shared.calibrateDifferentialPrivacy(epsilon: eps, delta: del, sensitivity: sens)
+            if let data = try? JSONEncoder().encode(dp) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
