@@ -819,6 +819,19 @@ enum SelfTest {
         let openSlo = SloBurnRateEngine.shared.generateOpenSloManifest(serviceId: "checkout-api", sloTargetPercent: 99.95)
         check("SloBurnRateEngine synthesizes OpenSLO v1 and multi-window PrometheusRule YAML", openSlo.openSloYaml.contains("apiVersion: openslo/v1") && openSlo.prometheusRuleYaml.contains("SloFastBurnPage") && openSlo.prometheusRuleYaml.contains("14.4"))
 
+        // Phase 24: Closed-Loop Autonomous Incident Remediation & Canary Rollback
+        let remPlaybooks = AutoRemediationEngine.shared.getPlaybooks()
+        check("AutoRemediationEngine catalogs deterministic MAPE-K remediation playbooks", remPlaybooks.count == 3 && remPlaybooks.contains(where: { $0.id == "pb-canary-drain" }))
+
+        let remExecuted = AutoRemediationEngine.shared.executePlaybook(triggerSignal: "ErrorBudgetFastBurn", targetService: "ledger-writer", estimatedBlastRadius: 1, dryRun: false)
+        check("AutoRemediationEngine executes closed-loop canary traffic rollback within guardrail bounds", remExecuted.executed && remExecuted.guardrailPassed && remExecuted.postActionTrafficStablePercent == 100)
+
+        let remBlocked = AutoRemediationEngine.shared.executePlaybook(triggerSignal: "ErrorBudgetFastBurn", targetService: "ledger-writer", estimatedBlastRadius: 5, dryRun: false)
+        check("AutoRemediationEngine halts autonomous execution when blast radius exceeds safety limit", !remBlocked.executed && !remBlocked.guardrailPassed && remBlocked.actionSummary.contains("BLOCKED"))
+
+        let argoSpec = AutoRemediationEngine.shared.generateArgoRolloutSpec(serviceName: "ledger-writer")
+        check("AutoRemediationEngine synthesizes Argo Rollouts canary spec and Prometheus AnalysisTemplate", argoSpec.rolloutYaml.contains("kind: Rollout") && argoSpec.analysisTemplateYaml.contains("kind: AnalysisTemplate") && argoSpec.canaryStepsCount == 4)
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

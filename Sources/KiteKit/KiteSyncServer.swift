@@ -1005,6 +1005,50 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/remediate/playbooks"):
+            let pbs = AutoRemediationEngine.shared.getPlaybooks()
+            if let data = try? JSONEncoder().encode(["playbooks": pbs]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/remediate/execute"):
+            var sig = "ErrorBudgetFastBurn"
+            var svc = "ledger-writer"
+            var blast = 1
+            var dry = false
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let ts = json["triggerSignal"] as? String { sig = ts }
+                if let t = json["targetService"] as? String { svc = t }
+                if let b = json["estimatedBlastRadius"] as? Int { blast = b }
+                if let d = json["dryRun"] as? Bool { dry = d }
+            }
+            let execRes = AutoRemediationEngine.shared.executePlaybook(
+                triggerSignal: sig,
+                targetService: svc,
+                estimatedBlastRadius: blast,
+                dryRun: dry
+            )
+            if let data = try? JSONEncoder().encode(execRes) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/remediate/rollout-spec"):
+            var svc = "ledger-writer"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let s = json["serviceName"] as? String {
+                svc = s
+            }
+            let spec = AutoRemediationEngine.shared.generateArgoRolloutSpec(serviceName: svc)
+            if let data = try? JSONEncoder().encode(spec) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
