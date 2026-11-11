@@ -805,6 +805,20 @@ enum SelfTest {
         let envoyPqc = pqcInitial.generateEnvoyPqcConfig(clusterName: "payments-core")
         check("PostQuantumCryptoEngine synthesizes Envoy PQ-TLS 1.3 SDS config with X25519MLKEM768 and mldsa65", envoyPqc.envoySdsYaml.contains("X25519MLKEM768") && envoyPqc.envoySdsYaml.contains("mldsa65") && envoyPqc.cbomJson.contains("\"bomFormat\": \"CycloneDX\""))
 
+        // Phase 23: Multi-Window SLO Error-Budget Burn-Rate & Release Gatekeeper
+        let sloBudgets = SloBurnRateEngine.shared.getBudgets()
+        check("SloBurnRateEngine tracks 30-day rolling error budgets and multi-window burn rates", sloBudgets.count == 3 && sloBudgets.contains(where: { $0.serviceId == "ledger-writer" }))
+
+        let allowGate = SloBurnRateEngine.shared.evaluateReleaseGate(serviceId: "checkout-api")
+        let freezeGate = SloBurnRateEngine.shared.evaluateReleaseGate(serviceId: "ledger-writer")
+        check("SloBurnRateEngine enforces FREEZE_RELEASE on 14.4x 1h fast burn and ALLOW_DEPLOY on healthy budget", allowGate.verdict == "ALLOW_DEPLOY" && freezeGate.verdict == "FREEZE_RELEASE" && freezeGate.fastBurnTriggered)
+
+        let canaryGate = SloBurnRateEngine.shared.evaluateReleaseGate(serviceId: "search-indexer")
+        check("SloBurnRateEngine enforces CANARY_ONLY progressive rollout on 6.0x 6h medium burn", canaryGate.verdict == "CANARY_ONLY" && canaryGate.mediumBurnTriggered && !canaryGate.fastBurnTriggered)
+
+        let openSlo = SloBurnRateEngine.shared.generateOpenSloManifest(serviceId: "checkout-api", sloTargetPercent: 99.95)
+        check("SloBurnRateEngine synthesizes OpenSLO v1 and multi-window PrometheusRule YAML", openSlo.openSloYaml.contains("apiVersion: openslo/v1") && openSlo.prometheusRuleYaml.contains("SloFastBurnPage") && openSlo.prometheusRuleYaml.contains("14.4"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

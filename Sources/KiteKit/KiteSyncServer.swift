@@ -970,6 +970,41 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/slo/budgets"):
+            let budgets = SloBurnRateEngine.shared.getBudgets()
+            if let data = try? JSONEncoder().encode(["budgets": budgets]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/slo/gate-check"):
+            var svc = "checkout-api"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let s = json["serviceId"] as? String {
+                svc = s
+            }
+            let verdict = SloBurnRateEngine.shared.evaluateReleaseGate(serviceId: svc)
+            if let data = try? JSONEncoder().encode(verdict) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/slo/openslo"):
+            var svc = "checkout-api"
+            var target = 99.95
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let s = json["serviceId"] as? String { svc = s }
+                if let t = json["sloTargetPercent"] as? Double { target = t }
+            }
+            let bundle = SloBurnRateEngine.shared.generateOpenSloManifest(serviceId: svc, sloTargetPercent: target)
+            if let data = try? JSONEncoder().encode(bundle) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
