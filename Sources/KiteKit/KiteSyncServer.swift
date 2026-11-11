@@ -804,6 +804,44 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/dr/regions"):
+            let regions = DisasterRecoveryEngine.shared.getRegions()
+            if let data = try? JSONEncoder().encode(["regions": regions]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/dr/failover"):
+            var outage = "eu-central-1"
+            var rpo = 1.0
+            var rto = 30.0
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let o = json["outageRegionId"] as? String { outage = o }
+                if let rp = json["rpoTargetSec"] as? Double { rpo = rp }
+                if let rt = json["rtoTargetSec"] as? Double { rto = rt }
+            }
+            let sim = DisasterRecoveryEngine.shared.simulateRegionalBlackout(outageRegionId: outage, rpoTargetSec: rpo, rtoTargetSec: rto)
+            if let data = try? JSONEncoder().encode(sim) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/dr/runbook"):
+            var rpo = 1.0
+            var rto = 30.0
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let rp = json["targetRpoSeconds"] as? Double { rpo = rp }
+                if let rt = json["targetRtoSeconds"] as? Double { rto = rt }
+            }
+            let rb = DisasterRecoveryEngine.shared.generateFailoverRunbook(targetRpoSeconds: rpo, targetRtoSeconds: rto)
+            if let data = try? JSONEncoder().encode(rb) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }

@@ -741,6 +741,18 @@ enum SelfTest {
 
         check("WasmEdgeMeshEngine enforces strict linear memory cap and CPU budget in Wrangler manifest", edgeBundle.wranglerConfigToml.contains("memory_mb = 32") && edgeBundle.wranglerConfigToml.contains("cpu_ms = 10"))
 
+        // Phase 18: Multi-Region Active-Active Disaster Recovery & Failover Autopilot
+        let drRegions = DisasterRecoveryEngine.shared.getRegions()
+        check("DisasterRecoveryEngine tracks multi-region replication lag and consensus voter distribution", drRegions.count == 3 && drRegions.reduce(0, { $0 + $1.votingVoters }) == 7)
+
+        let blackoutSim = DisasterRecoveryEngine.shared.simulateRegionalBlackout(outageRegionId: "eu-central-1", rpoTargetSec: 1.0, rtoTargetSec: 30.0)
+        check("DisasterRecoveryEngine simulates regional blackout and promotes lowest-lag survivor with quorum", blackoutSim.promotedPrimaryRegionId == "us-east-1" && blackoutSim.survivorQuorumVotes == 4 && blackoutSim.splitBrainPrevented)
+
+        check("DisasterRecoveryEngine verifies sub-second RPO and sub-30s RTO SLA compliance", blackoutSim.slaCompliant && blackoutSim.achievedRpoSeconds < 0.1 && blackoutSim.achievedRtoSeconds < 20.0)
+
+        let drRunbook = DisasterRecoveryEngine.shared.generateFailoverRunbook(targetRpoSeconds: 0.5, targetRtoSeconds: 20.0)
+        check("DisasterRecoveryEngine synthesizes Route53 failover policy and STONITH fencing runbook", drRunbook.dnsTrafficPolicyJson.contains("GeoLatencyFailoverSwitch") && drRunbook.runbookMarkdown.contains("STONITH"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }
