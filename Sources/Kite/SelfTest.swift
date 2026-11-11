@@ -897,6 +897,19 @@ enum SelfTest {
         let otelCfg = OtelTracingEngine.shared.synthesizeCollectorConfig(clusterEnv: "prod-eu-central", tailSampleLatencyThresholdMs: 120)
         check("OtelTracingEngine synthesizes OpenTelemetry Collector tail-sampling and PII redaction pipeline", otelCfg.otelCollectorYaml.contains("tail_sampling:") && otelCfg.otelCollectorYaml.contains("threshold_ms: 120") && otelCfg.otelCollectorYaml.contains("attributes/pii_redact:"))
 
+        // Phase 30: Supply-Chain Provenance (SLSA Level 4, Sigstore Cosign & SPDX 3.0)
+        let provArts = SupplyChainProvenanceEngine.shared.getArtifacts()
+        check("SupplyChainProvenanceEngine catalogs OCI digests, Rekor transparency indices, and hermetic flags", provArts.count == 3 && provArts.contains(where: { $0.rekorLogIndex > 0 && $0.hermeticBuild }))
+
+        let slsaL4 = SupplyChainProvenanceEngine.shared.verifySlsaCompliance(artifactId: "ghcr.io/kite/checkout-api", requireLevel: 4)
+        check("SupplyChainProvenanceEngine certifies SLSA Build Level 4 on hermetic two-party Cosign-verified image", slsaL4.achievedSlsaLevel == 4 && slsaL4.admissionAllowed && slsaL4.violations.isEmpty)
+
+        let slsaFail = SupplyChainProvenanceEngine.shared.verifySlsaCompliance(artifactId: "docker.io/vendor/legacy-agent", requireLevel: 3)
+        check("SupplyChainProvenanceEngine blocks unverified OCI image lacking Rekor log and hermetic build", !slsaFail.admissionAllowed && slsaFail.achievedSlsaLevel == 1 && slsaFail.violations.count >= 3)
+
+        let admBundle = SupplyChainProvenanceEngine.shared.synthesizeAdmissionBundle(namespace: "kite-prod")
+        check("SupplyChainProvenanceEngine synthesizes Sigstore ClusterImagePolicy, SPDX 3.0 SBOM, and in-toto v1 statement", admBundle.clusterImagePolicyYaml.contains("kind: ClusterImagePolicy") && admBundle.spdx3SbomJson.contains("3.0.1") && admBundle.inTotoStatementJson.contains("slsa.dev/provenance/v1"))
+
         print(failures == 0 ? "SELFTEST PASS \(count) checks" : "SELFTEST FAIL \(failures) of \(count) checks")
         finish(code: failures == 0 ? 0 : 1)
     }

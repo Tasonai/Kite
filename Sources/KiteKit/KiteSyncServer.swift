@@ -1210,6 +1210,41 @@ public final class KiteSyncServer: @unchecked Sendable {
                 sendResponse(connection: connection, body: Data("{}".utf8))
             }
 
+        case ("GET", "/api/provenance/artifacts"):
+            let arts = SupplyChainProvenanceEngine.shared.getArtifacts()
+            if let data = try? JSONEncoder().encode(["artifacts": arts]) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/provenance/verify-slsa"):
+            var artId = "ghcr.io/kite/checkout-api"
+            var reqLvl = 4
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] {
+                if let a = json["artifactId"] as? String { artId = a }
+                if let l = json["requireLevel"] as? Int { reqLvl = l }
+            }
+            let slsa = SupplyChainProvenanceEngine.shared.verifySlsaCompliance(artifactId: artId, requireLevel: reqLvl)
+            if let data = try? JSONEncoder().encode(slsa) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
+        case ("POST", "/api/provenance/admission-policy"):
+            var ns = "kite-prod"
+            if let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any],
+               let n = json["namespace"] as? String {
+                ns = n
+            }
+            let adm = SupplyChainProvenanceEngine.shared.synthesizeAdmissionBundle(namespace: ns)
+            if let data = try? JSONEncoder().encode(adm) {
+                sendResponse(connection: connection, body: data)
+            } else {
+                sendResponse(connection: connection, body: Data("{}".utf8))
+            }
+
         default:
             sendResponse(connection: connection, status: "404 Not Found")
         }
